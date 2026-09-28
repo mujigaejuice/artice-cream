@@ -1,0 +1,2362 @@
+[
+  {
+    "source": "AWS News Blog",
+    "title": "New low-cost burstable Amazon EC2 T8i instances are generally available",
+    "summary": "AWS introduces new low-cost burstable Amazon EC2 T8i instances powered by custom sixth generation Intel Xeon Scalable Processors (Granite Rapids), available only on AWS. T8i instances are among the lowest-cost EC2 instances and deliver up to 30% better price performance over previous generation T3 i",
+    "label": "cloud",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "AWS News Blog",
+    "title": "AWS Elastic Beanstalk introduces Cluster Mode",
+    "summary": "Run an application on AWS Elastic Beanstalk Cluster Mode without provisioning or operating the compute underneath it. You provide a container image or source code; Elastic Beanstalk with service-operated compute creates and operates the environment that runs it.",
+    "label": "cloud",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "AWS News Blog",
+    "title": "AWS reimagines the getting started experience",
+    "summary": "AWS has reimagined the getting started experience with smart and sensible defaults to help developers get started fast so that they can focus on building. New customers can sign up and get started right away with $100 in Free Tier credits, managed project environments, and simplified team and resour",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "AWS News Blog",
+    "title": "AWS Weekly Roundup: OpenAI GPT-6 Astra on Amazon Bedrock, Amazon Quick desktop GA, Kiro for students, and more (September 14, 2026)",
+    "summary": "There’s a particular energy to mid-September in New York. Pumpkin spice lattes are flowing, temperatures are dropping, and it’s nearly sweater weather. The city is back at full speed, and so is the AWS launch calendar. This week that energy showed up in a new frontier model on Amazon Bedrock, a desk",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "AWS News Blog",
+    "title": "Introducing Amazon EBS Volume Clones across AWS accounts",
+    "summary": "AWS introduces Amazon EBS Volume Clones with cross-account copy, so you can create copies of your EBS volumes into other AWS accounts and optionally re-encrypt them with an AWS Key Management Service (AWS KMS) key in the target account.",
+    "label": "cloud",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "AWS News Blog",
+    "title": "AWS Weekly Roundup: Claude Fable 5.1 on AWS, Amazon Linux 2027 preview, AWS Certified AI Business Strategist, and more (September 7, 2026)",
+    "summary": "Last week, Claude Fable 5.1 became available on AWS. According to Anthropic, Claude Fable 5.1 delivers frontier intelligence for ambitious tasks across coding, scientific research, and enterprise workflows. Claude Fable 5.1 is built for long-running, high-stakes work that runs for hours and spans ma",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Google Cloud Blog",
+    "title": "Announcing Native BM25 Ranking in AlloyDB and Cloud SQL",
+    "summary": "Vector search is a critical component of generative AI, retrieval-augmented generation (RAG), and data agent architectures, but sometimes vector search alone isn't enough. While vector embeddings are incredible at understanding conceptual meaning, they stumble on specific alphanumeric IDs and exact ",
+    "label": "cloud",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Google Cloud Blog",
+    "title": "Reimagining service delivery in the agentic era with Google Public Sector",
+    "summary": "State and local governments are driven by a shared mission to provide responsive, equitable, and accessible services. However, achieving this goal is often hindered by legacy technical debt, disconnected data, and heavy administrative burdens that slow down mission delivery. This systemic fragmentat",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Google Cloud Blog",
+    "title": "The DevFest Community Workshop Experience: Building Real Agents Together",
+    "summary": "This week we kicked off the DevFest season in North America at Google Hudson Square in New York City with 80 engineers packed into the room. Typical technical workshops hand you a finished repo, tell you to blindly paste blocks of code into your terminal, and hope nothing crashes. You walk away with",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Google Cloud Blog",
+    "title": "How to upskill enterprise AI builders by using daily micro habits",
+    "summary": "As enterprises invest in generative AI, tech leaders keep seeing the same pattern: Developers test AI tools for a week, hit setup problems, and then drift back to the backlog. Nothing ships. The real gap is enablement. In this landmark Harvard Business Review article , Josh Bersin and Marc Zao-Sande",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Google Cloud Blog",
+    "title": "Accelerating the borderless Lakehouse: Announcing preview of cross-cloud caching",
+    "summary": "Today, we are excited to announce enhancements to the borderless Lakehouse , our answer to how data engineers, data scientists, and increasingly, AI agents, can query governed data directly where it lives. To reason accurately and automate complex enterprise workflows, agents and data consumers of a",
+    "label": "data",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Google Cloud Blog",
+    "title": "What’s new with Google Cloud",
+    "summary": "Want to know the latest from Google Cloud? Find it here in one handy location. Check back regularly for our newest updates, announcements, resources, events, learning opportunities, and more. Tip : Not sure where to find what you’re looking for on the Google Cloud blog? Start here: Google Cloud blog",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Google Cloud Blog",
+    "title": "Changing the game: Using agentic AI to secure infrastructure code",
+    "summary": "AI is accelerating software development at an unprecedented pace. But as code generation scales, so do the challenges of securing the code, especially emerging AI-based vulnerability exploitations. To meet these challenges, the Google AI and Infrastructure team is transforming how we approach securi",
+    "label": "ai-security",
+    "ambiguous": true,
+    "split": "dev"
+  },
+  {
+    "source": "Google Cloud Blog",
+    "title": "Google named a Leader in the External Threat Intelligence Service Forrester Wave™",
+    "summary": "At Google, we see firsthand how the speed, scale, and sophistication of cyber threats continue to challenge traditional enterprise defenses. Today’s defenders can’t rely on reactive triage or fragmented data feeds; you require high-fidelity intelligence, deep underground visibility, and actionable c",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Google Cloud Blog",
+    "title": "The future of orchestration: Pine59’s journey to Airflow 3 on Google Cloud",
+    "summary": "Operating large data pipelines requires an orchestration layer that scales smoothly as workloads expand. When your pipelines process millions of complex data points every day to feed predictive models, staying up-to-date with your technology stack is a strategic necessity. Pine59 provides location i",
+    "label": "data",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Google Cloud Blog",
+    "title": "How a solo founder runs a five-continent tender platform on AlloyDB and MCP",
+    "summary": "Editor's note: Lucius AI, a tender-intelligence startup covering markets across five continents, runs its entire data platform on AlloyDB for PostgreSQL with a single operator. By migrating semantic search to a ScaNN index and managing database operations through Model Context Protocol (MCP), query ",
+    "label": "cloud",
+    "ambiguous": true,
+    "split": "dev"
+  },
+  {
+    "source": "Google Cloud Blog",
+    "title": "For SeaVerse, GKE Agent Sandbox reduces infrastructure costs by 60%",
+    "summary": "Editor’s note: Today we hear from SeaVerse , a gaming startup from SeaArt that is building a platform for playable AI experiences , where users can open lightweight games, character chats, and interactive apps, or create their own experiences from a prompt. To support that creative loop, SeaVerse ne",
+    "label": "cloud",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Google Cloud Blog",
+    "title": "M4N VM family, now GA: Highest per-core IOPS and throughput for I/O and memory-bound workloads",
+    "summary": "As enterprise organizations scale mission-critical applications, storage I/O and memory access can become severe operational bottlenecks. Whether its Oracle databases, in-memory databases like SAP HANA, or high-throughput SQL Server clusters, EHR systems, and real-time big data analytics, memory-bou",
+    "label": "cloud",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Cloudflare Blog",
+    "title": "Saving another 100TB of RAM with math (and Rust)",
+    "summary": "Cloudflare's global network is immense but not limitless. As we look for small ways to trim our resource usage, we sometimes get lucky and we can cut significantly more. Here’s how we reduced one of our Pingora-based service's RAM usage with statistics.",
+    "label": "infra",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Cloudflare Blog",
+    "title": "When scanners miss the attack: how Cloudflare Client-Side Security protects storefronts",
+    "summary": "A modern storefront can look healthy while malicious JavaScript quietly siphons revenue, hijacks clicks, or rewrites analytics. See how Cloudflare's machine learning models surface evasive client-side attacks for analyst investigation.",
+    "label": "security",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Cloudflare Blog",
+    "title": "Have it both ways: stay discoverable in search while disallowing AI training",
+    "summary": "Cloudflare is giving site owners a way to stay discoverable while disallowing AI training. New controls and an Accountable designation establish a shared model with Apple, Google, and Microsoft.",
+    "label": "cloud",
+    "ambiguous": true,
+    "split": "holdout"
+  },
+  {
+    "source": "Cloudflare Blog",
+    "title": "Give every teammate and agent the right level of access to your Workers",
+    "summary": "You can now scope access to individual Workers and assign narrower Developer Platform roles, so teammates, CI tokens, and agents get only the access they need to debug, deploy, or monitor safely.",
+    "label": "cloud",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Cloudflare Blog",
+    "title": "Introducing automatic remediation policies with Cloudflare CASB",
+    "summary": "Cloudflare CASB policies introduce a native automation engine built directly on the Cloudflare developer platform to remediate SaaS risks automatically. Security teams can now design event-driven logic to revoke risky file shares and send webhooks without manual intervention.",
+    "label": "security",
+    "ambiguous": true,
+    "split": "holdout"
+  },
+  {
+    "source": "Cloudflare Blog",
+    "title": "1.1.1.1 now supports post-quantum DNSSEC, all 2,420 bytes of it",
+    "summary": "1.1.1.1 now validates DNSSEC signatures using NIST’s post-quantum ML-DSA-44 algorithm. Here is how we manage 2,420-byte signatures and downgrade risks at scale.",
+    "label": "security",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Kubernetes Blog",
+    "title": "Kubernetes v1.37: Hardening Container Storage with Bind Mount Options and EmptyDir Permissions",
+    "summary": "Kubernetes v1.37 brings important storage security features: emptyDir permission modes and bind mount options. They help application programmers and security professionals implement rigorous security policies, for example, prohibiting deletion of files across containers or execution of arbitrary bin",
+    "label": "infra",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Kubernetes Blog",
+    "title": "Kubernetes v1.37: Pod-Level Resource Managers graduated to Beta",
+    "summary": "With the release of Kubernetes v1.37, the Pod-Level Resource Managers feature has graduated to Beta status (disabled by default)! First introduced as an Alpha feature in Kubernetes v1.36 , this enhancement builds on Pod-Level Resources by equipping Kubelet's Topology Manager, CPU Manager, and Memory",
+    "label": "infra",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Kubernetes Blog",
+    "title": "Kubernetes Changed Block Tracking API - Beta Differences",
+    "summary": "Changed Block Tracking (CBT) support for CSI drivers shipped as Alpha in September 2025. With the March 2026 v1.0.0 release of the external-snapshot-metadata project, the feature moved to Beta . If you aren't yet familiar with changed block tracking for storage in Kubernetes, the Alpha announcement ",
+    "label": "infra",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Kubernetes Blog",
+    "title": "Kubernetes v1.37: Memory QoS Graduates to Beta",
+    "summary": "Memory QoS has graduated to Beta in Kubernetes v1.37 and is now enabled by default. On Linux nodes running cgroup v2, the feature uses the memory controller to give the kernel better guidance on how to treat container memory. It was first introduced as Alpha in v1.22, and expanded in v1.36 with tier",
+    "label": "infra",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Kubernetes Blog",
+    "title": "Kubernetes v1.37: Native Histograms Graduates to Beta",
+    "summary": "I'm excited to announce that native histogram support for Kubernetes metrics is graduating to Beta and is enabled by default in Kubernetes v1.37! Native histograms (previously introduced as Alpha in Kubernetes v1.36 under KEP-5808 ) bring high-resolution, low-cardinality observability to Kubernetes ",
+    "label": "infra",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "CNCF Blog",
+    "title": "OpenTelemetry everywhere: Migrating a metrics platform at scale",
+    "summary": "Why we did this at all For most of the last decade our metrics pipeline ran on gostatsd, the open-source StatsD implementation we maintain. It primarily did two jobs: as sidecar on every host and the...",
+    "label": "infra",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "CNCF Blog",
+    "title": "Running OpenBao on Kubernetes with a CloudNativePG PostgreSQL backend",
+    "summary": "Managing infrastructure secrets on Kubernetes needs a backend that is self-healing and free of vendor lock-in, and that is exactly what OpenBao (the Linux Foundation’s open-source fork of HashiCorp Vault) and CloudNativePG give you: an entirely...",
+    "label": "infra",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "CNCF Blog",
+    "title": "What I learned organizing KCD Lima 2026",
+    "summary": "On July 18, 2026, we held the third edition of Kubernetes Community Days Lima at UTEC in Barranco. By now, we have already sent the Transparency Report to the CNCF, thanked our sponsors, and processed the...",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "CNCF Blog",
+    "title": "Cilium 1.20: Gateway API ExternalAuth, TCPRoute/UDPRoute, ENI IPAM for IPv6, and more",
+    "summary": "Cilium 1.20, the second major open source Cilium release of 2026 after Cilium 1.19, is finally here. Three themes stand out in this release: Thank you to every contributor, reviewer and maintainer who made Cilium 1.20...",
+    "label": "infra",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "CNCF Blog",
+    "title": "KubeCon + CloudNativeCon North America 2026: Your Week in Salt Lake City",
+    "summary": "This November, the cloud native community is heading to Salt Lake City. From November 9–12, 2026, KubeCon + CloudNativeCon North America will bring together adopters and technologists from across open source and cloud native communities for...",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "CNCF Blog",
+    "title": "Building a reliable cloud native foundation for distributed AI training",
+    "summary": "AI workloads are changing what platform teams need from infrastructure. Provisioning GPUs and standing up a cluster no longer makes a platform “AI-ready.” Once training spans more than one node, the bottlenecks show up in places...",
+    "label": "infra",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "The New Stack",
+    "title": "One engineer shipped 2,000 PRs a month to production. Verification is the key.",
+    "summary": "Lauren Tan, an engineer on the Grok team at SpaceXAI, who previously worked at Cursor and Meta, recently published a The post One engineer shipped 2,000 PRs a month to production. Verification is the key. appeared first on The New Stack .",
+    "label": "llm",
+    "ambiguous": true,
+    "split": "dev"
+  },
+  {
+    "source": "The New Stack",
+    "title": "“Dormant deployments were quietly consuming storage”: Why Vercel tightened its free-tier rules",
+    "summary": "Vercel announced this week that teams on its free Hobby plan will now have older, unprotected deployments deleted immediately if The post “Dormant deployments were quietly consuming storage”: Why Vercel tightened its free-tier rules appeared first on The New Stack .",
+    "label": "cloud",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "The New Stack",
+    "title": "This week’s news from Zed, Anthropic, and OpenRouter shows why better harnesses matter more than better models",
+    "summary": "Our five most-read stories this week covered code collaboration, a model router, a UI change, a benchmark, and a caching The post This week’s news from Zed, Anthropic, and OpenRouter shows why better harnesses matter more than better models appeared first on The New Stack .",
+    "label": "llm",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "The New Stack",
+    "title": "Claude couldn’t hack OpenAI. Then Anthropic shipped Opus 5.",
+    "summary": "Three security researchers at Hacktron AI found a memory-corruption bug in a widely used image library. Finding it was the The post Claude couldn’t hack OpenAI. Then Anthropic shipped Opus 5. appeared first on The New Stack .",
+    "label": "ai-security",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "The New Stack",
+    "title": "Kubernetes can run AI inference. But can it count the real cost?",
+    "summary": "Welcome to another edition of Road to KubeCon, where we’re tracking the Kubernetes and cloud-native ecosystem on the way into The post Kubernetes can run AI inference. But can it count the real cost? appeared first on The New Stack .",
+    "label": "infra",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "The New Stack",
+    "title": "How buildpacks help enterprises finally operate container security controls at scale",
+    "summary": "Container security controls often fail less because organizations lack standards, scanners, or best practices, and more. After all, every service The post How buildpacks help enterprises finally operate container security controls at scale appeared first on The New Stack .",
+    "label": "infra",
+    "ambiguous": true,
+    "split": "holdout"
+  },
+  {
+    "source": "The New Stack",
+    "title": "Your agent is only as good as your infrastructure",
+    "summary": "You built a great agent, but something happened when it moved into production. In testing, your agent reviewed pull requests The post Your agent is only as good as your infrastructure appeared first on The New Stack .",
+    "label": "llm",
+    "ambiguous": true,
+    "split": "dev"
+  },
+  {
+    "source": "The New Stack",
+    "title": "Open-weight models now handle a majority of tokens on Vercel’s AI Gateway. But Anthropic still takes 64% of the spend.",
+    "summary": "The trend is clear: open-weight models are taking an increasingly large bite out of production AI usage. On Monday, The The post Open-weight models now handle a majority of tokens on Vercel’s AI Gateway. But Anthropic still takes 64% of the spend. appeared first on The New Stack .",
+    "label": "llm",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "The New Stack",
+    "title": "Code review is burning out your best engineers",
+    "summary": "Every team I talk to has the same problem. Their best engineers, the ones who care most about code quality, The post Code review is burning out your best engineers appeared first on The New Stack .",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "The New Stack",
+    "title": "Intel squeezed a 1.58-bit LLM down to 1.485 bits without changing a single weight",
+    "summary": "The 1.58 in a 1.58-bit language model sounds like a hard limit, but Intel researchers pushed a ternary model below The post Intel squeezed a 1.58-bit LLM down to 1.485 bits without changing a single weight appeared first on The New Stack .",
+    "label": "llm",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "The New Stack",
+    "title": "“Be transparent only if asked”: OpenAI’s models learned to leave notes for their future selves",
+    "summary": "OpenAI revealed Wednesday evening that some GPT-5.6 Sol model instances, during reinforcement learning (RL) training, wrote instructions to conceal mistakes The post “Be transparent only if asked”: OpenAI’s models learned to leave notes for their future selves appeared first on The New Stack .",
+    "label": "llm",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "The New Stack",
+    "title": "GitHub and Anthropic used their own agents for major Rust rewrites — but with very different playbooks",
+    "summary": "Rust is seemingly the language of the moment, with open-source projects and companies forming an orderly queue to move core The post GitHub and Anthropic used their own agents for major Rust rewrites — but with very different playbooks appeared first on The New Stack .",
+    "label": "llm",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "InfoQ",
+    "title": "Presentation: Context Engineering at LinkedIn: How We Built an Organizational Context Layer for AI Agents with MCP",
+    "summary": "Ajay Prakash discusses how LinkedIn overcomes AI agent limitations in large codebases. He explains Contextual Agent Playbooks and Tools - built on Model Context Protocol (MCP) - which serves procedural memory, code search, and runbooks directly to coding agents. Prakash shares architectural details ",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "InfoQ",
+    "title": "AWS Lambda Pushes Serverless Toward Long-Running Workloads",
+    "summary": "AWS Lambda now allows functions running on Lambda Managed Instances to run for up to 90 minutes, six times longer than the previous 15-minute limit, further blurring the line between a Lambda invocation and a traditional server. The limit remains unchanged for traditional synchronous requests. By Re",
+    "label": "cloud",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "InfoQ",
+    "title": "SolidStart 2: Replaces Vinxi with a Vite 8 and Enters Maintenance as Its Role Winds Down",
+    "summary": "SolidStart, a full-stack meta-framework based on SolidJS, has transitioned to version 2.0, improving compatibility with Vite's Environment API. This release modernizes the framework, enhancing CSS handling and integrating better with tools like Tailwind CSS and deployment services. Following this, S",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "InfoQ",
+    "title": "MariaDB 13 Expands Oracle Compatibility and Improves Developer Experience and Observability",
+    "summary": "MariaDB Community Server 13.0 has reached General Availability (GA) and is now officially stable. This release introduces a range of new features, deprecations, and performance improvements, including expanded support for procedural SQL, new DML capabilities, and more. By Sergio De Simone",
+    "label": "infra",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "InfoQ",
+    "title": "DoorDash Uses Multi Agent LLMs to Clean up 60,000 Feature Flags",
+    "summary": "DoorDash built a multi-agent LLM system to automate stale feature flag cleanup across more than 60,000 flags and 623 repositories. The workflow combines live experimentation data through MCP, engineer approval, isolated Git worktrees, parallel agents, and automated validation. In an evaluation of 50",
+    "label": "llm",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "InfoQ",
+    "title": "WSO2 Releases Agent Manager as Enterprises Look to Control Growing AI Agent Sprawl",
+    "summary": "WSO2 has announced the general availability of WSO2 Agent Manager, an open-source platform designed to provide centralized governance, identity management, security controls, and operational oversight for AI agents running across different models, frameworks, and deployment environments. By Craig Ri",
+    "label": "llm",
+    "ambiguous": true,
+    "split": "dev"
+  },
+  {
+    "source": "InfoQ",
+    "title": "Presentation: Complexity and Creativity in Software Engineering",
+    "summary": "Phillip Mortimer discusses the shift toward write-only software driven by AI code generation. He explains why traditional pull requests are broken and shares how engineering leaders can manage complexity by decoupling intent from implementation, automating code reviews, and building self-healing arc",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "InfoQ",
+    "title": "htmx 4.0: a Fetch-Based Rewrite, Built-In Morphing Swaps, and Explicit Attribute Inheritance",
+    "summary": "htmx 4 has been released, featuring a transition from XMLHttpRequest to the fetch() API, enhancing streaming capabilities. Key updates include built-in morphing swaps for DOM state preservation and an hx-partial tag for cleaner updates. Attribute inheritance is now explicit, with event names standar",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "InfoQ",
+    "title": "Podcast: Signals and Levers: Building Thriving Engineering Organizations",
+    "summary": "In this podcast Shane Hastie, Lead Editor for Culture & Methods spoke to Elisabeth Hendrickson and Joel Tosi about systems thinking as a lens for software delivery, the cultural \"levers\" leaders and teams can pull to shape organizations, and building thriving, sustainable teams amid AI-driven change",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "InfoQ",
+    "title": "Article: Architecting Secure and Scalable Facial Verification Systems",
+    "summary": "When three thousand employees verify at once, synchronous API calls collapse. This article presents a four-layer architecture for high-volume face verification: client-side filtering that cut cloud costs 30%, decoupled detection and verification enabling 10x scaling, risk-based dynamic thresholds, a",
+    "label": "deep-learning",
+    "ambiguous": true,
+    "split": "dev"
+  },
+  {
+    "source": "InfoQ",
+    "title": "OpenAI Introduces Triage Framework and Case Studies to Report Model Misalignment",
+    "summary": "OpenAI has released a disclosure framework for model misalignment during its lifecycle. Employees can flag potential issues, prompting technical staff to label incidents. The initial case studies outline unexpected model behaviours, providing insights into deviations from expected parameters. Commun",
+    "label": "llm",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "InfoQ",
+    "title": "Building an Internal Developer Platform with Artificial Intelligence",
+    "summary": "Agents are becoming the new developer platform, using semantic search with data from tools like Git, Slack, and Jira for context. Things to consider are setting guardrails to block or allow things, and using logs, metrics, and traces to understand agent behavior. By Ben Linders",
+    "label": "infra",
+    "ambiguous": true,
+    "split": "holdout"
+  },
+  {
+    "source": "우아한형제들 기술블로그",
+    "title": "배달의민족 전자계약서 화면 개편기: AI에게 맡긴 것과 사람이 챙긴 것",
+    "summary": "들어가며 전자계약서는 파트너(사장님)가 배달의민족을 처음 시작할 때 작성하는 전자문서입니다. 영업 담당자가 파트너와 함께 작성하고, 계약 내용을 바꿀 때도 같은 문서를 씁니다. 이 문서를 쓰는 작성 화면은 사업자 정보, 가게 정보, 광고 정보 같은 섹션이 모여 계약서 한 장을 이루는 큰 폼입니다. 2026년 4월부터 6월까지 이 작성 화면을 개편했습니다. 작성자가 계약서를 더 편하게 쓸 수 있게 […] The post 배달의민족 전자계약서 화면 개편기: AI에게 맡긴 것과 사람이 챙긴 것 first appeared on 우아한형제들",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "우아한형제들 기술블로그",
+    "title": "집 나간 네트워크는 돌아왔는데 React.lazy는 왜 안 돌아올까",
+    "summary": "들어가며 파트너(업주)님이 영업 내내 주문을 받는 배민주문접수 웹뷰를 개발하던 중 QA 과정에서 네트워크 OFF -> ON으로 변경 후 다른 화면으로 이동 시 오류 화면이 노출된다는 티켓을 전달받았습니다. 원인을 파악해 보니 브라우저가 모듈 로드 실패를 기억하고 있었고, 이는 버그가 아니라 HTML 스펙에 명시된 동작이었습니다. 더 곤란한 것은 프런트엔드 빌드 도구인 Vite 공식 문서가 안내하는 해결책 중 […] The post 집 나간 네트워크는 돌아왔는데 React.lazy는 왜 안 돌아올까 first appeared on 우",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "우아한형제들 기술블로그",
+    "title": "AI 전환, 우리가 도운 건 돕는 사람이었습니다",
+    "summary": "1편 \"AI로 바뀐 건 업무가 아니라 사람이었습니다\"는 옆자리 동료가 덜 힘들어졌으면 좋겠다는 마음이 계속될 것 같다는 말로 끝났습니다. 혹시 못 읽으셨어도 따라오실 수 있게 배경만 짧게 정리합니다. 저는 우아한형제들에서 개발자를 길러내는 교육의 코치로 일하며 배운 게 하나 있습니다. 사람은 설명을 들어서가 아니라 자기 손으로 부딪혀봐야 변한다는 것입니다. 그 원리로 개발을 전혀 모르는 동료 15명이 5주 […] The post AI 전환, 우리가 도운 건 돕는 사람이었습니다 first appeared on 우아한형제들 기술블로그 ",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "우아한형제들 기술블로그",
+    "title": "한꺼번에 짊어지던 배치를 내려놓고, 하나씩 흘려보내는 워크플로로",
+    "summary": "Temporal 도입은 부담스러웠고, 그렇다고 배치를 그대로 둘 순 없었습니다 – 입맛대로 골라 Claude로 뚝딱 만든 워크플로 엔진 개발기 ℹ️ 이 글에 등장하는 수치와 설정값(대기 시간, 타임아웃, 재시도 횟수 등)은 이해를 돕기 위한 예시이며, 실제 운영 설정과는 다릅니다. 들어가는 말 배달의민족 사장님이 사용하는 포스(POS)의 백엔드를 만들다 보면, \"지금 당장 처리할 일\"보다 \"시간이 흐른 뒤에 처리해야 할 […] The post 한꺼번에 짊어지던 배치를 내려놓고, 하나씩 흘려보내는 워크플로로 first appeared",
+    "label": "data",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "우아한형제들 기술블로그",
+    "title": "문서로만 지키던 아키텍처 규칙, 테스트 코드로 강제하기",
+    "summary": "들어가며 제가 속한 파트너셀프서비스팀은 코딩 컨벤션을 사내 위키 문서와 AI 에이전트가 참조할 수 있는 규칙 문서에 정의해놓고 개발하고 있습니다. 하지만 그 규칙을 잘 지키고 있는지 확인하는 방법이 코드 리뷰뿐이었다는 점이 문제였습니다. 문서에 있는 규칙은 팀원들이 의식적으로 인지해서 코드를 작성하거나 리뷰를 받는 과정에서 반영해야 했습니다. AI 에이전트를 이용해 규칙을 주입하더라도 세션별 컨텍스트에 따라 규칙을 위반하는 경우가 […] The post 문서로만 지키던 아키텍처 규칙, 테스트 코드로 강제하기 first appeare",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "토스 기술블로그",
+    "title": "사용자를 위해 일부러 어렵게 만드는 경험, 어디까지 괜찮을까?",
+    "summary": "10대를 위한 잠금 저금통을 만들며 찾은 ‘좋은 불편함’의 기준을 공유합니다.",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "토스 기술블로그",
+    "title": "리더보드 1등 LLM, 토스에서도 1등일까? - Toss Benchmark 구축기",
+    "summary": "Toss의 AI 기반 서비스에 적합한 LLM이 무엇인지 평가하는 Toss Benchmark 구축기",
+    "label": "llm",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "토스 기술블로그",
+    "title": "토스증권이 GPU-aware를 넘어 GPU-native 클러스터를 구축한 방법",
+    "summary": "토스증권이 Kubernetes GPU 클러스터의 운영 한계를 해결한 방법",
+    "label": "infra",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "토스 기술블로그",
+    "title": "App Router의 장점은 우리에게도 장점일까요?",
+    "summary": "App Router가 토스뱅크에도 좋은 선택일지, 직접 측정한 결과와 도입 여부를 판단한 기준을 공유해요.",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "토스 기술블로그",
+    "title": "AI가 팀 규칙을 지키도록 하는 방법",
+    "summary": "Coding Agent를 위한 Stylepack",
+    "label": "llm",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "LY Corporation 기술블로그",
+    "title": "LLM에게 어디까지 맡길 것인가: AI 에이전트 기반 광고 분석 리포트 자동화",
+    "summary": "들어가며안녕하세요. LINE Ads에서 데이터 분석 플랫폼을 개발하고 있는 이종우, 이운열입니다.광고 매출은 상품, 광고주, 캠페인 집행 변화에 따라 매일 움직입니다. 광고 KPI...",
+    "label": "llm",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "LY Corporation 기술블로그",
+    "title": "AI를 전제로 다시 설계하다, Tech-Verse 2026 참관기",
+    "summary": "들어가며안녕하세요. LINE Plus의 LINE VoIP Service Dev 팀에서 서버 개발을 하고 있는 한규범, ABC Studio에서 서버를 개발하고 있는 황건구입니다.저희...",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "LY Corporation 기술블로그",
+    "title": "장애 Alert의 원인을 스스로 찾다: SRE Observer 개발기",
+    "summary": "들어가며안녕하세요. LINE Plus에서 Home 서비스의 안정성을 책임지고 있는 Home SRE(Site Reliability Engineering) 팀입니다.SRE Observ...",
+    "label": "infra",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "LY Corporation 기술블로그",
+    "title": "LLM Wiki: 코드 기준으로 자동 최신화되는 도메인 지식 SSOT 만들기",
+    "summary": "들어가며안녕하세요. LINE Plus에서 Global E-Commerce Platform 개발을 맡고 있는 윤석범입니다.AI로 개발할 때 결과물의 품질은 AI의 코드 생성 능력보다...",
+    "label": "llm",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "LY Corporation 기술블로그",
+    "title": "일본어 상품 검색 정확도 높이기: Elasticsearch + Kuromoji에서 OpenSearch + Sudachi로",
+    "summary": "들어가며안녕하세요. LINE Plus에서 통합 커머스 개발을 맡고 있는 김진성입니다.2025년 초, 통합 커머스 프로젝트가 시작되었습니다.서비스가 안정되어 가던 중, 일본 담당자로...",
+    "label": "infra",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Google Research",
+    "title": "MilleMiglia: A realistic instance generator for middle-mile logistics",
+    "summary": "Algorithms & Theory",
+    "label": "reject",
+    "ambiguous": true,
+    "split": "holdout"
+  },
+  {
+    "source": "Google Research",
+    "title": "The future of practice: Enabling teachers to create learning interactives with generative UI",
+    "summary": "Education Innovation",
+    "label": "llm",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Google Research",
+    "title": "Bypassing inference bottlenecks: Accelerating complex AI search with Retrieve-for-Train",
+    "summary": "Algorithms & Theory",
+    "label": "deep-learning",
+    "ambiguous": true,
+    "split": "holdout"
+  },
+  {
+    "source": "Google Research",
+    "title": "ToolGrad: Efficient tool-use dataset generation with textual \"gradients\"",
+    "summary": "Machine Intelligence",
+    "label": "llm",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Google Research",
+    "title": "Transfer learning for genomic prediction in underrepresented populations",
+    "summary": "General Science",
+    "label": "deep-learning",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Google Research",
+    "title": "A connectomics milestone: Mapping the complete male fruit fly brain",
+    "summary": "General Science",
+    "label": "reject",
+    "ambiguous": true,
+    "split": "dev"
+  },
+  {
+    "source": "Google DeepMind",
+    "title": "Introducing Gemini 3.8 Live and 3.8 Live Extended Thinking",
+    "summary": "",
+    "label": "llm",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Google DeepMind",
+    "title": "AlphaGenome Atlas: A predictive map of every possible DNA letter change in the human genome",
+    "summary": "AlphaGenome Atlas maps the molecular effects of 9 billion single-letter DNA variants across the human genome.",
+    "label": "deep-learning",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Google DeepMind",
+    "title": "Introducing WeatherNext 3, our most advanced and accurate global weather AI model",
+    "summary": "",
+    "label": "deep-learning",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Google DeepMind",
+    "title": "Proactive cyber defense for governments and enterprises",
+    "summary": "",
+    "label": "ai-security",
+    "ambiguous": true,
+    "split": "dev"
+  },
+  {
+    "source": "Google DeepMind",
+    "title": "Introducing Gemini 3.8 Flash and 3.8 Flash Cyber",
+    "summary": "",
+    "label": "llm",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Google DeepMind",
+    "title": "Introducing agentic video understanding with Gemini",
+    "summary": "",
+    "label": "llm",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Hugging Face Blog",
+    "title": "Your Agent Aced the Task. Will It Do It Again?",
+    "summary": "",
+    "label": "llm",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Hugging Face Blog",
+    "title": "Async GRPO with LoRA across HF Jobs: a bucket, a proxy, and no NCCL",
+    "summary": "",
+    "label": "llm",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Hugging Face Blog",
+    "title": "Rebuilding AUTOMATIC1111 with Gradio Workflow",
+    "summary": "",
+    "label": "deep-learning",
+    "ambiguous": true,
+    "split": "holdout"
+  },
+  {
+    "source": "Hugging Face Blog",
+    "title": "Safety for Whom? Refusing the Right Subset of a Topic, Not the Whole Topic",
+    "summary": "",
+    "label": "llm",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Hugging Face Blog",
+    "title": "NeoMME: an efficient Multimodal-native and Multilingual Encoder",
+    "summary": "",
+    "label": "deep-learning",
+    "ambiguous": true,
+    "split": "dev"
+  },
+  {
+    "source": "Hugging Face Blog",
+    "title": "Fine-tuning a 350M Model for Better Structured Outputs in 100 GRPO Steps",
+    "summary": "",
+    "label": "llm",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "PyTorch Blog",
+    "title": "PyTorch Day Japan 2026 Comes to Tokyo on December 10",
+    "summary": "PyTorch Day Japan 2026 will bring the open source AI community together in Tokyo on December 10 for a full day of technical talks and interactive discussions designed to foster...",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "PyTorch Blog",
+    "title": "Open Research, Tooling & Optimization at PyTorch Conference North America 2026",
+    "summary": "TL;DR Taking place October 20 to 21 in San Jose, California, PyTorch Conference North America 2026 highlights open research, tooling, and performance optimization across compiler architecture, cross-hardware kernel domain-specific languages,...",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "PyTorch Blog",
+    "title": "Low Precision Flash Attention 4: End-to-End Block-Scaled Attention for Blackwell",
+    "summary": "TL;DR We extend FlashAttention-4 [1] with MXFP8 forward and backward, reaching 2.85 PF/s forward and 2 PF/s backward on LLM shapes. On our internal shapes, FA4 MX8 reaches 2.54 PF/s...",
+    "label": "deep-learning",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "PyTorch Blog",
+    "title": "Helion x 🤗 HF Kernels: Building and Shipping Out-of-the-box Performant Kernels",
+    "summary": "TL;DR The HuggingFace Kernels project now has Helion support. This blog walks through how to build, autotune, and ship performant and portable Helion kernels via the Hugging Face Kernels project,...",
+    "label": "deep-learning",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "PyTorch Blog",
+    "title": "PyTorch Conference China 2026: Advancing the Open Source AI Stack",
+    "summary": "PyTorch Conference China 2026 brought the PyTorch community together in Shanghai on September 8–9 alongside KubeCon + CloudNativeCon and OpenInfra Summit, following sponsor-hosted co-located events on September 7. Technical discussions...",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "NVIDIA Technical Blog",
+    "title": "Benchmarking LLM Inference at Scale with AIPerf",
+    "summary": "You’re deploying a model on a system. It starts up, prompts are getting responses. Now the hard question: Is this fast? Your instincts might lead you to send...",
+    "label": "llm",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "NVIDIA Technical Blog",
+    "title": "How to Use AI Agents to Prepare 3D Scenes for Simulation",
+    "summary": "Agentic AI workflows can be used to prepare and validate digital twins for physical AI systems. Agents can inspect 3D scenes, author simulation-relevant data in...",
+    "label": "deep-learning",
+    "ambiguous": true,
+    "split": "holdout"
+  },
+  {
+    "source": "NVIDIA Technical Blog",
+    "title": "TensorRT Edge-LLM Completes the MLPerf Edge Agentic Benchmark 6.4x Faster on Jetson AGX Thor",
+    "summary": "AI agents are moving from cloud data centers to vehicles, robots, and other edge devices. Unlike a chatbot that answers a single prompt, an agent works through...",
+    "label": "llm",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "NVIDIA Technical Blog",
+    "title": "Translating CUDA Tile Operations from Python to Rust Using Agentic AI",
+    "summary": "cuTile Rust (cutile-rs) is a tile-based system for safe, idiomatic GPU kernel authoring in the Rust programming language. Extending the Rust ownership model to...",
+    "label": "llm",
+    "ambiguous": true,
+    "split": "holdout"
+  },
+  {
+    "source": "NVIDIA Technical Blog",
+    "title": "Dense vs. MoE Models: Active Parameters, Throughput, and When to Choose Each",
+    "summary": "How can a 30B-parameter model activate only 3B parameters per token, and still use the capacity of the larger model? Nemotron 3.5 Lightning illustrates the...",
+    "label": "llm",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "NVIDIA Technical Blog",
+    "title": "How NVIDIA Groq 3 LPX Deterministic Execution Drives Power-Efficient High-Interactivity Inference on NVIDIA Vera Rubin",
+    "summary": "Power is a defining constraint for AI factories. As AI workloads demand a full compute platform to serve them, each component of that platform must maximize...",
+    "label": "infra",
+    "ambiguous": true,
+    "split": "holdout"
+  },
+  {
+    "source": "NVIDIA Technical Blog",
+    "title": "How NVIDIA NVLink 6 Delivers Multi-Layer Resiliency for AI Factories",
+    "summary": "For operators of large-scale AI factories, maximizing continuous output is essential for productivity. In massive-scale AI training, every GPU in the cluster...",
+    "label": "infra",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "NVIDIA Technical Blog",
+    "title": "Scaling Federated Learning Across Docker, Kubernetes, and Slurm with NVIDIA FLARE",
+    "summary": "Federated learning (FL) projects often begin with a straightforward setup: one server, a few clients, and one dataset at each site. As those projects grow, the...",
+    "label": "deep-learning",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "MIT News (AI)",
+    "title": "A new chapter for MIT Reads",
+    "summary": "A new focus on fiction and memoir aims to help the MIT community celebrate the power of storytelling and strengthen social connection.",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "MIT News (AI)",
+    "title": "New AI technique could make minimally invasive surgeries safer and more precise",
+    "summary": "This patient-specific method, called xvr, helps doctors use X-rays for surgical navigation in fields such as orthopedics and neurosurgery.",
+    "label": "deep-learning",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "MIT News (AI)",
+    "title": "Measure by measure, studying society accurately",
+    "summary": "Naoki Egami has become a standout in political methodology, helping refine tools that give scholars durable results.",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "MIT News (AI)",
+    "title": "New method enables AI for safety-critical situations",
+    "summary": "The “HardFlow” algorithm could help generative AI models produce high-quality outputs that obey strict requirements when “pretty close” doesn’t cut it.",
+    "label": "deep-learning",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "MIT News (AI)",
+    "title": "MIT spinout turns plastic waste into resilient building materials",
+    "summary": "Atlas Building Composites is commercializing MIT research to turn plastic waste into parts for buildings and other infrastructure.",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "MIT News (AI)",
+    "title": "Lifesaving Lincoln Laboratory device wins 2026 Excellence in Technology Transfer Award",
+    "summary": "The handheld catheterization device AI-GUIDE, created by Lincoln Laboratory and Massachusetts General Hospital, promises improved health outcomes for injured service members and civilians.",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Microsoft Research",
+    "title": "GigaPath-Flash and GigaTIME-Flash: Toward population-scale discovery with efficient pathology foundation models",
+    "summary": "What if pathology foundation models could do more with less? GigaPath-Flash and GigaTIME-Flash cut computational demands while maintaining strong performance, opening the door to larger studies and broader exploration. The post GigaPath-Flash and GigaTIME-Flash: Toward population-scale discovery wit",
+    "label": "deep-learning",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Microsoft Research",
+    "title": "Broadening access to Skala creates a faster path to predictive DFT",
+    "summary": "Skala 1.1, the updated deep-learning exchange-correlation functional from Microsoft Research, provides greater accuracy, expanded accessibility across the computational chemistry ecosystem, and a living benchmark to track computational performance. The post Broadening access to Skala creates a faste",
+    "label": "deep-learning",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Microsoft Research",
+    "title": "MindTopo reveals VLMs’ spatial reasoning abilities",
+    "summary": "A path, a fence, a knot. MindTopo sets a new benchmark for testing how AI understands topological relationships and highlights new opportunities to strengthen spatial reasoning and planning. The post MindTopo reveals VLMs’ spatial reasoning abilities appeared first on Microsoft Research .",
+    "label": "llm",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Microsoft Research",
+    "title": "Introducing CARE-X: Towards Clinically Useful Radiology VLMs with Auxiliary Supervision, Reward-Aligned Learning, and Tool-Augmented Measurement",
+    "summary": "Radiology AI is evolving beyond report generation. CARE-X explores a unified approach that combines flexible reasoning, calibrated predictions, and measurement-based tools for chest X-ray interpretation. The post Introducing CARE-X: Towards Clinically Useful Radiology VLMs with Auxiliary Supervision",
+    "label": "llm",
+    "ambiguous": true,
+    "split": "dev"
+  },
+  {
+    "source": "Microsoft Research",
+    "title": "Orchard: An open framework for scalable agentic AI",
+    "summary": "Orchard is an open-source framework for the research community to train and evaluate AI agents across task types. It reduces complexity while supporting strong performance from smaller models by enabling researchers to reuse the same infrastructure. The post Orchard: An open framework for scalable a",
+    "label": "llm",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Simon Willison",
+    "title": "Generating running routes with GPT-6 Astra and ChatGPT Work",
+    "summary": "Here's a neat thing I had ChatGPT Work with GPT-6 Astra (Max) do this morning: I live at <my address>. Figure out 5K and 10K running routes from me that loop from my house. Use OSM data. It worked for 27 minutes and produced exactly what I'd asked for, as both an embedded visualization and downloada",
+    "label": "llm",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Simon Willison",
+    "title": "OpenAI agents attacked RubyGems back in May",
+    "summary": "OpenAI agents carried out an undisclosed attack on RubyGems is a new bombshell report from Spencer Kitts, Thomas Larsen, and Sydney Von Arx - three of the four authors of the report on the agent attack on disused wikis ( previously ) last week. This time they're noting that it looks very likely that",
+    "label": "ai-security",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Simon Willison",
+    "title": "Some thoughts on the Navier–Stokes Millennium Prize Problem",
+    "summary": "On the Navier–Stokes Millennium Prize Problem introduces an impressive result from OpenAI, who used an unreleased model to produce a resolution to the Navier–Stokes existence and smoothness problem , one of the seven Millennium Prize Problems that have been subject to a $1,000,000 prize since May 24",
+    "label": "reject",
+    "ambiguous": true,
+    "split": "dev"
+  },
+  {
+    "source": "Simon Willison",
+    "title": "The Pelican comparison grid for Astra is pretty interesting",
+    "summary": "I got access to GPT-6 Astra this afternoon, so naturally I used it to generate SVGs of pelicans riding bicycles - at low, medium, high, xhigh and max reasoning levels (Astra doesn't support reasoning=none). Then I rendered those pelicans in a comparison grid with GPT-5.6 Sol, Terra, and Luna, and be",
+    "label": "llm",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Simon Willison",
+    "title": "OpenAI's rogue agents were caught communicating via public wikis",
+    "summary": "Here we go again... Discovery of a new OpenAI agent message board by Sydney Von Arx, Cormac Slade Byrd, Spencer Kitts, and Thomas Larsen describes the latest accidental cyberattack by models being trained by OpenAI. This time it was agents engaged in some sort of web research benchmark, so they had ",
+    "label": "ai-security",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Simon Willison",
+    "title": "Claude's new system prompt really doesn't want to reproduce song lyrics",
+    "summary": "Anthropic publish the system prompts for their Claude consumer applications ( Claude.ai and the Claude mobile apps - sadly not for Claude Cowork or Claude Code). I love that they do this, and that they share not just the current prompts but historic changes to their prompts as well. They used to kee",
+    "label": "llm",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Interconnects",
+    "title": "Why I still haven’t bought into true RSI",
+    "summary": "An “AI moderate’s” view on recent events and the trajectory of frontier models.",
+    "label": "reject",
+    "ambiguous": true,
+    "split": "holdout"
+  },
+  {
+    "source": "Interconnects",
+    "title": "Open-Source AI & Open Models Reading List",
+    "summary": "How to get up to speed on open models and their implications.",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Interconnects",
+    "title": "One resignation turned the embers of AI fear into a wildfire",
+    "summary": "Some quick notes on a truly weird week.",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Interconnects",
+    "title": "When will average people feel AI’s impact?",
+    "summary": "We’re <5 years into a compounding revolution which could take a century, and how the AI industry should manage this.",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Interconnects",
+    "title": "Latest open artifacts (#24): Motif-3, GLM-5.3, Hy4-preview and open model licenses",
+    "summary": "The open model ecosystem continues to expand in its breadth",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "AI타임스",
+    "title": "[AI 이슈트렌드] 역대급 수출 실적 속 AI 속도조절론·대통령 지지율 최저 주목",
+    "summary": "AI타임스와 이스트에이드의 9월 셋째 주(9월11일~17일) 이슈 분석 결과, SBS 개그맨 술집 난동을 포함해 MBC 사장 인선과 수출 실적, AI 관련 소식이 상위권을 차지했다.이번 주 검색량 1위는 'SBS 개그맨 술집 난동(5.60%)'이 차지했다. SBS 공채 개그맨을 사칭한 남성이 서울의 한 술집에서 업주에게 폭언하고 맥주잔을 던지는 등 난동을 부려 경찰 조사를 받아 화제를 모았다.2위는 'MBC 사장 이성주 내정(4.76%)'으로 이성주 iMBC 경영이사와 전동건 전 울산MBC 사장 중 이사회 투표를 거쳐 이성주 이사가",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "AI타임스",
+    "title": "오픈AI, 기업 시장 점유율 역전…앤트로픽, IPO전 신형 모델 출시 검토",
+    "summary": "오픈AI가 'GPT-6 아스트라'를 앞세워 기업용 시장 점유율을 가파르게 확대하자, 이 분야에서 우위를 점해온 앤트로픽이 기업공개(IPO)를 앞두고 차세대 AI 모델 공개를 준비 중인 것으로 알려졌다. 다리오 아모데이 앤트로픽 CEO가 안전성 확보를 위한 AI 발전 속도 조절론을 제기한 지 불과 일주일 만에 나온 움직임으로, 시장 경쟁 압박이 회사 정체성과 전략까지 흔드는 모양새다.로이터는 19일 소식통 3명을 인용, 앤트로픽이 IPO 이전에 경쟁사의 상승세에 대응하기 위한 신규 AI 모델 출시를 신중히 검토 중이라고 보도했다.현재",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "AI타임스",
+    "title": "구글 '제미나이', 보안 테스트 환경 오류로 기업 3곳 침투 사고 발생",
+    "summary": "구글의 '제미나이'가 사이버 보안 평가 도중 기업 시스템 3곳에 무단 침투한 사실이 확인됐다. 월스트리트저널(WSJ)이 18일(현지시간) 해당 사실을 보도한 직후, 구글은 자율적 침투 발생을 인정했다.다만 이번 사건은 AI 모델의 자체 결함이나 불량 작동이 아닌, 외주 평가업체의 테스트 환경 관리 소홀에서 비롯된 사고라는 점이 드러났다.사고는 지난 5월 AI 보안 평가 전문 스타트업 이레귤러(Irregular)가 진행한 모의 침투 훈련 과정에서 일어났다. 가상 환경 내 격리된 기업 시스템을 공격하도록 설계된 시뮬레이션이었으나, 평가",
+    "label": "ai-security",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "AI타임스",
+    "title": "Z.ai “AI가 AI 실행 인프라 스스로 구축...'재귀적 자기개선'의 시작”",
+    "summary": "AI가 단순히 사람이 지정한 애플리케이션 코드를 작성하는 단계를 넘어, 자신이 구동되는 하드웨어 및 시스템 인프라 최적화 레이어까지 직접 진입하며 개발 과정을 진화시키고 있다.Z.ai(지푸 AI)는 17일(현지시간) 자체 개발한 'GLM'을 활용해 차세대 AI 모델의 추론 인프라를 직접 구축하고 최적화하는 사례를 공개했다.아직 AI가 스스로 후속 모델을 설계하고 학습하는 ‘재귀적 자기개선(RSI)’ 단계에는 도달하지 않았지만, GLM이 자신의 실행 환경을 개선하는 초기 형태가 나타나고 있다고 설명했다.앞서 지난해 10월에는 사이버보",
+    "label": "llm",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "AI타임스",
+    "title": "SK하이닉스, 미국에 첫 낸드 생산거점 구축...\"확정된 바 없다\"",
+    "summary": "SK하이닉스의 손자회사 솔리다임이 미국 첫 낸드플래시 생산거점 구축을 검토 중인 것으로 알려졌으나, SK하이닉스는 확정된 바 없다는 입장을 밝혔다.지난 18일 업계에 따르면 솔리다임은 미국 동부 지역에 낸드 양산라인을 세우기 위해 후보 부지와 세부 조건 등을 들여다보고 있는 것으로 전해졌다.솔리다임은 SK하이닉스가 2021년 말 90억달러(약 12조원)를 들여 인텔 낸드 사업을 인수하면서 출범한 법인이다. 현재 중국 다롄에서 생산시설을 가동 중이며, 미국에는 본사와 연구개발(R&D) 센터를 두고 있다.현재 SK하이닉스가 인디애나주에",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "AI타임스",
+    "title": "'애플 인수설' 프리즘ML, 270억 매개변수 모델 5.9GB로 압축",
+    "summary": "애플의 인수 검토설로 주목받은 AI 스타트업 프리즘ML(PrismML)이 한층 진화한 온디바이스 AI 압축 모델을 선보였다. 270억 매개변수급 대형언어모델(LLM)을 5.9기가바이트(GB) 수준으로 압축해 일반 PC와 노트북, 고성능 스마트폰에서도 원활하게 작동하는 신규 모델을 공개했다.캘리포니아 공과대학(Caltech) 스핀오프 기업인 프리즘ML은 지난 7월 54GB 크기의 모델을 4GB 미만으로 줄여 아이폰 17 프로에서 구동하는 데 성공하며 애플 등 빅테크의 인수 및 협력 검토 대상으로 떠오른 바 있다. 이어 17일(현지시간",
+    "label": "llm",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "AI타임스",
+    "title": "메타, 에이전트 '뮤즈' 맥으로 확대…앱스토어 1위 인기 속 '보안' 부각",
+    "summary": "메타의 개인용 AI 에이전트 ‘뮤즈(Muse)’가 맥(Mac)으로 서비스를 확대하면서 AI가 사용자의 컴퓨터에서 직접 작업을 수행하는 시대가 본격화하고 있다. 또 뮤즈는 모바일 버전이 앱스토어 1위에 오르며 폭발적인 인기를 끌고 있지만, 사용자 데이터 접근에 따른 개인정보 보호와 보안 문제는 넘어야 할 최대 과제로 꼽힌다.메타는 17일(현지시간) 맥용 뮤즈를 공식 출시했다. 모바일과 웹에 이어 맥 데스크톱 환경으로 영역을 넓혀 파일, 메시지, 캘린더, 메모, 이메일 등 PC 내 주요 애플리케이션 및 시스템 파일과 직접 연동된다.이를",
+    "label": "llm",
+    "ambiguous": true,
+    "split": "holdout"
+  },
+  {
+    "source": "AI타임스",
+    "title": "알리바바, 보고 듣고 행동하는 옴니모달 '큐원3.8-옴니-플래시' 공개",
+    "summary": "알리바바가 오디오와 비디오를 이해하는 데 그치지 않고 사용자의 지시에 따라 도구를 호출하고 작업까지 수행할 수 있는 차세대 옴니모달 모델을 공개했다. 알리바바는 18일(현지시간) 단순한 콘텐츠 인식을 넘어 작업 계획과 실행이 가능한 새로운 옴니모달 모델 ‘큐원3.8-옴니-플래시(Qwen3.8-Omni-Flash)’를 공개했다.텍스트와 이미지뿐 아니라 오디오와 비디오를 입력으로 처리하며, 최대 100만 토큰의 컨텍스트를 지원한다. 출력은 텍스트 형태로 제공되지만 함수 호출과 웹 검색, 구조화된 출력, 컨텍스트 캐싱, 배치 호출 등을",
+    "label": "llm",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "AI타임스",
+    "title": "스페이스XAI, ‘그록 보이스 트랜스크라이브 2.0’ 공개...전사 정확도 1위",
+    "summary": "스페이스XAI는 18일(현지시간) 음성을 텍스트로 변환하는 새로운 음성 전사 모델 ‘그록 보이스 트랜스크라이브 2.0(Grok Voice Transcribe 2.0)’을 공개했다.이를 두고 \"현재 사용 가능한 변환 모델 중 가장 정확한 모델 중 하나\"라고 강조했다. 실제 환경에서 수집한 다양한 음성 데이터를 바탕으로 전사 정확도를 크게 높였다는 설명이다.그록 보이스 트랜스크라이브 2.0은 그록 음성 기능에 사용되는 오디오 기반 모델을 바탕으로 개발됐다. 기존 '그록 보이스'는 하루 수만건의 고객지원 통화를 처리하고, 수백만 시간에",
+    "label": "deep-learning",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "AI타임스",
+    "title": "네오클라우드 엔스케일, 엔비디아 지원으로 뉴욕증시 상장 추진",
+    "summary": "영국의 네오클라우드 엔스케일(Nscale)이 미국 뉴욕증권거래소(NYSE) 상장을 위한 기업공개(IPO)를 신청했다. 2024년 가상자산 채굴 인프라 기업에서 분사한 지 약 2년 만에 상장에 나선 것으로, 폭발적으로 늘어나는 AI 컴퓨팅 수요를 겨냥한 대규모 자금 조달에 나섰다.CNBC 등에 따르면, 엔스케일은 18일(현지시간) 미국 증권거래위원회(SEC)에 IPO 신청서를 제출했다.이를 통해 2026년 상반기 매출이 1억4060만달러(약 2000억원), 순손실은 10억2000만달러(약 1조4000억원)라고 밝혔다. 매출은 전년 같",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "AI타임스",
+    "title": "조비, 사람 조종 없이 미국 대륙 횡단…'최초' 완전 자율비행 성공",
+    "summary": "미국 에어택시 스타트업 조비 에비에이션(Joby Aviation)이 사람의 조종 없이 미국 대륙을 동서로 가로지르는 완전 자율비행에 성공했다. 조비는 17일(현지시간) 자율비행 기술을 탑재한 개조형 세스나 카라반 항공기가 캘리포니아 콩코드에서 노스캐롤라이나 아우터뱅크스까지 3199마일(약 5148km)을 비행했다고 발표했다.기내에는 안전을 위한 조종사가 탑승했지만, 비행 과정에서 조종사의 직접적인 제어 입력은 전혀 없었다. 항공기는 활주와 이륙, 항로 비행, 착륙까지 모든 과정을 자율적으로 수행했다.비행은 캘리포니아의 조비 본부와",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "AI타임스",
+    "title": "디즈니, 사상 첫 CTO 선임…'저작권 마찰' 캐릭터닷AI CEO 영입",
+    "summary": "월트 디즈니 컴퍼니가 창사 이래 처음으로 회사 전체를 아우르는 최고 기술책임자(CTO) 직책을 신설하고 AI 중심의 디지털 전환에 속도를 내겠다는 의지를 드러냈다. 특히 자사 캐릭터 IP 무단 사용 문제로 법적 경고장을 보냈던 캐릭터닷AI 출신의 카란딥 아난드를 영입했다는 점이 눈길을 끈다.디즈니는 18일(현지시간) 캐릭터닷AI의 전 CEO인 카란딥 아난드를 수석 부사장 겸 초대 CTO로 임명했다고 발표했다.아난드 신임 CTO는 메타와 마이크로소프트에서 고위 임원을 거쳐 2025년 6월부터 캐릭터닷AI를 이끌어온 베테랑 기술 전문가",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Embrace The Red",
+    "title": "Breaking Claude Code Opus 5 Auto Mode",
+    "summary": "In this post, we explore how a simple website summary request hijacks Claude Code Opus 5 in Auto Mode and achieves code execution with 60-80% attack success rate using a small sample size. This is interesting because a third-party evaluation commissioned by Anthropic showed a 0.00% prompt injection ",
+    "label": "ai-security",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Embrace The Red",
+    "title": "Recovering Encrypted LLM Reasoning Traces",
+    "summary": "A few days ago, a paper named &ldquo;Stealing Reasoning Traces from Proprietary LLM APIs&rdquo; was published. It describes a simple, yet super elegant way to recover encrypted LLM reasoning traces. Naturally, I had to try it. Background AI labs like OpenAI and Anthropic send reasoning traces back a",
+    "label": "ai-security",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Embrace The Red",
+    "title": "LLM Heist: Hijacking LiteLLM for Traffic Interception, Key Theft, and Tool-Call Injection",
+    "summary": "LiteLLM is a popular AI gateway. It provides a unified interface to LLMs and simplifies governance. It also has access to the backend LLM provider keys. All of that makes it a high-value target. Not only for IP and data theft, but also for response modification and tool invocation. This post walks t",
+    "label": "ai-security",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Embrace The Red",
+    "title": "Escaping Linux Sandboxes via PipeWire (CVE-2026-5674)",
+    "summary": "This post walks through a sandbox escape from a Flatpak application via PipeWire. The vulnerability was discovered using my automated research pipeline with Claude Code and Opus 4.6 back in April 2026. It was an exciting find, as this was the first bug I submitted to Red Hat. Claude Code was also ex",
+    "label": "security",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Trail of Bits",
+    "title": "Auditing in the age of (good enough) AI",
+    "summary": "Security firms have published numerous blog posts describing how they pointed their agent harness at a codebase and found dozens of bugs ( we’re one of them ). However, these posts tend to focus on agentic code review, which is just one aspect of how we use AI in our security reviews. We want to giv",
+    "label": "ai-security",
+    "ambiguous": true,
+    "split": "holdout"
+  },
+  {
+    "source": "Trail of Bits",
+    "title": "1Password's AI patching benchmark is misleading",
+    "summary": "1Password’s FLAWED report , published on August 6, 2026, gives defenders a misleading picture of AI patching. Its headline says models produced clean fixes only 26% of the time. That figure includes experiments that deliberately instructed agents to apply the wrong fix, along with experiments in whi",
+    "label": "ai-security",
+    "ambiguous": true,
+    "split": "dev"
+  },
+  {
+    "source": "Trail of Bits",
+    "title": "A “proof” of Fermat’s Last Theorem that fits the margin",
+    "summary": "Fermat famously claimed to have a “truly marvelous proof” of his Last Theorem , but he never wrote it down, insisting the margin of his page was too narrow to contain it. A few centuries later, Anthropic announced a complete formalization of Fermat&rsquo;s Last Theorem using 13 million lines of Lean",
+    "label": "reject",
+    "ambiguous": true,
+    "split": "dev"
+  },
+  {
+    "source": "Trail of Bits",
+    "title": "VMs won't contain cyber-capable agents",
+    "summary": "As part of Patch the Planet , we received preview access to GPT 5.6-Cyber with a simple task: evaluate its cyber capabilities. Recent events inspired me to give it a challenge to work through: escape the VM I’d normally use for sandboxing. The target was a QEMU/KVM VM on my Linux dev machine (Debian",
+    "label": "ai-security",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Trail of Bits",
+    "title": "State divergence enables unauthorized access",
+    "summary": "We found and reported a bug in Provenance Blockchain, a public proof-of-stake chain built on Cosmos SDK , that lets any user grant themselves admin control over marker accounts without holding a single token. Provenance covers a range of financial services, including on-chain tokenized loans, privat",
+    "label": "security",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Trail of Bits",
+    "title": "How Trail of Bits helps verify the integrity of your Signal chats",
+    "summary": "Every Signal chat starts the same way: the client asks the Signal server for the public key associated with your contact’s phone number. But how do you know the server gave you the right key? A compromised server could provide a false public key, allowing the client to encrypt messages to an attacke",
+    "label": "security",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "OWASP GenAI Security Project",
+    "title": "OWASP GenAI Security Project Unveils 2026 Top 10 for LLM Applications, New Agent Control Standard and Sponsors as Community Tops 30,000 Members",
+    "summary": "OWASP GenAI Security Project Releases 2026 Top 10 for LLM Applications, Debuts Agent Control Standard and New Resources for Securing Generative and Agentic AI F5, WitnessAI, Evoke Security and Mondoo Inc. join as new sponsors as community expands AI security solutions guidance and surpasses 30,000 m",
+    "label": "ai-security",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "OWASP GenAI Security Project",
+    "title": "Memory Is a Feature. It Is Also an Attack Surface",
+    "summary": "As co-lead of OWASP ASI06: Memory & Context Poisoning entry as part of OWASP Top 10 for Agentic Applications , I have spent a lot of time thinking about a simple question: what happens when an AI agent does not just process untrusted input, but carries it forward? That is the core issue behind ASI06",
+    "label": "ai-security",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "OWASP GenAI Security Project",
+    "title": "FinBot CTF Is Live: A Hands-On Companion to the OWASP GenAI Security Project",
+    "summary": "FinBot is a hands-on companion to the OWASP GenAI Security Project, offering an interactive Capture-The-Flag environment built around a simulated financial services application. Designed as the 'Juice Shop for the Agentic AI', it lets builders and defenders explore agentic risks in a live, multi-age",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "OWASP GenAI Security Project",
+    "title": "OWASP GenAI Exploit Round-up Report Q1 2026",
+    "summary": "OWASP GenAI Exploit Round-up Report Q1 2026 Coverage period: January 1, 2026 through April 11, 2026 Overview For the last two years the OWASP GenAI Security Project published a list of the major incidents for the last quarter. This is not designed to be an exhaustive report. This report consolidates",
+    "label": "ai-security",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Google Security Blog",
+    "title": "AI threats in the wild: The current state of prompt injections on the web",
+    "summary": "Posted by Thomas Brunner, Yu-Han Liu, Moni Pande At Google, our Threat Intelligence teams are dedicated to staying ahead of real-world adversarial activity, proactively monitoring emerging threats before they can impact users. Right now, Indirect Prompt Injection (IPI) is a top priority for the secu",
+    "label": "ai-security",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Google Security Blog",
+    "title": "Bringing Rust to the Pixel Baseband",
+    "summary": "Posted by Jiacheng Lu, Software Engineer, Google Pixel Team Google is continuously advancing the security of Pixel devices. We have been focusing on hardening the cellular baseband modem against exploitation. Recognizing the risks associated within the complex modem firmware, Pixel 9 shipped with mi",
+    "label": "security",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Google Security Blog",
+    "title": "Protecting Cookies with Device Bound Session Credentials",
+    "summary": "Posted by Ben Ackerman, Chrome team, Daniel Rubery, Chrome team and Guillaume Ehinger, Google Account Security team Following our April 2024 announcement , Device Bound Session Credentials (DBSC) is now entering public availability for Windows users on Chrome 146, and expanding to macOS in an upcomi",
+    "label": "security",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Google Security Blog",
+    "title": "Google Workspace’s continuous approach to mitigating indirect prompt injections",
+    "summary": "Posted by Adam Gavish, Google GenAI Security Team Indirect prompt injection (IPI) is an evolving threat vector targeting users of complex AI applications with multiple data sources, such as Workspace with Gemini. This technique enables the attacker to influence the behavior of an LLM by injecting ma",
+    "label": "ai-security",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Google Security Blog",
+    "title": "VRP 2025 Year in Review",
+    "summary": "Posted by Dirk G ö hmann, Tony Mendez, and the Vulnerability Rewards Program Team 2025 marked a special year in the history of vulnerability rewards and bug bounty programs at Google: our 15th anniversary 🎉🎉🎉! Originally started in 2010 , our vulnerability reward program (VRP) has seen constant a",
+    "label": "security",
+    "ambiguous": true,
+    "split": "dev"
+  },
+  {
+    "source": "The Hacker News",
+    "title": "Can You Prove a New CVE Is Exploitable Before Attackers Do? Learn How in This Webinar",
+    "summary": "A new CVE drops. Your scanner finds it. The severity score looks ugly. But that still does not answer the question that matters: Can it actually be exploited in your environment? Mythos-class AI is compressing the time between disclosure and working exploitation, while many security programs still v",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "The Hacker News",
+    "title": "Identity Visibility in 2026: The Foundation of Identity Security",
+    "summary": "Identity visibility is a starting point for modern identity security, because stolen and misused credentials are among the most frequently reported initial access vectors in breach research, including Verizon's annual Data Breach Investigations Report. This article explains what identity visibility ",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "The Hacker News",
+    "title": "Claude Opus 5 Helped Researchers Take Over OpenAI Staff Accounts via Chained Flaws",
+    "summary": "Three researchers at the security firm Hacktron used Anthropic's Claude Opus 5 to chain two flaws and take over the ChatGPT and Codex accounts of several OpenAI employees, then reach an internal OpenAI code repository. The chain began with a bug in the software that runs OpenAI's public help forum a",
+    "label": "ai-security",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "The Hacker News",
+    "title": "SolarWinds Patches ARM Hard-Coded Key Flaw Enabling Unauthenticated RCE",
+    "summary": "SolarWinds has released security updates to address a high-severity flaw in Access Rights Manager (ARM) that, if successfully exploited, could lead to an unauthenticated remote code execution vulnerability. The vulnerability, tracked as CVE-2026-28326, is rated 8.8 out of 10.0 on the CVSS scoring sy",
+    "label": "security",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "The Hacker News",
+    "title": "Critical Pre-Auth RCE in Orkes Conductor Workflow Platform Exploited in the Wild",
+    "summary": "A critical vulnerability impacting Orkes Conductor is being actively exploited in the wild, according to Fortinet. The vulnerability in question is CVE-2026-58138 (CVSS v3.1 score: 9.8/CVSS v4 score: 9.3), which relates to a case of unauthenticated remote code execution. \"Orkes Conductor 3.21.21 bef",
+    "label": "security",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "The Hacker News",
+    "title": "Google Gemini Broke Into Real Company Systems After Security Test Domain Mix-Up",
+    "summary": "Google's Gemini model has become the latest artificial intelligence (AI) system to access the internet and break into other companies during a cybersecurity evaluation. The development was first reported by The Wall Street Journal. The incidents occurred in May 2026 as part of a test run conducted b",
+    "label": "ai-security",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "The Hacker News",
+    "title": "CrowdSec Says TanStack npm Attack Led to Copy of 170 Private GitHub Repositories",
+    "summary": "An attacker copied about 170 of CrowdSec's private GitHub repositories on May 22 using the account of an employee who had just left, CrowdSec said on September 18. The French security company had kept his GitHub access open. CrowdSec says his laptop was compromised in May's supply chain attack on Ta",
+    "label": "security",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "The Hacker News",
+    "title": "CISA Flags Three Linux Kernel Vulnerabilities Exploited in the Wild",
+    "summary": "The U.S. Cybersecurity and Infrastructure Security Agency (CISA) on Friday added three security flaws impacting the Linux kernel to its Known Exploited Vulnerabilities (KEV) catalog, citing evidence of active exploitation. The vulnerabilities are listed below - CVE-2025-39682 (CVSS score: 9.8) - An ",
+    "label": "security",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "The Hacker News",
+    "title": "Public Exploits Released for Four Linux Kernel Flaws That Enable Local Root",
+    "summary": "A security researcher has released working exploit code for four Linux kernel flaws that each let a local user gain root, the highest level of access on a machine. Kernel maintainers have fixed all four over the past few weeks, so a system running an up-to-date kernel is not affected. But the exploi",
+    "label": "security",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "The Hacker News",
+    "title": "New WordPress Click2Shell Flaw Forces Theme Installs, Can Chain to Code Execution",
+    "summary": "WordPress today released patches to fix a new set of vulnerabilities in its core software, one of which could allow a crafted web link, opened by a logged-in administrator, to install a theme from the official WordPress.org directory without anyone clicking Install. The security firm pwn.ai, whose r",
+    "label": "security",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "The Hacker News",
+    "title": "Transparent Tribe Deploys New Rust Backdoor Using Private GitHub Repositories for C2",
+    "summary": "The Pakistan-aligned threat group tracked as Transparent Tribe (aka APT36 and Earth Karkaddan) has been attributed to a fresh set of cyber attacks targeting government and defense entities in India and Afghanistan. The attacks, per Zscaler ThreatLabz, involve the use of previously undocumented tools",
+    "label": "security",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "The Hacker News",
+    "title": "Microsoft Patches CVSS 10.0 Azure AI Foundry Flaw Enabling Unauthorized Privilege Escalation",
+    "summary": "Microsoft has released fixes for a maximum-severity security flaw in Azure AI Foundry that could be exploited to achieve privilege escalation. No customer action is required. The vulnerability, tracked as CVE-2026-85889, carries a CVSS score of 10.0. \"Missing authentication for critical function in ",
+    "label": "security",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "The Hacker News",
+    "title": "An Abandoned CDN Domain Was Re-Registered. Thousands of Sites Still Call It.",
+    "summary": "In July 2025, someone registered a domain that used to belong to a content delivery network. The CDN had been wound down years earlier, and the domain it served assets from was allowed to expire. What it had not lost were its callers. Thousands of websites, code repositories, and documentation pages",
+    "label": "security",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "The Hacker News",
+    "title": "Plugin4Shell Lets Repository Owners Swap Pinned Plugin Code Across Four AI Coding Agents",
+    "summary": "A flaw in four widely used AI coding agents lets someone who controls a plugin's code repository swap the plugin an agent installs for a malicious one, even when the agent locked that plugin to a specific reviewed version, security firm Air Security said on Thursday. The firm said Anthropic has patc",
+    "label": "ai-security",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "The Hacker News",
+    "title": "WeaselBiscuit Stealer Spreads via 13 npm Packages to Harvest Chrome Extension Storage",
+    "summary": "Cybersecurity researchers have discovered a cluster of 13 npm packages that have been found to deliver a previously undocumented JavaScript stealer codenamed WeaselBiscuit. The new malware family, per OpenSourceMalware, exhibits functional overlaps with two malware strains associated with the Democr",
+    "label": "security",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "BleepingComputer",
+    "title": "BragJack attacks hijack AI browser agents through malicious extensions",
+    "summary": "BragJack, a proof-of-concept attack from Forever Security's Gal Weizman, hijacks the AI assistants in Chrome, Edge, Opera Neon, Perplexity Comet, and Claude in Chrome using one malicious extension. The Prompt Forcing technique earned over $20,000 in bounties and two CVEs. [...]",
+    "label": "ai-security",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "BleepingComputer",
+    "title": "North Korean WaterPlum hackers infected 30,000 devices worldwide",
+    "summary": "A joint law enforcement advisory warns that the North Korean hacking group WaterPlum compromised at least 30,000 devices worldwide from December 2025 through July 2026 and transferred more than $10.7 million in stolen cryptocurrency to North Korea. [...]",
+    "label": "security",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "BleepingComputer",
+    "title": "ShinyHunters hacks Clop leak site, threatens to extort ransomware gang",
+    "summary": "The ShinyHunters extortion gang breached the Clop (aka Cl0p) ransomware operation's data leak site, defacing the Tor site and allegedly stealing server data and the private keys for its onion service. [...]",
+    "label": "security",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "BleepingComputer",
+    "title": "Viral AI actress' hotline face-scans every caller, watches their mood",
+    "summary": "AI actress Tilly Norwood went viral after glitching into Chinese on Piers Morgan Uncensored last night. Her \"Talking Tilly\" video call service face-scans every caller for an 18+ age check, senses callers' moods during calls, and shuts down permanently on September 27. We tried it and read the fine p",
+    "label": "reject",
+    "ambiguous": true,
+    "split": "dev"
+  },
+  {
+    "source": "BleepingComputer",
+    "title": "Gyazo server flaw exploited to steal 23.6 million user records",
+    "summary": "The Gyazo image-sharing platform has confirmed it suffered a data breach after hackers exploited a server vulnerability that allowed them to steal 23.6 million user records. [...]",
+    "label": "security",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "BleepingComputer",
+    "title": "Fake LastPass Authenticator GitHub repos push new Rapuncel infostealer",
+    "summary": "An ongoing malware campaign uses SEO-optimized GitHub repositories to impersonate well-known software firms to push a previously undocumented information stealer called Rapuncel. [...]",
+    "label": "security",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "BleepingComputer",
+    "title": "Secure enterprise sharing with access reviews for Microsoft 365",
+    "summary": "Microsoft 365 makes sharing files easy, but access can remain long after its original purpose has ended, leaving organizations with little visibility into who can still reach sensitive data. tenfold Software explains how centralized access governance and owner-driven reviews can help identify and re",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "BleepingComputer",
+    "title": "Microsoft Teams will let admins block custom file extensions",
+    "summary": "Microsoft Teams will soon let administrators tweak the list of file extensions commonly associated with security threats to meet their company's security requirements. [...]",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "BleepingComputer",
+    "title": "Webinar: Which Google Workspace security controls actually matter?",
+    "summary": "Fast-growing companies face countless recommendations for securing Google Workspace, but not every control provides the same value. This webinar examines real-world breaches to explore which security controls matter most, which may be overrated, and where lean security teams should focus their resou",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "BleepingComputer",
+    "title": "Microsoft fixes bug behind ‘Defender Antivirus is turned off’ alerts",
+    "summary": "Microsoft has resolved a known issue that causes incorrect alerts warning that Defender Antivirus was turned off after installing recent updates. [...]",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "BleepingComputer",
+    "title": "New Check Point flaw lets hackers execute code with root privileges",
+    "summary": "Check Point Software has released security updates to address a critical vulnerability that can let attackers execute code with root privileges on management systems. [...]",
+    "label": "security",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "BleepingComputer",
+    "title": "Microsoft fixes broken copy and paste for Excel 2016 users",
+    "summary": "Microsoft has fixed a known issue that causes copy-and-paste failures for some Excel users after installing the September 2026 KB5002914 security update. [...]",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "SecurityWeek",
+    "title": "TigerByte Cyber Emerges From Stealth With $3 Million in Funding",
+    "summary": "The company has secured over $7 million in contracts with US government agencies, including the US Space Force, the US Navy, and DARPA. The post TigerByte Cyber Emerges From Stealth With $3 Million in Funding appeared first on SecurityWeek .",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "SecurityWeek",
+    "title": "In Other News: Ransomware Developer Sentenced, Plugin4Shell AI Attack, Critical SAP Flaw",
+    "summary": "Noteworthy stories that might have slipped under the radar: Mandiant's 2026 AI risk report, PhantomRaven malware used by bug bounty hunter, WordPress plugin bug exploited. The post In Other News: Ransomware Developer Sentenced, Plugin4Shell AI Attack, Critical SAP Flaw appeared first on SecurityWeek",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "SecurityWeek",
+    "title": "AI-Built Exploit and Sign-In Flaw Opened Path to Internal OpenAI Code",
+    "summary": "Hacktron researchers earned a bug bounty after demonstrating access to OpenAI employee accounts. The post AI-Built Exploit and Sign-In Flaw Opened Path to Internal OpenAI Code appeared first on SecurityWeek .",
+    "label": "ai-security",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "SecurityWeek",
+    "title": "23 Million User Records Compromised in Gyazo Data Breach",
+    "summary": "Gyazo maker Helpfeel said the attacker exploited a vulnerability in its image upload server to gain unauthorized access. The post 23 Million User Records Compromised in Gyazo Data Breach appeared first on SecurityWeek .",
+    "label": "security",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "SecurityWeek",
+    "title": "Microsoft Patches 18 Vulnerabilities in AI, Cloud Products",
+    "summary": "Microsoft fixed vulnerabilities across Azure and AI-branded products, with privilege escalation flaws accounting for the majority. The post Microsoft Patches 18 Vulnerabilities in AI, Cloud Products appeared first on SecurityWeek .",
+    "label": "security",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "SecurityWeek",
+    "title": "NightmareStresser DDoS Service Disrupted in International Operation",
+    "summary": "Active since at least 2022, NightmareStresser was one of the longest-running DDoS-for-hire services in the world. The post NightmareStresser DDoS Service Disrupted in International Operation appeared first on SecurityWeek .",
+    "label": "security",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "SecurityWeek",
+    "title": "Brevo Supply Chain Attack Injects Malware Into 100,000 Websites",
+    "summary": "Hackers used a compromised API key to deploy a Cloudflare worker that injected malicious scripts. The post Brevo Supply Chain Attack Injects Malware Into 100,000 Websites appeared first on SecurityWeek .",
+    "label": "security",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "SecurityWeek",
+    "title": "Critical Orkes Conductor Vulnerability Exploited in Attacks",
+    "summary": "CVE-2026-58138 is an unauthenticated remote code execution vulnerability that attackers can exploit via inline workflow definitions. The post Critical Orkes Conductor Vulnerability Exploited in Attacks appeared first on SecurityWeek .",
+    "label": "security",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "SecurityWeek",
+    "title": "MIND Secures $72 Million for AI-Powered DLP",
+    "summary": "The company will use the funding to accelerate platform development and expand its presence in key enterprise markets. The post MIND Secures $72 Million for AI-Powered DLP appeared first on SecurityWeek .",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "SecurityWeek",
+    "title": "Check Point, Kaspersky, Tanium Patch Product Vulnerabilities",
+    "summary": "Check Point Security Management and Log Servers are affected by a critical vulnerability that can allow remote code execution with root privileges. The post Check Point, Kaspersky, Tanium Patch Product Vulnerabilities appeared first on SecurityWeek .",
+    "label": "security",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "데일리시큐",
+    "title": "[데일리시큐 웨비나] “EDR이 놓친 브라우저가 새로운 공격 표면”…아카마이, ‘Browser EDR’로 제로트러스트 확장",
+    "summary": "기업의 핵심 업무가 네트워크와 로컬 애플리케이션에서 웹·SaaS·생성형 AI를 사용하는 브라우저 중심으로 이동하면서 기존 EDR(Endpoint Detection and Response)이 충분히 관찰하기 어려운 새로운 보안 사각지대가 커지고 있다.데일리시큐는 9월 17일 아카마이 코리아와 함께 ‘EDR이 보지 못하는 브라우저 위협, 어떻게 막을 것인가’를 주제로 온라인 웨비나를 개최했다. 이날 신기욱 아카마이 코리아 상무는 아카마이 워크포스 프로텍터(Akamai Workforce Protector, LayerX)를 중심으로 브라우",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "데일리시큐",
+    "title": "AI가 취약점 공격 개발 가속…오픈AI 직원 챗GPT·코덱스 계정까지 탈취",
+    "summary": "AI를 이용해 이미지 처리 라이브러리의 메모리 취약점을 실제 원격코드실행 공격으로 발전시키고, 이를 오픈AI의 인증 시스템 문제와 연계해 직원의 챗GPT와 코덱스 계정까지 탈취한 보안 연구 결과가 공개됐다.보안업체 핵트론(Hacktron) 연구진은 앤트로픽 클로드 오퍼스 5를 활용해 오픈AI 커뮤니티 포럼에서 코드 실행 권한을 확보한 뒤 오픈AI 직원 계정과 내부 코드 저장소까지 접근 가능한 공격경로를 확인했다고 밝혔다. 연구진은 실제 악성 공격이 아닌 보안 연구 과정에서 문제를 발견해 오픈AI와 디스코스에 신고했다.앞서 공개된 자",
+    "label": "ai-security",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "데일리시큐",
+    "title": "‘플러그인4셸’…AI 코딩 에이전트 플러그인 검증 허점에 제로클릭 원격코드실행 위험",
+    "summary": "주요 AI 코딩 에이전트의 플러그인 설치·업데이트 과정에서 검증된 코드와 실제 실행되는 코드가 달라질 수 있는 공급망 취약점이 공개됐다.AI 보안업체 에어 시큐리티(AIR Security)는 앤스로픽의 클로드 코드(Claude Code), 오픈AI 코덱스(Codex), 깃허브 코파일럿(GitHub Copilot), 구글 제미나이 CLI(Gemini CLI)에 영향을 주는 취약점을 발견하고 이를 ‘플러그인4셸(Plugin4Shell)’이라고 명명했다.“검증한 버전이라고 믿었지만 다른 코드 실행 가능”문제의 핵심은 플러그인의 무결성을",
+    "label": "ai-security",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "데일리시큐",
+    "title": "체크포인트 보안관리 서버 치명적 RCE…인증 없이 루트 권한 코드 실행 가능",
+    "summary": "기업의 방화벽 정책과 관리자 접근, 보안로그를 중앙에서 관리하는 체크포인트 보안관리 서버에서 인증 없이 원격코드실행(RCE)이 가능한 치명적 취약점이 공개돼 신속한 패치가 요구된다.체크포인트는 9월 16일 보안관리 서버(Security Management Server)와 로그 서버(Log Server)에 영향을 미치는 CVE-2026-91843을 공개하고 긴급 보안 업데이트를 권고했다. 취약점의 CVSS 점수는 9.8로 평가됐다.CVE-2026-91843은 사용자 인증이 완료되기 전 로그인 처리 과정에서 발생하는 스택 기반 버퍼 오",
+    "label": "security",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "데일리시큐",
+    "title": "[이혁중 CISO 칼럼] IoT/OT 보안2-이미 현실 세계를 흔들고 있는 사이버 공격",
+    "summary": "글로벌 사고 사례와 산업별 대응 전략지난 회에서는 OT/IoT 보안이 왜 사이버보안의 새로운 전선이 되었는지 살펴보았다. IoT는 수많은 기기와 서비스를 연결하고, OT는 공장과 도시, 발전소와 교통망 같은 물리적 인프라를 운영한다. 의료장비, 로봇, 자동차, 드론, 스마트빌딩, 스마트시티까지 연결 대상은 계속 확대되고 있다.이제 보안은 데이터를 보호하는 것을 넘어 생산라인, 도시 기능, 교통, 에너지, 병원, 로봇, 생명 안전을 지키는 문제로 확장되고 있다. 이번 회에서는 실제 사고 사례와 대응 방안, 그리고 산업별 보안 과제를",
+    "label": "security",
+    "ambiguous": true,
+    "split": "holdout"
+  },
+  {
+    "source": "데일리시큐",
+    "title": "[정보보안 연재소설-로그아웃되지 않는 밤] 제39화 '신선한 재고'",
+    "summary": "데일리시큐는 7월부터 장삼봉 작가(필명)의 정보보안 소설《로그아웃되지 않는 밤》을 매주 4편씩 연재한다. 화려한 디지털 서비스 뒤에서 보이지 않는 위협과 맞서는 보안 담당자들의 현실과 고뇌, 성장을 생생하게 담았다. 수많은 오탐 속에 숨은 단 하나의 진짜 공격을 추적하는 이들의 잠들지 못하는 밤이 시작된다. -다크웹 장터- 도윤에게는 한 달에 한 번, 마음이 가장 무거워지는 날이 있었다. 다크웹을 들여다보는 날이었다.인터넷에는 보통 사람이 닿지 못하는 뒷골목이 있었다. 검색되지 않고, 흔적이 남지 않는 곳. 그곳에서는 훔친 것들이",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "데일리시큐",
+    "title": "엔피코어, 인도네시아 ‘인도섹 2026’ 참가…동남아 보안시장 공략",
+    "summary": "사이버보안 전문기업 엔피코어(대표 한승철)는 9월 15일부터 16일까지 인도네시아 자카르타에서 열린 ‘인도섹 2026(IndoSEC 2026)’에 참가해 주요 사이버보안 솔루션을 선보였다고 밝혔다.인도섹은 인도네시아 정부기관과 기업 정보보안 책임자, 보안 전문가들이 참여하는 사이버보안 행사다. 엔피코어는 이번 행사에서 ‘좀비제로 인스펙터 X’와 ‘랜섬제로’를 소개하고 지능형 사이버공격과 랜섬웨어 대응 기술을 시연했다.행사 기간 엔피코어 부스에는 100명 이상의 현지 기업 및 보안업계 관계자가 방문했다. 데이터 침해와 랜섬웨어 대응,",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "데일리시큐",
+    "title": "선박 사이버공격 대응 법제화 추진…탐지·대응·복구 체계 구축",
+    "summary": "선박의 항해·통신·화물관리 시스템을 겨냥한 사이버공격에 대응하기 위한 법적 안전관리 체계 구축이 추진된다.국회 농림축산식품해양수산위원회 소속 송옥주 의원은 9월 18일 선박에 대한 사이버공격을 예방하고 사고 발생 시 신속하게 대응·복구할 수 있도록 하는 ‘해사안전기본법’ 개정안을 대표 발의했다.최근 선박은 전자해도(ENC), 위성통신, 항해장비, 화물관리 시스템 등 디지털 기술 활용이 확대되면서 외부 네트워크와 연결되는 영역도 늘고 있다. 이에 따라 해킹이나 랜섬웨어로 주요 시스템이 마비될 경우 정보유출을 넘어 항로 이탈이나 충돌,",
+    "label": "reject",
+    "ambiguous": true,
+    "split": "dev"
+  },
+  {
+    "source": "데일리시큐",
+    "title": "국정원 ‘AI 방어팀’ 국제 사이버훈련 투입…탐지부터 복구까지 자동 대응",
+    "summary": "사이버공격 탐지와 분석부터 시스템 복구, 대응전략 수립까지 AI가 수행하는 자동방어 시스템이 국제 사이버훈련에 투입됐다.국가정보원은 9월 16일부터 18일까지 진행되는 국제 사이버훈련 ‘APEX 2026’에서 사람의 직접 개입 없이 실시간 사이버공격에 대응하는 AI 방어팀을 공개했다. AI 방어팀은 NATO와 인도태평양 지역 23개국 참가자들로 구성된 8개 방어팀과 같은 조건에서 훈련에 참여했다.‘프로젝트 팔랑크스(Project Phalanx)’로 명명된 AI 방어팀은 국정원 국가사이버안보센터(NCSC)를 중심으로 국방부, 국가보안",
+    "label": "reject",
+    "ambiguous": true,
+    "split": "holdout"
+  },
+  {
+    "source": "데일리시큐",
+    "title": "금융권 겨냥 ‘AI 에이전트 공격’ 실제 탐지…API 보안 경고등",
+    "summary": "금융권을 대상으로 AI 에이전트를 활용한 사이버 공격 시도가 실제 탐지됐다. 공격 자동화가 취약점 탐색을 넘어 금융 시스템과 데이터를 연결하는 API 영역으로 향하면서 금융회사의 API 보안 관리가 새로운 과제로 떠올랐다.금융보안원은 17일 금융회사 보안담당자 160여 명이 참석한 ‘금융 AI 보안 위협 대응 세미나’에서 금융권을 겨냥한 AI 에이전트 기반 공격 시도를 탐지했다고 밝혔다. 금융보안원이 탐지한 사례 가운데 공격 주체가 AI 에이전트 기반임을 확인한 것은 이번이 처음이다.특히 금융보안원은 AI 에이전트가 다양한 시스템과",
+    "label": "ai-security",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "데일리시큐",
+    "title": "지니언스, ‘2026 한국IR대상’ IR우수기업 선정…2년 연속 수상",
+    "summary": "사이버보안 전문기업 지니언스(대표 이동범)가 18일 서울 여의도 한국거래소에서 열린 ‘2026 한국IR대상’에서 코스닥 시장 부문 IR우수기업으로 선정됐다고 밝혔다.한국IR대상은 적극적이고 효율적인 IR 활동을 통해 기업·주주·투자자의 공동이익과 자본시장 발전에 기여한 기업과 IR 담당자를 선정하는 행사다. 지니언스는 지난해에 이어 2년 연속 IR우수기업으로 이름을 올렸다.지니언스는 ‘신뢰성·적극성·전문성’을 IR 활동의 핵심 가치로 두고 투자자 의견 반영, 경영진과 투자자 간 소통 강화, 투자자별 맞춤형 설명회 등을 운영해왔다.최",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "데일리시큐",
+    "title": "암호자산 진단부터 PQC 적용까지…아이씨티케이·지란지교시큐리티 맞손",
+    "summary": "아이씨티케이(ICTK, 대표 이정원)가 지란지교시큐리티(대표 조원희)와 양자내성암호(PQC) 전환 및 암호자산 진단 사업을 공동 추진한다.아이씨티케이는 지란지교시큐리티와 PQC 전환 및 ‘Crypto Discovery’ 사업 협력을 위한 업무협약(MOU)을 체결했다고 18일 밝혔다. 양사는 이번 협력을 ‘큐브릿지(Q-BRIDGE)’ 프로젝트로 명명하고, 기업·기관의 암호자산 식별과 양자취약성 분석부터 PQC 적용, 현장 실증까지 연결하는 통합 전환 사업을 추진할 계획이다.Q-BRIDGE는 기업과 기관이 현재 사용 중인 암호기술과 관",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "데일리시큐",
+    "title": "KISA, WEF·싱가포르 CSA와 AI 시대 사이버보안 협력 강화",
+    "summary": "한국인터넷진흥원(KISA, 원장 이상중)은 9월 17일 세계경제포럼(WEF) 사이버보안센터와 싱가포르 사이버보안청(CSA) 대표단을 서울청사에서 만나 인공지능(AI) 시대 글로벌 사이버보안 협력 확대 방안을 논의했다고 18일 밝혔다.KISA는 세계경제포럼 사이버보안센터 약샤이 조시(Akshay Joshi) 총괄 등과 사이버보안 인재 양성, AI 기반 사이버 위협 대응, 사이버범죄 대응, 침해사고의 경제적 영향 공동 연구 등을 논의했다.특히 K-Shield와 차세대 보안리더 양성 프로그램(BoB) 등 국내 실전형 보안 교육 프로그램과",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "데일리시큐",
+    "title": "[정보보안 연재소설-로그아웃되지 않는 밤] 제38화 'D-day 디도스'",
+    "summary": "데일리시큐는 7월부터 장삼봉 작가(필명)의 정보보안 소설《로그아웃되지 않는 밤》을 매주 4편씩 연재한다. 화려한 디지털 서비스 뒤에서 보이지 않는 위협과 맞서는 보안 담당자들의 현실과 고뇌, 성장을 생생하게 담았다. 수많은 오탐 속에 숨은 단 하나의 진짜 공격을 추적하는 이들의 잠들지 못하는 밤이 시작된다. -연막-외부 방어 업체가 1차 그물을 깔자, 들이치던 양은 한 풀 꺾였다. 그러나 도윤은 안심하지 않았다. 공격이 양으로 안 되면 모양을 바꾼다는 걸, 7년 동안 너무 많이 봤다. 도윤은 막힌 트래픽이 어디로 새는지를 계속 따라",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "데일리시큐",
+    "title": "AI스페라, MS 파운드리 에이전트 적용…AITEM 보안 운영 자동화 강화",
+    "summary": "사이버 위협 인텔리전스 전문기업 AI스페라(대표 강병탁)는 AI 기반 위협 노출 관리 플랫폼 ‘AITEM(AI Threat Exposure Management)’에 마이크로소프트 파운드리(Microsoft Foundry) 기반 AI 에이전트 기술을 적용해 보안 운영 자동화 기능을 강화했다고 밝혔다.AITEM은 기업의 외부 노출 자산과 취약점, 위협 인텔리전스를 지속적으로 식별·분석하고 대응 우선순위를 지원하는 CTEM(Continuous Threat Exposure Management) 기반 플랫폼이다.이번 고도화를 통해 AITEM",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Unit 42",
+    "title": "A Vault with a Heap-View: The Uncomfortable Space Between AgentCore Harness and Identity",
+    "summary": "Analysis of how default configurations in AWS AgentCore Harness allow prompt injection to exfiltrate credentials, and key steps to secure your agents. The post A Vault with a Heap-View: The Uncomfortable Space Between AgentCore Harness and Identity appeared first on Unit 42 .",
+    "label": "ai-security",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Unit 42",
+    "title": "Inside the Modern SOC: Defending the Cross-Environment Pivot",
+    "summary": "Cross-environment attacks demand a new approach to security operations. Learn how Unit 42 Managed XSIAM helps SOC teams investigate complete attack paths. The post Inside the Modern SOC: Defending the Cross-Environment Pivot appeared first on Unit 42 .",
+    "label": "security",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Unit 42",
+    "title": "Atomic macOS (AMOS) Stealer Activity",
+    "summary": "Modern macOS malware uses deceptive setup guides to steal credentials and sensitive user data. Learn how to identify and block these threats. The post Atomic macOS (AMOS) Stealer Activity appeared first on Unit 42 .",
+    "label": "security",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Unit 42",
+    "title": "Unmasking Cloud Identities: From Behavioral Clustering to Automated Detection",
+    "summary": "We designed a behavioral clustering model to map cloud identity roles from audit logs, enabling continuous threat detection using standard SQL queries. The post Unmasking Cloud Identities: From Behavioral Clustering to Automated Detection appeared first on Unit 42 .",
+    "label": "security",
+    "ambiguous": true,
+    "split": "dev"
+  },
+  {
+    "source": "Unit 42",
+    "title": "The Machine With Many Faces: Post-Exploitation Identity Misuse in SPIFFE/SPIRE",
+    "summary": "Learn how root access on a compromised K8s node allows attackers to utilize SPIFFE/SPIRE metadata to spoof and harvest co-located workload identities. The post The Machine With Many Faces: Post-Exploitation Identity Misuse in SPIFFE/SPIRE appeared first on Unit 42 .",
+    "label": "security",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Murat Demirbas (Metadata)",
+    "title": "Academic Doomerism",
+    "summary": "AI doomerism is everywhere these days. Every field, and recently humanity as a whole, has had its \"we're finished\" post. In contrast to the run-of-the-mill hot take, Jason Potts has written an economics paper on why academia is doomed . So let's dive in. What does a university sell? Potts says a uni",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Murat Demirbas (Metadata)",
+    "title": "Jetpack: Consensus Made Generally Fast (OSDI '26)",
+    "summary": "Aleksey and I are back to reading papers live. This paper, Jetpack(OSDI '26), attempts building a universal 1-RTT fast-path framework that bolts onto existing leader-based consensus protocols with minimal modification. Why would we want this? Classic consensus protocols like Raft, Paxos, or Zab requ",
+    "label": "cs-fundamentals",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Murat Demirbas (Metadata)",
+    "title": "Metastability as a failed conditional discharge of rely-guarantee composition",
+    "summary": "Last week I wrote about modular verification of systems through open TLA+ specs and rely-guarantee discharge. In this post, I apply the same approach to study the metastability mechanics of a retry storm. Through this modeling I show that when the system is metastable, it is due to some trigger/shoc",
+    "label": "cs-fundamentals",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Murat Demirbas (Metadata)",
+    "title": "The Safest Job from AI may be Writing",
+    "summary": "Today, tech folk are scrambling to change their workflows to meet newly inflated 5X productivity quotas, while getting pummeled under the cognitive debt of agent-generated code. With every new model release, the gap is widening and humans are becoming more of a bottleneck in the loop, approaching cl",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Murat Demirbas (Metadata)",
+    "title": "Composition and Modular Verification of TLA+ specs",
+    "summary": "Preamble. This post came slowly, simmering over months really . So there is some stream of consciousness in here, and a lot of deliberating in public. The post is me learning modular verification and talking myself into it at the same time. Even pep-talking myself, because this is genuinely hard, an",
+    "label": "cs-fundamentals",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Murat Demirbas (Metadata)",
+    "title": "Thoughts on LLMs",
+    "summary": "I am a distributed systems researcher. I mostly read and write about distributed systems and lightweight formal methods. But as my blog definition says, the blog is about \"distributed systems broadly defined and other curiosities\". The last two years, LLMs were unavoidably the biggest part of those ",
+    "label": "reject",
+    "ambiguous": true,
+    "split": "holdout"
+  },
+  {
+    "source": "Murat Demirbas (Metadata)",
+    "title": "Specula: Scaling formal specifications for autonomous model checking of system code",
+    "summary": "Specula is an agentic system that automates the process of software bug finding through authoring and model-checking a spec for the code. It derives TLA+ specifications automatically from the code, checks code-spec conformance through trace validation, model checks the spec to find concurrency bugs,",
+    "label": "cs-fundamentals",
+    "ambiguous": true,
+    "split": "holdout"
+  },
+  {
+    "source": "Murat Demirbas (Metadata)",
+    "title": "Towards Designing an Execution Control System with Metastability Resilience",
+    "summary": "This week, I presented this paper at ICCCN'26. This is joint work with Aleksey Charapko (University of New Hampshire) and my MongoDB colleagues Matt Broadstone, Daniel Gomez Ferro, and Akshat Vig. The paper investigates how to build a metastability tolerant execution control system (ECS) for a datab",
+    "label": "cs-fundamentals",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Murat Demirbas (Metadata)",
+    "title": "Aurora DSQL: Scalable, Multi-Region OLTP",
+    "summary": "The Aurora DSQL paper finally dropped . Reading it yesterday was an interesting experience, because I spent two years (2022-23) working with the AWS team that designed and built Aurora DSQL. Since I have been very familiar with the architecture, the paper's overview description of the system didn't ",
+    "label": "cs-fundamentals",
+    "ambiguous": true,
+    "split": "holdout"
+  },
+  {
+    "source": "Murat Demirbas (Metadata)",
+    "title": "Characterizing Metastable Faults and Failures",
+    "summary": "Metastability has been studied in previous work as a self-sustaining degradation in goodput that persists even after the trigger is gone. The degraded state loiters on entirely due to the system's own internal feedback loops (retries, queues), and there is no simple reset button to press in distribu",
+    "label": "cs-fundamentals",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Eli Bendersky",
+    "title": "Notes on discrete-time Fourier series and transform",
+    "summary": "The following are my notes on discrete-time Fourier series (DTFS), as well as the discrete-time Fourier transform (DTFT). These topics serve as an important theoretical underpinning to the digital processing of signals by computers using the DFT (which will be covered in a future post). For discrete",
+    "label": "cs-fundamentals",
+    "ambiguous": true,
+    "split": "holdout"
+  },
+  {
+    "source": "Eli Bendersky",
+    "title": "How big are factorials?",
+    "summary": "The other day, I found myself wondering how big 52! (52 factorial) is, and that led me to ponder how these could be estimated without a calculator or a computer. It turns out there’s some fairly interesting math behind being able to estimate the size (number of digits) of …",
+    "label": "cs-fundamentals",
+    "ambiguous": true,
+    "split": "dev"
+  },
+  {
+    "source": "Eli Bendersky",
+    "title": "Concurrent Servers: Part 8 - Go",
+    "summary": "This is part 8 in a series of posts on writing concurrent network servers. In this part, we'll switch to Go and see how it tackles the challenges described earlier in the series. All posts in the series: Part 1 - Introduction Part 2 - Threads Part 3 - Event-driven Part 4 - libuv …",
+    "label": "cs-fundamentals",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Eli Bendersky",
+    "title": "Concurrent Servers: Part 7 - Rust",
+    "summary": "This is part 7 in a series of posts on writing concurrent network servers. In this part, we discuss how the challenges described in earlier parts are tackled in the Rust programming language. All posts in the series: Part 1 - Introduction Part 2 - Threads Part 3 - Event-driven Part 4 - libuv …",
+    "label": "cs-fundamentals",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Eli Bendersky",
+    "title": "Relative velocity and closing speed",
+    "summary": "In Physics simulations or game engines it’s sometimes useful to determine the speed with which two objects are approaching each other. This post will discuss the concept of closing speed , which is the normal component of the relative velocity of two objects. Relative velocity and its components Sup",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "The Old New Thing",
+    "title": "std::call_once vs. std::async",
+    "summary": "Simple vs complex machinery. The post <CODE>std::call_once</CODE> vs. <CODE>std::async</CODE> appeared first on The Old New Thing .",
+    "label": "cs-fundamentals",
+    "ambiguous": true,
+    "split": "holdout"
+  },
+  {
+    "source": "The Old New Thing",
+    "title": "Magic statics vs. std::call_once",
+    "summary": "They sort of do the same thing, but differently. The post Magic statics vs. <CODE>std::call_once</CODE> appeared first on The Old New Thing .",
+    "label": "cs-fundamentals",
+    "ambiguous": true,
+    "split": "dev"
+  },
+  {
+    "source": "The Old New Thing",
+    "title": "Why do Microsoft job levels start in the high 50’s instead of starting at a sane number like 1?",
+    "summary": "It used to start at 1, but that was the old system. The post Why do Microsoft job levels start in the high 50’s instead of starting at a sane number like 1? appeared first on The Old New Thing .",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "The Old New Thing",
+    "title": "Why didn’t Read­Directory­ChangesW provide a way to correlate the two sides of a rename operation?",
+    "summary": "Perhaps it wasn't necessary, or perhaps it didn't occur to them that this a problem. The post Why didn’t <CODE>Read&shy;Directory&shy;ChangesW</CODE> provide a way to correlate the two sides of a rename operation? appeared first on The Old New Thing .",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "The Old New Thing",
+    "title": "How can I remove the Close button from my window caption?",
+    "summary": "Not through normal means. The post How can I remove the Close button from my window caption? appeared first on The Old New Thing .",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "The Old New Thing",
+    "title": "Why is the x86 undefined instruction called ud2? Why 2?",
+    "summary": "It came after ud0 and ud1 . The post Why is the x86 undefined instruction called <CODE>ud2</CODE>? Why 2? appeared first on The Old New Thing .",
+    "label": "cs-fundamentals",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "The Old New Thing",
+    "title": "What algorithm did Windows XP use to choose your initial user picture?",
+    "summary": "It's random, really. The post What algorithm did Windows XP use to choose your initial user picture? appeared first on The Old New Thing .",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "The Old New Thing",
+    "title": "A sample use of the winstart.bat file in Windows 95",
+    "summary": "For a driver that needs high resolution mode only in Windows. The post A sample use of the <CODE>winstart.bat</CODE> file in Windows 95 appeared first on The Old New Thing .",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "The Old New Thing",
+    "title": "Why don’t we allow stacks to be sparse, instead of forcing them to be contiguous?",
+    "summary": "Imagining how to report a memory allocation failure for a sparse page. The post Why don’t we allow stacks to be sparse, instead of forcing them to be contiguous? appeared first on The Old New Thing .",
+    "label": "cs-fundamentals",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "The Old New Thing",
+    "title": "What happens if you change a window class’s GCL_CB­WND­EXTRA?",
+    "summary": "You're changing the value for future windows. The post What happens if you change a window class’s <CODE>GCL_<WBR>CB&shy;WND&shy;EXTRA</CODE>? appeared first on The Old New Thing .",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Daniel Lemire",
+    "title": "How did Apple Silicon get 50% faster in three years?",
+    "summary": "Recently, I looked at how AMD made its chips 50% faster within a span of two years, in How did AMD Ryzen get 50% faster in two years? Many people asked me to cover Apple processors. So let us go. Consider the base Apple Silicon chips: M2 (2022), M3 (2023), M4 (2024) and M5 (2025). … Continue reading",
+    "label": "cs-fundamentals",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Daniel Lemire",
+    "title": "Faster JSON parsing with SVE2 on ARM processors",
+    "summary": "ARM processors, like those in your phone, have instructions capable of processing several elements at once (SIMD). These instructions are called NEON. But many newer processors have a different SIMD extension called SVE. The latest ARM processors have SVE2. Unfortunately, Apple has not yet adopted S",
+    "label": "cs-fundamentals",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Daniel Lemire",
+    "title": "How did AMD Ryzen get 50% faster in two years?",
+    "summary": "People still tell me that CPUs are boring. That nothing much happens anymore. Let us look at AMD Ryzen 7 processors from 2022 to 2024: the 5800X3D (Zen 3), the 7800X3D (Zen 4) and the 9800X3D (Zen 5). They are comparable 8-core chips with 3D V-Cache. I have written about them before, in How stagnant",
+    "label": "cs-fundamentals",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Daniel Lemire",
+    "title": "How fast is C++23’s std::flat_map?",
+    "summary": "C++23 added a new type to the standard library: std::flat_map. There is also a std::flat_set and other variants, but let me focus on std::flat_map. A flat map is a sorted vector of keys next to a vector of values. A query is a binary search over the sorted keys. You need a recent standard library: …",
+    "label": "cs-fundamentals",
+    "ambiguous": true,
+    "split": "dev"
+  },
+  {
+    "source": "Daniel Lemire",
+    "title": "Subnormal floating-point numbers are expensive… on Intel processors",
+    "summary": "We represent floating-point numbers using the IEEE standard. For very small numbers, the standard uses special subnormal numbers. Unfortunately, they have a reputation of making operations slow. Thus video game programmers and machine learning specialists sometimes avoid computing with subnormal num",
+    "label": "cs-fundamentals",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Daniel Lemire",
+    "title": "The four-colour theorem was only the start",
+    "summary": "Mathematicians are unhappy about OpenAI. Several influential mathematicians wrote an open letter. The gist of their argument is that they form a community that trains young people. When AI started producing breakthroughs on hard mathematical problems, I asked what a very smart 17-year-old would feel",
+    "label": "cs-fundamentals",
+    "ambiguous": true,
+    "split": "dev"
+  },
+  {
+    "source": "Daniel Lemire",
+    "title": "Fear Is Not an Argument",
+    "summary": "We are told that AI entities much like ChatGPT might soon kill us all. The statement is vague and unfalsifiable. It might be true, it might be false. People with credentials (e.g., Turing Award recipient Yoshua Bengio) believe it. Many still remember the Year-2000 bug. Our computers used two-digit c",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Daniel Lemire",
+    "title": "A quick overview of atomics in C",
+    "summary": "If you write in C, by default, you use a single thread. Extra cores do not help until you create more threads. However, if you include the header <threads.h>, you can pass a function to thrd_create, and wait for it with thrd_join. #include <threads.h> #include <stdio.h> int worker(void *arg) { print",
+    "label": "cs-fundamentals",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Daniel Lemire",
+    "title": "AI programming: a layered model",
+    "summary": "In the late 1960s and 1970s, people like David Parnas faced a problem. A decade earlier there were almost no programmers. Suddenly there were hordes of inexperienced ones. What could have been a golden era was turning into a mess: far more software, much of it falling apart. It sent Edsger Dijkstra ",
+    "label": "reject",
+    "ambiguous": true,
+    "split": "dev"
+  },
+  {
+    "source": "Daniel Lemire",
+    "title": "Python sets and dictionaries can have quadratic-time performance",
+    "summary": "In Python, the dict data structure is the conventional key-value structure. E.g., you might store a list of names as keys and have their phone numbers as values. Valentin Ignatev wrote this amusing post on X: It is indeed widely believed that, in the strict sense, the dict data structure and its com",
+    "label": "cs-fundamentals",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "DuckDB Blog",
+    "title": "Persistent Databases in the Browser with DuckDB-Wasm and OPFS",
+    "summary": "DuckDB-Wasm can open a persistent database file in the browser's Origin Private File System (OPFS). This post shows how, and when data reaches disk.",
+    "label": "data",
+    "ambiguous": true,
+    "split": "holdout"
+  },
+  {
+    "source": "DuckDB Blog",
+    "title": "DuckDB Skills for Claude Code",
+    "summary": "The duckdb-skills plugin gives Claude Code a growing number of skills that use the DuckDB CLI to read data files, run queries, convert formats, explore object storage, work with spatial data, search the documentation and recall earlier sessions.",
+    "label": "reject",
+    "ambiguous": true,
+    "split": "holdout"
+  },
+  {
+    "source": "DuckDB Blog",
+    "title": "Try DuckDB v2.0-alpha",
+    "summary": "DuckDB's development team in Amsterdam has started getting DuckDB v2.0 ready for release in October. If you like shiny new things, try out the alpha releases now and report anything that might not be working as expected!",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "DuckDB Blog",
+    "title": "DuckLabs to Join AWS, Projects to Remain Open Source",
+    "summary": "DuckLabs will join Amazon Web Services (AWS), which is expected to be effective in early September. The projects will remain open-source under the MIT license.",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "DuckDB Blog",
+    "title": "How DuckDB Runs Recursive CTEs Faster",
+    "summary": "DuckDB's recursive CTE engine now treats recursion as one long-lived computation: it retains eligible epoch-invariant state, chooses execution modes from exact frontier cardinalities and physical work, probes keyed state directly and gives `USING KEY ... UNION` changed-key semantics.",
+    "label": "cs-fundamentals",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "DuckDB Blog",
+    "title": "DuckDB Table Functions in Java",
+    "summary": "The DuckDB Java client can register table functions written in pure Java, exposing any Java-accessible data source as a SQL table. That turns DuckDB into a single-node query engine for heterogeneous joins across remote systems and local files, with no export step.",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "DuckDB Blog",
+    "title": "Chunked Query Results in the DuckDB Java Driver",
+    "summary": "The DuckDB Java driver can now return query results as a lazily fetched sequence of columnar data chunks, avoiding JDBC's row-at-a-time ResultSet and its per-value overhead.",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "DuckDB Blog",
+    "title": "DuckDB v2.0: Your Database Deserves a Better Parser",
+    "summary": "DuckDB v2.0 replaces its PostgreSQL-derived SQL parser with a PEG-based parser that is easier to evolve and can be extended at runtime.",
+    "label": "cs-fundamentals",
+    "ambiguous": true,
+    "split": "dev"
+  },
+  {
+    "source": "DuckDB Blog",
+    "title": "Reconciling JSON in DuckDB, One Patch at a Time",
+    "summary": "DuckDB v2.0 will ship JSON functions that allow you to easily apply JSON patches.",
+    "label": "data",
+    "ambiguous": true,
+    "split": "dev"
+  },
+  {
+    "source": "DuckDB Blog",
+    "title": "A Preview of DuckDB v2.0",
+    "summary": "DuckDB v2.0 is coming this fall. In this post, we preview its headline features: DuckDB as a server, triggers, the VARIANT type, asynchronous I/O, a new SQL parser, a new storage format, and much more.",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Databricks Blog",
+    "title": "RADAR: Catch gray failures with anomaly detection",
+    "summary": "Some of the most damaging outages are the ones your monitoring never flags: a slice...",
+    "label": "data",
+    "ambiguous": true,
+    "split": "holdout"
+  },
+  {
+    "source": "Databricks Blog",
+    "title": "Enabling secure, productive work on personal devices",
+    "summary": "At Databricks IT, our vision is to empower people to work from anywhere without putting...",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Databricks Blog",
+    "title": "Database for AI Agents: 5 Evaluation Criteria",
+    "summary": "The five criteria for evaluating a database for AI agents are branch isolation, serverless...",
+    "label": "reject",
+    "ambiguous": true,
+    "split": "dev"
+  },
+  {
+    "source": "Databricks Blog",
+    "title": "The Web Search Your Agent Inherited Isn't Good Enough",
+    "summary": "An agent that needs the outside worldAn engineer at a software company is building...",
+    "label": "llm",
+    "ambiguous": true,
+    "split": "holdout"
+  },
+  {
+    "source": "Databricks Blog",
+    "title": "What is AIOps?",
+    "summary": "Artificial Intelligence for IT Operations (AIOps) applies AI and machine learning to IT operations to detect anomalies...",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Databricks Blog",
+    "title": "Modernizing the Trade Lifecycle With Governed Data and AI",
+    "summary": "Capital-markets firms are modernizing the trade lifecycle under pressure from every direction: growing data volumes...",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Databricks Blog",
+    "title": "\"Regex for Rows\": Simplifying Pattern Detection in SQL with MATCH_RECOGNIZE",
+    "summary": "Imagine you work in cybersecurity and you have a table that tracks login attempts...",
+    "label": "data",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Databricks Blog",
+    "title": "How energy teams turn theft detection into governed action with Genie and AI business processes",
+    "summary": "Energy theft is the deliberate use of gas or electricity without paying for it, typically...",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Databricks Blog",
+    "title": "How Databricks’ marketers use data 3x more with Genie, an AI analytics assistant",
+    "summary": "Most marketing teams aspire to be data-driven. In practice, getting a trusted answer,...",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Databricks Blog",
+    "title": "Managed Postgres: What Lakebase Actually Takes Off Your Plate",
+    "summary": "Every Postgres vendor calls itself \"managed.\" Few of them agree on what that word...",
+    "label": "reject",
+    "ambiguous": true,
+    "split": "holdout"
+  },
+  {
+    "source": "Towards Data Science",
+    "title": "One Vendor, Four Spellings: How Deterministic Stages Beat Similarity Scores",
+    "summary": "Deduplicating a 10,000-row supplier list in Python, where the hard part is deciding what a similarity score of 91 means The post One Vendor, Four Spellings: How Deterministic Stages Beat Similarity Scores appeared first on Towards Data Science .",
+    "label": "data",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Towards Data Science",
+    "title": "AI Made Me 5x Faster. It Also Made Me 5x Worse at My Job.",
+    "summary": "One near miss, four months of running agents, and the question almost nobody is asking: what are you supposed to do while the AI writes the code? The post AI Made Me 5x Faster. It Also Made Me 5x Worse at My Job. appeared first on Towards Data Science .",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Towards Data Science",
+    "title": "Coding Agents Keep Shipping Silent Failures — Here Is How to Catch Them",
+    "summary": "How to verify your app aligns with your intent without ever reading a line of generated code. The post Coding Agents Keep Shipping Silent Failures — Here Is How to Catch Them appeared first on Towards Data Science .",
+    "label": "llm",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Towards Data Science",
+    "title": "We Pinned Our Model Version to Stay Safe. The Provider Deprecated It Anyway.",
+    "summary": "The recurring cost of production AI is not inference. It is re-qualification: the eval reruns, prompt retuning, and regression testing you owe every time a model changes under you. Here is what that tax actually covers, and how to budget for it before it surprises you. The post We Pinned Our Model V",
+    "label": "llm",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Towards Data Science",
+    "title": "Starting a Career in Data Science in the Age of AI",
+    "summary": "How do you set yourself up for a career that will stand the test of time when things are changing so fast? The post Starting a Career in Data Science in the Age of AI appeared first on Towards Data Science .",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Towards Data Science",
+    "title": "Multi-Agent Coding Isn’t Enough — Agents Need a Commitment Layer",
+    "summary": "Multi-agent coding systems don't necessarily fail because agents can't communicate. They can fail because important commitments made in conversation have nowhere to live afterward. The post Multi-Agent Coding Isn’t Enough — Agents Need a Commitment Layer appeared first on Towards Data Science .",
+    "label": "llm",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Towards Data Science",
+    "title": "Building a Data Lakehouse with DuckDB and DuckLake",
+    "summary": "Starting with a local Parquet file, then joining it to data stored in the cloud The post Building a Data Lakehouse with DuckDB and DuckLake appeared first on Towards Data Science .",
+    "label": "data",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Towards Data Science",
+    "title": "How I Built a Multi-Agent System for Interrupted Time Series Analysis (ITSA)",
+    "summary": "What it takes to turn counterfactual analysis into an AI product The post How I Built a Multi-Agent System for Interrupted Time Series Analysis (ITSA) appeared first on Towards Data Science .",
+    "label": "llm",
+    "ambiguous": true,
+    "split": "holdout"
+  },
+  {
+    "source": "Towards Data Science",
+    "title": "Why You Think Like a Bayesian but Were Taught Like a Frequentist",
+    "summary": "From a chocolate bar with no price tag to a marketing mix model in PyMC, and the 200-year-old integral that stood in between. The post Why You Think Like a Bayesian but Were Taught Like a Frequentist appeared first on Towards Data Science .",
+    "label": "data",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Towards Data Science",
+    "title": "When Does Graph RAG Actually Add Value? A Hands-On Experiment",
+    "summary": "I built four AI retrieval architectures on a laptop and benchmarked them against the same set of documents and questions. Here’s what the results taught me about the trade-offs between plain RAG, graph RAG, and simply putting everything into a frontier model’s context window. The post When Does Grap",
+    "label": "llm",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Spotify Engineering",
+    "title": "AI Changed How Spotify Builds. What We Learned (and Fixed) About Quality at Higher Velocity",
+    "summary": "Quality and reliability have always been a point of pride for Spotify. We run an extraordinarily complex... The post AI Changed How Spotify Builds. What We Learned (and Fixed) About Quality at Higher Velocity appeared first on Spotify Engineering .",
+    "label": "reject",
+    "ambiguous": true,
+    "split": "dev"
+  },
+  {
+    "source": "Spotify Engineering",
+    "title": "Why Spotify Is Not Using Bayesian A/B Testing",
+    "summary": "Clearing the confusion about what Bayesian A/B testing is. The post Why Spotify Is Not Using Bayesian A/B Testing appeared first on Spotify Engineering .",
+    "label": "data",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "Spotify Engineering",
+    "title": "Portal by Spotify cut my Claude Code token usage by 90%",
+    "summary": "Most of what an AI coding agent does for me isn't thinking. It's I/O. The post Portal by Spotify cut my Claude Code token usage by 90% appeared first on Spotify Engineering .",
+    "label": "llm",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "Spotify Engineering",
+    "title": "When Can LLMs Replace Humans in A/B Tests?",
+    "summary": "TL;DR: LLM predictions can stand in for human outcomes in A/B tests, but only by assumption, not by design.... The post When Can LLMs Replace Humans in A/B Tests? appeared first on Spotify Engineering .",
+    "label": "llm",
+    "ambiguous": true,
+    "split": "dev"
+  },
+  {
+    "source": "Spotify Engineering",
+    "title": "Indexing the Data Lake for Online Point Queries",
+    "summary": "Companies like Spotify need vast quantities of data accessible at low latency for online services and,... The post Indexing the Data Lake for Online Point Queries appeared first on Spotify Engineering .",
+    "label": "data",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "데브시스터즈 기술블로그",
+    "title": "쿼리가 아니라 정의를 고치기로 했습니다: Databricks Metric View 도입기",
+    "summary": "Metric View를 신규 런칭 게임의 데이터 파이프라인에 도입하면서, 대시보드와 분석 에이전트가 같은 지표 정의를 읽게 하기 위해 데이터 구조를 어떻게 나눴는지, 그 과정에서 정한 설계 규칙과 결과를 공유합니다.",
+    "label": "data",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "데브시스터즈 기술블로그",
+    "title": "Kafka Streams를 k8s로 옮기며 얻은 스케일링 설계: 비용 80% 절감까지",
+    "summary": "EC2에서 운영하던 Kafka Streams 애플리케이션을 Kubernetes로 옮기면서, CPU 기반 HPA의 한계를 확인하고 KEDA와 consumer lag 기반 스케일링으로 인프라 비용을 80% 이상 절감한 과정을 공유합니다.",
+    "label": "data",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "데브시스터즈 기술블로그",
+    "title": "킹덤 서버! 튜토리얼",
+    "summary": "킹덤 서버 합류기를 공유합니다.",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "데브시스터즈 기술블로그",
+    "title": "쿠키런: 킹덤의 전투 데이터, JSON Schema로 검증하고 자동완성하기",
+    "summary": "JSON 형태로 된 게임 데이터를 검증하기 위해 JSON Schema를 이용하는 방법을 소개합니다. 클라이언트 코드에서 JSON Schema를 생성하고, 후처리하고, 검증 및 자동완성에 이용하는 과정을 순서대로 다룹니다.",
+    "label": "reject",
+    "ambiguous": true,
+    "split": "dev"
+  },
+  {
+    "source": "데브시스터즈 기술블로그",
+    "title": "데브시스터즈 엔지니어링 데이 - 게임 서버 돌아보기",
+    "summary": "데브시스터즈에서 개최한 세 번째 엔지니어링 데이 - 게임 서버를 소개합니다.",
+    "label": "reject",
+    "ambiguous": true,
+    "split": "holdout"
+  },
+  {
+    "source": "데브시스터즈 기술블로그",
+    "title": "게임 회사에서 클라이언트 프로그래머가 하는 일",
+    "summary": "게임 회사에서 클라이언트 프로그래머가 하는 일을 게임 업데이트 루틴과 함께 소개합니다.",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "dev"
+  },
+  {
+    "source": "데브시스터즈 기술블로그",
+    "title": "주니어 클라이언트 개발자의 성장 노트",
+    "summary": "주니어 클라이언트 개발자로서 겪어본 경험을 나눠봅니다.",
+    "label": "reject",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "데브시스터즈 기술블로그",
+    "title": "결정론적인 알고리즘",
+    "summary": "게임에서 결정론적인 알고리즘에 대해 살펴봅니다.",
+    "label": "cs-fundamentals",
+    "ambiguous": false,
+    "split": "holdout"
+  },
+  {
+    "source": "데브시스터즈 기술블로그",
+    "title": "데브시스터즈 엔지니어링 데이 - Data 돌아보기",
+    "summary": "데브시스터즈에서 개최한 두 번째 엔지니어링 데이 - Data를 소개합니다.",
+    "label": "reject",
+    "ambiguous": true,
+    "split": "dev"
+  },
+  {
+    "source": "데브시스터즈 기술블로그",
+    "title": "데브시스터즈 엔지니어링 데이 - Infra/SRE 돌아보기",
+    "summary": "‘데브시스터즈 엔지니어링 데이’를 소개합니다.",
+    "label": "reject",
+    "ambiguous": true,
+    "split": "holdout"
+  }
+]

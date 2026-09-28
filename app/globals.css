@@ -1,0 +1,174 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: ui-sans-serif, system-ui, "Pretendard", "Apple SD Gothic Neo",
+    "Malgun Gothic", sans-serif;
+}
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  /* 한국어 본문은 글자가 아니라 어절 단위로 끊어야 읽힌다. */
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+body {
+  background: #faf7f2;
+  color: #241b33;
+}
+
+/* ── 콘 (scoop-cone.jsx 프로토타입에서 이식) ──────────────────── */
+
+.ac-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/*
+ * 스쿱의 자리. 스택 안 위치(그리고 빠져나올 때의 이탈)를 transform으로 잡는다.
+ * 안쪽 .ac-scoop은 hover/포커스만 담당해서 둘이 서로 덮어쓰지 않는다.
+ */
+.ac-slot {
+  transition: transform 0.26s cubic-bezier(0.34, 1.3, 0.5, 1);
+}
+
+/*
+ * 콘. 선택하면 아래쪽 스쿱들과 함께 내려가 슬롯을 고른 스쿱 중심에 대칭으로
+ * 벌린다. path를 다시 그리는 대신 transform만 움직여서 전환이 걸리게 한다.
+ */
+.ac-cone {
+  transition: transform 0.24s ease-out;
+}
+
+.ac-scoop {
+  cursor: pointer;
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 0.18s ease;
+  outline: none;
+}
+
+.ac-scoop:hover,
+.ac-scoop:focus-visible {
+  transform: translateY(-5px);
+}
+
+@keyframes ac-plop {
+  0% {
+    transform: translateY(-46px) scale(1.12);
+    opacity: 0;
+  }
+  60% {
+    transform: translateY(4px) scaleY(0.9) scaleX(1.06);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.ac-scoop.ac-plop {
+  animation: ac-plop 0.52s cubic-bezier(0.3, 1.25, 0.5, 1) both;
+}
+
+/*
+ * 스쿱 패널의 줄이 나타나는 방식 — 한 글자씩 타이핑하지 않는다(화면구성.md §4-2).
+ * 텍스트는 처음부터 완성된 채로 DOM에 있고, mask-image의 reveal 위치만 애니메이션한다.
+ * 스크린리더가 갱신마다 다시 읽지 않고, 타이머·상태 없이 CSS로 끝난다.
+ *
+ * --reveal을 @property로 등록해야 %가 이산적으로 뛰지 않고 부드럽게 보간된다
+ * (등록을 모르는 브라우저에서는 그냥 즉시 나타난다 — 정보는 동일하게 전달된다).
+ */
+@property --reveal {
+  syntax: "<percentage>";
+  inherits: true;
+  initial-value: 0%;
+}
+
+.ac-write {
+  --reveal: 0%;
+  mask-image: linear-gradient(90deg, #000 0 var(--reveal), transparent var(--reveal));
+  -webkit-mask-image: linear-gradient(90deg, #000 0 var(--reveal), transparent var(--reveal));
+  animation: ac-write 220ms ease-out forwards;
+}
+
+@keyframes ac-write {
+  from {
+    --reveal: 0%;
+  }
+  to {
+    --reveal: 100%;
+  }
+}
+
+/* 손그림 톤의 형광펜 밑줄. 제목 텍스트에만 걸리도록 inline 요소에 쓴다. */
+.ac-mark {
+  background: linear-gradient(transparent 64%, #FBE08C 64%, #FBE08C 92%, transparent 92%);
+}
+
+/* ── 리더 본문 ───────────────────────────────────────────────── */
+
+/* 하이라이트는 pipeline.ts의 markTerms가 <mark data-w="wN">으로 넣는다. */
+.prose-article mark[data-w] {
+  background: linear-gradient(transparent 62%, #fde68a 62%);
+  color: inherit;
+  cursor: pointer;
+  border-radius: 2px;
+  padding: 0 1px;
+}
+
+.prose-article mark[data-w]:focus-visible {
+  outline: 2px solid #241b33;
+  outline-offset: 2px;
+}
+
+.prose-article p {
+  margin-bottom: 1.15rem;
+  line-height: 1.85;
+}
+
+/* 중요 대목(plan.md phase6 §3) — pipeline.markTerms가 문단 인덱스로 붙이는 클래스. */
+.prose-article p.ac-key {
+  padding-left: 0.85rem;
+  border-left: 3px solid #f2c66d;
+}
+
+/* 용어 뜻을 행간에 펼친 줄(정책.md §13, plan.md phase6 §3) — 별도 시트 없이 그 자리에. */
+.prose-article .ac-def {
+  display: block;
+  margin-top: 0.35rem;
+  margin-bottom: 0.35rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  background: #fff8e6;
+  color: #57534d;
+  font-size: 0.85em;
+  line-height: 1.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ac-scoop,
+  .ac-slot,
+  .ac-cone,
+  .ac-write {
+    transition: none !important;
+    animation: none !important;
+  }
+  .ac-write {
+    --reveal: 100% !important;
+  }
+  .ac-scoop.ac-plop {
+    animation: none !important;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

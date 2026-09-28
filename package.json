@@ -1,0 +1,48 @@
+{
+  "name": "artice-cream",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "spike:llm": "tsx scripts/spike-llm.ts",
+    "spike:sources": "tsx scripts/spike-sources.ts",
+    "test:classify": "tsx tests/classify/run.ts",
+    "test:logic": "tsx scripts/check-logic.ts",
+    "build:app": "node scripts/build-app.mjs build",
+    "app:dev": "node scripts/build-app.mjs dev",
+    "app:run": "node scripts/build-app.mjs run"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.125.0",
+    "@capacitor/app": "^8.1.1",
+    "@capacitor/browser": "^8.0.4",
+    "@capacitor/core": "^8.5.2",
+    "@capacitor/preferences": "^8.0.1",
+    "@mozilla/readability": "^0.6.0",
+    "@supabase/supabase-js": "^2.116.0",
+    "fast-xml-parser": "^5.2.5",
+    "jsdom": "^27.0.0",
+    "next": "^16.3.5",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/cli": "^8.5.2",
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/jsdom": "^27.0.0",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "^16.3.5",
+    "tailwindcss": "^4.3.3",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0"
+  }
+}

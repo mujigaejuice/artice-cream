@@ -1,0 +1,13 @@
+{
+  "name": "artice cream",
+  "short_name": "artice",
+  "description": "오늘의 뉴스를 내 수준에 맞게. 읽을 때마다 콘에 스쿱이 쌓여요.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#faf7f2",
+  "theme_color": "#faf7f2",
+  "lang": "ko",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
