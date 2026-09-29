@@ -1,4 +1,7 @@
 import { Readability } from "@mozilla/readability";
+// jsdom은 26.1.0에 고정한다. 27부터는 의존성 안에 ESM 전용 패키지(@exodus/bytes)가
+// 들어오는데, Vercel 런타임은 Node를 --no-experimental-require-module로 띄워서
+// 이 라우트가 모듈을 불러오는 단계에서 죽는다. 올리려면 이 플래그로 먼저 확인한다.
 import { JSDOM } from "jsdom";
 
 import { MAX_BODY_CHARS } from "../policy";
