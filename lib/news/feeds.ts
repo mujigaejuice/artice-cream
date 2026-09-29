@@ -32,7 +32,7 @@ export const SOURCES: Source[] = [
   { id: "thenewstack", url: "https://thenewstack.io/feed/", lang: "en", kind: "news" },
   { id: "infoq", url: "https://feed.infoq.com/", lang: "en", kind: "news" },
   { id: "meta-eng", url: "https://engineering.fb.com/feed/", lang: "en", kind: "blog" },
-  { id: "woowahan", url: "https://techblog.woowahan.com/feed/", lang: "ko", kind: "blog" },
+  // { id: "woowahan", url: "https://techblog.woowahan.com/feed/", lang: "ko", kind: "blog" },
   { id: "toss", url: "https://toss.tech/rss.xml", lang: "ko", kind: "blog" },
   { id: "lycorp-ko", url: "https://techblog.lycorp.co.jp/ko/feed/index.xml", lang: "ko", kind: "blog" },
   { id: "google-research", url: "https://research.google/blog/rss/", lang: "en", kind: "blog" },
