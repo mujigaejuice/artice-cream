@@ -41,6 +41,5 @@ export async function GET(request: Request) {
       canRead: quota.canRead,
       canUnlockWithAd: quota.canUnlockWithAd,
     },
-    isGuest: user.is_anonymous === true,
   });
 }

@@ -19,12 +19,10 @@ export const AUTH_HOST = "auth";
 export const AUTH_DEEP_LINK = `${AUTH_SCHEME}://${AUTH_HOST}/callback`;
 
 /**
- * 로그인에 실패했을 때 돌아가는 자리.
- *
- * `?link=1`이 붙어야 연결 화면으로 간다. 이게 없으면 분야 고르기 첫 화면으로
- * 떨어져서, 사용자는 온보딩을 처음부터 다시 하는 것처럼 본다.
+ * 로그인에 실패했을 때 돌아가는 자리. 로그인하지 않았으면 온보딩이 로그인 화면을
+ * 보여 주고, `?error=auth`가 그 화면에 실패 안내를 띄운다.
  */
-export const AUTH_FAILED_HREF = "/onboarding?link=1&error=auth";
+export const AUTH_FAILED_HREF = "/onboarding?error=auth";
 
 type CapacitorGlobal = { isNativePlatform?: () => boolean };
 

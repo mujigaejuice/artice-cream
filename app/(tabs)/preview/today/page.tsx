@@ -28,11 +28,6 @@ export default function TodayPreview() {
         </p>
       </header>
 
-      <p className="mb-5 rounded-xl bg-amber-50 p-3 text-center text-sm text-amber-900">
-        게스트로 읽고 있어요.{" "}
-        <span className="font-semibold underline">로그인하면 콘이 저장돼요</span>
-      </p>
-
       <ul className="space-y-3">
         {mockPicks.map((pick) => (
           <li key={pick.variantId}>

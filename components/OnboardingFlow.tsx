@@ -15,9 +15,7 @@ type Props = {
   initialLevels: Record<string, number>;
   /** 정책.md §15 — 분야별 용어 체크 목록. 비어 있으면 그 분야는 체크를 건너뛴다. */
   domainTerms: Record<string, DomainTerms>;
-  startAt: "pick" | "link";
   isSignedIn: boolean;
-  isGuest: boolean;
   /** 딥링크·웹 콜백에서 로그인이 실패해 돌아온 경우. */
   authFailed?: boolean;
 };
@@ -26,16 +24,12 @@ export function OnboardingFlow({
   domains,
   initialLevels,
   domainTerms,
-  startAt,
   isSignedIn,
-  isGuest,
   authFailed = false,
 }: Props) {
   const router = useRouter();
   const supabase = createClient();
 
-  const [step, setStep] = useState<"pick" | "link">(startAt);
-  const [ready, setReady] = useState(isSignedIn);
   const [selected, setSelected] = useState<Set<number>>(
     () =>
       new Set(
@@ -64,23 +58,6 @@ export function OnboardingFlow({
     if (initialLevels[String(domainId)] != null) return initialLevels[String(domainId)];
     return levelFromTermCheck(checkedRare[domainId]?.size ?? 0);
   }
-
-  // Sign in anonymously on arrival — the whole point is that the first read
-  // costs no account. The identity is upgraded in place later.
-  useEffect(() => {
-    if (isSignedIn) return;
-    let cancelled = false;
-
-    supabase.auth.signInAnonymously().then(({ error }) => {
-      if (cancelled) return;
-      if (error) setError("시작하지 못했어요. 새로고침 해 주세요.");
-      else setReady(true);
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [isSignedIn, supabase]);
 
   async function saveAndContinue() {
     setBusy(true);
@@ -117,11 +94,7 @@ export function OnboardingFlow({
     router.push("/");
   }
 
-  if (step === "link") {
-    return (
-      <LinkAccount isGuest={isGuest} authFailed={authFailed} onBack={() => setStep("pick")} />
-    );
-  }
+  if (!isSignedIn) return <SignIn authFailed={authFailed} />;
 
   return (
     <main>
@@ -187,42 +160,39 @@ export function OnboardingFlow({
       <button
         type="button"
         onClick={saveAndContinue}
-        disabled={!ready || busy || selected.size === 0}
+        disabled={busy || selected.size === 0}
         className="mt-6 w-full rounded-xl bg-stone-900 px-4 py-3 font-medium text-white transition hover:bg-stone-800 disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-800"
       >
         {busy ? "저장 중…" : selected.size === 0 ? "한 개 이상 골라 주세요" : "시작하기"}
       </button>
-
-      <p className="mt-3 text-center text-xs text-stone-500">
-        가입 없이 바로 읽을 수 있어요.
-      </p>
     </main>
   );
 }
 
 /**
- * Identity linking, not a fresh sign-in: `linkIdentity` attaches Google to the
- * existing anonymous user, so the scoops and levels earned as a guest survive.
- * Signing in normally would strand them on an orphaned account.
+ * 로그인을 먼저 받는다. 게스트로 읽게 했다가 나중에 계정을 붙이던 방식은
+ * 접었다 — 이미 있는 계정으로 돌아온 사람은 붙이기가 거부돼 자기 계정에 들어갈
+ * 수 없었고, 게스트 기록을 기존 계정과 합치는 방법도 없었다.
  */
-function LinkAccount({
-  isGuest,
-  authFailed,
-  onBack,
-}: {
-  isGuest: boolean;
-  authFailed?: boolean;
-  onBack: () => void;
-}) {
+function SignIn({ authFailed }: { authFailed?: boolean }) {
   const supabase = createClient();
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   // 구글에 다녀왔는데 실패한 채로 돌아온 경우. 아무 말도 없으면 사용자는 화면만
   // 바뀐 것으로 본다.
   const [error, setError] = useState<string | null>(
-    authFailed ? "연결하지 못했어요. 다시 시도해 주세요." : null,
+    authFailed ? "로그인하지 못했어요. 다시 시도해 주세요." : null,
   );
   const [busy, setBusy] = useState(false);
+
+  // 게스트 모드를 없애기 전에 만든 익명 세션이 남아 있을 수 있다. 서버는 이미
+  // 로그인 안 한 것으로 보지만(lib/api.ts `signedInUser`), 두면 토큰이 계속
+  // 갱신되고 API 요청마다 실려 간다. 이 화면에 온 김에 버린다.
+  useEffect(() => {
+    void supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user.is_anonymous) void supabase.auth.signOut({ scope: "local" });
+    });
+  }, [supabase]);
 
   async function withGoogle() {
     setBusy(true);
@@ -232,16 +202,15 @@ function LinkAccount({
     // skipBrowserRedirect가 없으면 supabase-js가 WebView 자체를 구글로 보내서
     // 앱 셸을 잃는다. 웹에서는 openExternal이 같은 탭을 옮기므로 동작이 같다.
     // prompt=select_account가 없으면 구글이 브라우저에 로그인된 계정을 말없이
-    // 고른다. 계정을 붙이는 동작이라 어느 계정인지 사용자가 보고 골라야 한다.
-    const options = {
-      redirectTo: authRedirectUrl(),
-      skipBrowserRedirect: true,
-      queryParams: { prompt: "select_account" },
-    };
-
-    const { data, error } = isGuest
-      ? await supabase.auth.linkIdentity({ provider: "google", options })
-      : await supabase.auth.signInWithOAuth({ provider: "google", options });
+    // 고른다. 기록이 계정에 쌓이므로 어느 계정으로 들어갈지 사용자가 보고 골라야 한다.
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: authRedirectUrl(),
+        skipBrowserRedirect: true,
+        queryParams: { prompt: "select_account" },
+      },
+    });
 
     if (error || !data?.url) {
       setError("구글 로그인에 실패했어요.");
@@ -282,10 +251,10 @@ function LinkAccount({
   return (
     <main>
       <h1 className="text-xl font-bold tracking-tight text-stone-900">
-        콘을 저장할까요?
+        로그인하고 시작해요
       </h1>
       <p className="mt-2 text-sm text-stone-600">
-        로그인하면 지금까지 쌓은 스쿱과 난이도가 그대로 남아요.
+        읽은 글과 콘이 계정에 저장돼서, 다른 기기에서도 이어서 읽을 수 있어요.
       </p>
 
       <button
@@ -334,14 +303,6 @@ function LinkAccount({
           {error}
         </p>
       )}
-
-      <button
-        type="button"
-        onClick={onBack}
-        className="mt-6 w-full text-center text-sm text-stone-500 underline"
-      >
-        나중에 할게요
-      </button>
     </main>
   );
 }

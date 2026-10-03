@@ -26,7 +26,9 @@ import { CATEGORY_SLUGS } from "../lib/ai/schemas";
 import { coreColor, hslStr, scoopShade } from "../lib/color";
 import { CATEGORY_COUNT } from "../lib/policy";
 import { applyQuiz } from "../lib/level";
-import { corsHeaders } from "../lib/api";
+import type { User } from "@supabase/supabase-js";
+
+import { corsHeaders, signedInUser } from "../lib/api";
 import {
   AUTH_DEEP_LINK,
   AUTH_HOST,
@@ -278,6 +280,24 @@ assert.deepEqual(
 // 오리진 헤더가 없는 요청(같은 오리진, curl)도 헤더 없이 통과한다.
 assert.deepEqual(corsHeaders(new Request("https://x/api/feed")), {});
 console.log("cors ok");
+
+/* ── 로그인 판정 ── */
+// 게스트 모드를 없앴다. 그 전에 만든 익명 세션은 토큰이 계속 갱신되므로 서버가 걸러야
+// 한다. 여기가 새면 익명 사용자가 로그인 화면을 건너뛰고 홈으로 들어온다.
+{
+  const base = {
+    id: "u",
+    app_metadata: {},
+    user_metadata: {},
+    aud: "authenticated",
+    created_at: "",
+  } as User;
+  assert.equal(signedInUser(null), null);
+  assert.equal(signedInUser({ ...base, is_anonymous: true }), null, "익명 세션은 로그인이 아니다");
+  assert.equal(signedInUser({ ...base, is_anonymous: false })?.id, "u");
+  assert.equal(signedInUser(base)?.id, "u", "is_anonymous가 없는 토큰도 로그인으로 친다");
+}
+console.log("auth ok");
 
 /* ── 네이티브 경계 (T2 스펙 §6·§7) ── */
 // 앱과 웹이 갈리는 자리가 여기 하나여야 한다. 화면마다 분기하면 다음 화면에서 빠뜨린다.

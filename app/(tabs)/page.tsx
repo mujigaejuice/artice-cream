@@ -24,7 +24,6 @@ type Feed =
       status: "ok";
       picks: TodayPick[];
       quota: { remaining: number; canRead: boolean; canUnlockWithAd: boolean };
-      isGuest: boolean;
     };
 
 export default function TodayPage() {
@@ -53,7 +52,7 @@ export default function TodayPage() {
     return <PageLoading label="오늘의 아티클을 불러오고 있어요" />;
   }
 
-  const { picks, quota, isGuest } = feed;
+  const { picks, quota } = feed;
 
   return (
     <main>
@@ -65,16 +64,6 @@ export default function TodayPage() {
           {quota.canRead ? `오늘 ${quota.remaining}편 남음` : "오늘 분량을 다 읽었어요"}
         </p>
       </header>
-
-      {/* 계정 화면이 따로 없어서, 지금은 이 배너가 유일한 연결 경로다. */}
-      {isGuest && (
-        <p className="mb-5 rounded-xl bg-amber-50 p-3 text-center text-sm text-amber-900">
-          게스트로 읽고 있어요.{" "}
-          <Link href="/onboarding?link=1" className="font-semibold underline">
-            로그인하면 콘이 저장돼요
-          </Link>
-        </p>
-      )}
 
       {picks.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-stone-300 p-6 text-center">

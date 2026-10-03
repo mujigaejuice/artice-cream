@@ -88,9 +88,9 @@ function bearerToken(request: Request): string | null {
  * 따로 만들면 토큰을 붙이는 것을 잊기 쉽고, 그러면 `auth.uid()`가 null인 채로
  * 쿼리가 돌아 조용히 빈 결과가 나온다.
  *
- * 토큰이 없으면 `user`는 null이고 클라이언트는 anon으로 남는다. 그래도 200을
- * 주는 라우트가 하나 있다 — `/api/onboarding`. `domains`와 `domain_terms`는 RLS가
- * 전체 읽기를 허용하고, 익명 로그인은 그 화면에서 일어나기 때문이다.
+ * 토큰이 없거나 익명 사용자면 `user`는 null이다. 그래도 200을 주는 라우트가
+ * 하나 있다 — `/api/onboarding`. `domains`와 `domain_terms`는 RLS가 전체 읽기를
+ * 허용하고, 로그인 화면이 거기 있기 때문이다.
  */
 export async function getRequestContext(
   request: Request,
@@ -107,5 +107,16 @@ export async function getRequestContext(
   if (!token) return { user: null, supabase };
 
   const { data } = await supabase.auth.getUser(token);
-  return { user: data.user ?? null, supabase };
+  return { user: signedInUser(data.user), supabase };
+}
+
+/**
+ * 익명 사용자는 로그인하지 않은 것으로 본다.
+ *
+ * 처음부터 로그인을 받도록 바꾸면서(2026-10-04) 게스트 모드를 없앴다. 그 전에
+ * 만든 익명 세션은 브라우저에 남아 토큰이 계속 갱신되므로, 판정은 서버가 쥔다.
+ * 그런 사용자는 온보딩의 로그인 화면으로 가고, 거기서 세션이 정리된다.
+ */
+export function signedInUser(user: User | null): User | null {
+  return user && user.is_anonymous !== true ? user : null;
 }
