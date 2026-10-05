@@ -11,12 +11,13 @@
   용어와 퀴즈는 원문이 아니라 다시 쓴 본문에서 나온다.
 - 퀴즈 결과에 따라 다음 글의 수준이 오르내린다.
 - 읽은 글은 분류별 색의 스쿱이 되어 한 달짜리 콘에 올라간다.
-- 게스트로 바로 시작하고, 나중에 이메일이나 구글 계정을 연결할 수 있다.
+- 이메일 로그인 링크나 구글 계정으로 로그인한 뒤 관심 분야를 고른다.
+- 하단의 나 탭에서 로그인한 계정을 확인하고 로그아웃해 다른 계정으로 바꿀 수 있다.
 
 ## 기술 스택
 
 - Next.js 16, React 19, Tailwind CSS 4
-- Supabase: Postgres, 인증(익명·매직 링크·구글), RLS
+- Supabase: Postgres, 인증(매직 링크·구글), RLS
 - LLM: Anthropic SDK, 또는 OpenAI 호환 게이트웨이
 - Capacitor 8: 안드로이드 앱
 - Vercel: API와 매일 도는 인제스트 cron
@@ -48,7 +49,19 @@ Supabase 프로젝트를 만들고 SQL 에디터에서 아래 세 파일을 순�
 2. `supabase/policies.sql`
 3. `supabase/seed.sql`
 
-Authentication 설정에서 익명 로그인은 반드시 켠다. 온보딩이 익명 로그인으로 시작한다.
+Authentication 설정에서 이메일과 Google 로그인을 켜고, 익명 로그인은 끈다.
+온보딩은 정식 계정 로그인부터 시작한다.
+
+Authentication → URL Configuration에는 다음 주소를 등록한다.
+
+- Site URL: `https://artice-cream.vercel.app`
+- Redirect URLs: `http://localhost:3000/auth/callback`,
+  `https://artice-cream.vercel.app/auth/callback`, `artice-cream://auth/callback`
+
+Google OAuth의 Authorized redirect URI는 앱 주소가 아니라
+`https://<project-ref>.supabase.co/auth/v1/callback`이다.
+이메일 링크는 로그인을 요청한 브라우저에서 열고, 앱에서 요청했다면 같은 기기의
+앱으로 돌아와야 한다. PKCE 검증에 요청 당시 저장한 값이 필요하다.
 
 LLM은 `.env.local`에 `BASE_URL`, `MODEL_ID`, `API_KEY`가 모두 있으면 OpenAI 호환
 게이트웨이로, 없으면 `ANTHROPIC_API_KEY`로 Anthropic을 직접 부른다.
@@ -79,6 +92,7 @@ npm run dev            # 개발 서버
 npm run build          # 프로덕션 빌드
 npm run typecheck      # 타입 검사
 npm run test:logic     # 수준 조정, 스쿱 색, 용어 표시 같은 순수 로직 점검
+npm run test:auth      # 웹·앱 저장소의 로그아웃 검증 (외부 요청 없음)
 npm run test:classify  # 분류기 정답률 (LLM 호출, 유료)
 npm run build:app      # 앱용 정적 번들 (out/)
 npm run app:run        # 번들 → cap sync → 안드로이드 빌드·설치·실행

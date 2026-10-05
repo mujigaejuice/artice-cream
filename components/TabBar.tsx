@@ -35,6 +35,15 @@ function ConeIcon() {
   );
 }
 
+function AccountIcon() {
+  return (
+    <svg viewBox="0 0 22 22" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="11" cy="7" r="3.5" />
+      <path d="M4 19v-1a7 7 0 0 1 14 0v1" />
+    </svg>
+  );
+}
+
 type Tab = {
   href: string;
   label: string;
@@ -46,6 +55,7 @@ type Tab = {
 const TABS: Tab[] = [
   { href: "/", label: "오늘", Icon: TodayIcon },
   { href: "/cone", label: "내 콘", Icon: ConeIcon },
+  { href: "/account", label: "나", Icon: AccountIcon },
 ];
 
 export function TabBar() {
@@ -61,7 +71,7 @@ export function TabBar() {
         style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
         {TABS.map((tab) => {
-          const active = pathname === tab.href;
+          const active = (pathname.replace(/\/$/, "") || "/") === tab.href;
           return (
             <li key={tab.href} className="flex-1">
               <Link

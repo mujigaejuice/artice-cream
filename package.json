@@ -15,6 +15,7 @@
     "spike:sources": "tsx scripts/spike-sources.ts",
     "test:classify": "tsx tests/classify/run.ts",
     "test:logic": "tsx scripts/check-logic.ts",
+    "test:auth": "tsx scripts/check-auth-session.ts && tsx scripts/check-auth-session.ts --native",
     "build:app": "node scripts/build-app.mjs build",
     "app:dev": "node scripts/build-app.mjs dev",
     "app:run": "node scripts/build-app.mjs run"

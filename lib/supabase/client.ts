@@ -125,3 +125,15 @@ export function createClient(): SupabaseClient {
 
   return cached;
 }
+
+/** 다른 기기의 로그인은 유지하고 현재 세션만 종료한다. */
+export async function signOutCurrentDevice(): Promise<void> {
+  const client = createClient();
+  const { error } = await client.auth.signOut({ scope: "local" });
+  if (error) throw error;
+
+  // 스토리지 어댑터가 삭제 실패를 삼킬 수 있으므로 성공 안내 전에 확인한다.
+  const { data, error: sessionError } = await client.auth.getSession();
+  if (sessionError) throw sessionError;
+  if (data.session) throw new Error("Session was not cleared");
+}
