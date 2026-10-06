@@ -2,7 +2,7 @@ import { Readability } from "@mozilla/readability";
 // jsdom은 26.1.0에 고정한다. 27부터는 의존성 안에 ESM 전용 패키지(@exodus/bytes)가
 // 들어오는데, Vercel 런타임은 Node를 --no-experimental-require-module로 띄워서
 // 이 라우트가 모듈을 불러오는 단계에서 죽는다. 올리려면 이 플래그로 먼저 확인한다.
-import { JSDOM } from "jsdom";
+import { JSDOM, VirtualConsole } from "jsdom";
 
 import { MAX_BODY_CHARS } from "../policy";
 import { USER_AGENT, type NewsItem } from "./source";
@@ -19,6 +19,10 @@ import type { SourceKind } from "./feeds";
 
 export type ExtractFailure =
   | "fetch-failed"
+  | "timeout"
+  | "http-error"
+  | "invalid-url"
+  | "parse-failed"
   | "not-html"
   | "no-article"
   | "too-short"
@@ -36,7 +40,14 @@ export type ExtractResult =
       /** og:image. spec §8 articles.image_url용. 없으면 null. */
       imageUrl: string | null;
     }
-  | { ok: false; url: string; host: string | null; reason: ExtractFailure };
+  | {
+      ok: false; url: string; host: string | null; reason: ExtractFailure;
+      retryable: boolean;
+      httpStatus?: number;
+      charCount?: number;
+    };
+
+export const EXTRACT_TIMEOUT_MS = 20_000;
 
 /** Below this, Readability found navigation chrome rather than an article. */
 export const MIN_BODY_CHARS = 600;
@@ -60,62 +71,76 @@ function hostOf(url: string): string | null {
 export async function extractArticle(
   item: Pick<NewsItem, "url" | "title">,
   kind: SourceKind = "news",
+  signal?: AbortSignal,
 ): Promise<ExtractResult> {
   const host = hostOf(item.url);
   if (!host) {
-    return { ok: false, url: item.url, host: null, reason: "fetch-failed" };
+    return { ok: false, url: item.url, host: null, reason: "invalid-url", retryable: false };
   }
+
+  const failure = (reason: ExtractFailure, retryable = false): ExtractResult =>
+    ({ ok: false, url: item.url, host, reason, retryable });
+  const timeout = AbortSignal.timeout(EXTRACT_TIMEOUT_MS);
+  const requestSignal = signal ? AbortSignal.any([signal, timeout]) : timeout;
 
   let html: string;
   try {
     const response = await fetch(item.url, {
       headers: { "user-agent": USER_AGENT },
       cache: "no-store",
+      signal: requestSignal,
     });
     if (!response.ok) {
-      return { ok: false, url: item.url, host, reason: "fetch-failed" };
+      // 404·410은 사라진 글이다. 차단·429·서버 오류는 다음 실행에서 재시도한다.
+      return { ok: false, url: item.url, host, reason: "http-error",
+        httpStatus: response.status, retryable: ![404, 410].includes(response.status) };
     }
     const contentType = response.headers.get("content-type") ?? "";
     if (!contentType.includes("html")) {
-      return { ok: false, url: item.url, host, reason: "not-html" };
+      return failure("not-html");
     }
     html = await response.text();
   } catch {
-    return { ok: false, url: item.url, host, reason: "fetch-failed" };
+    return failure(requestSignal.aborted ? "timeout" : "fetch-failed", true);
   }
 
-  // `url` matters: Readability resolves relative links against it.
-  const dom = new JSDOM(html, { url: item.url });
-  const parsed = new Readability(dom.window.document).parse();
-  dom.window.close();
+  try {
+    // CSS 해석 경고가 원문 스타일 전체를 로그에 쏟지 않게 한다. 본문 추출에는 불필요하다.
+    const virtualConsole = new VirtualConsole();
+    const dom = new JSDOM(html, { url: item.url, virtualConsole });
+    let parsed;
+    try {
+      parsed = new Readability(dom.window.document).parse();
+    } finally {
+      dom.window.close();
+    }
 
-  if (!parsed?.content) {
-    return { ok: false, url: item.url, host, reason: "no-article" };
+    if (!parsed?.content) return failure("no-article");
+
+    const text = normalizeBody(proseTextOf(parsed.content));
+
+    if (PAYWALL_MARKERS.some((marker) => text.includes(marker))) return failure("paywalled");
+    if (text.length < MIN_BODY_CHARS) {
+      return { ok: false, url: item.url, host, reason: "too-short", retryable: false, charCount: text.length };
+    }
+
+    const bounded = boundBody(text, kind);
+    if (!bounded) {
+      return { ok: false, url: item.url, host, reason: "too-long", retryable: false, charCount: text.length };
+    }
+
+    return {
+      ok: true,
+      url: item.url,
+      host,
+      title: parsed.title?.trim() || item.title,
+      text: bounded,
+      charCount: bounded.length,
+      imageUrl: ogImage(html),
+    };
+  } catch {
+    return failure("parse-failed", true);
   }
-
-  const text = normalizeBody(proseTextOf(parsed.content));
-
-  if (PAYWALL_MARKERS.some((marker) => text.includes(marker))) {
-    return { ok: false, url: item.url, host, reason: "paywalled" };
-  }
-  if (text.length < MIN_BODY_CHARS) {
-    return { ok: false, url: item.url, host, reason: "too-short" };
-  }
-
-  const bounded = boundBody(text, kind);
-  if (!bounded) {
-    return { ok: false, url: item.url, host, reason: "too-long" };
-  }
-
-  return {
-    ok: true,
-    url: item.url,
-    host,
-    title: parsed.title?.trim() || item.title,
-    text: bounded,
-    charCount: bounded.length,
-    imageUrl: ogImage(html),
-  };
 }
 
 /**

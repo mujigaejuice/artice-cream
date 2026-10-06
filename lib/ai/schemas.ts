@@ -19,7 +19,9 @@ export const RewriteSchema = z.object({
   title: z.string().trim().min(1),
   summary: z.string().trim().min(1),
   paragraphs: z.array(z.string().trim().min(1)).min(1),
-  keyParagraphs: z.array(z.number().int().min(0)).max(2).default([]),
+  // Optional visual emphasis must not trigger another full article generation.
+  // Invalid metadata is omitted; title, summary and body remain strictly validated.
+  keyParagraphs: z.array(z.number().int().min(0)).max(2).catch([]),
 });
 export type Rewrite = z.infer<typeof RewriteSchema>;
 

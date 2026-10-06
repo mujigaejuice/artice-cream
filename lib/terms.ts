@@ -46,11 +46,14 @@ export async function getDomainTerms(
 export async function refreshDomainTerms(
   admin: SupabaseClient,
   domainId: number,
+  signal: AbortSignal = AbortSignal.timeout(15_000),
 ): Promise<void> {
-  const { data: variants } = await admin
+  const { data: variants, error: readError } = await admin
     .from("article_variants")
     .select("level, glossary, articles!inner(domain_id)")
-    .eq("articles.domain_id", domainId);
+    .eq("articles.domain_id", domainId)
+    .abortSignal(signal);
+  if (readError) throw new Error(`term source: ${readError.message}`);
 
   const easyCount = new Map<string, number>();
   const rareCount = new Map<string, number>();
@@ -76,9 +79,12 @@ export async function refreshDomainTerms(
     ...topN(rareCount, 20).map((term) => ({ domain_id: domainId, term, tier: "rare" as const })),
   ];
 
-  await admin.from("domain_terms").delete().eq("domain_id", domainId);
+  const { error: deleteError } = await admin.from("domain_terms").delete()
+    .eq("domain_id", domainId).abortSignal(signal);
+  if (deleteError) throw new Error(`term cleanup: ${deleteError.message}`);
   if (rows.length > 0) {
-    await admin.from("domain_terms").insert(rows);
+    const { error: insertError } = await admin.from("domain_terms").insert(rows).abortSignal(signal);
+    if (insertError) throw new Error(`term insert: ${insertError.message}`);
   }
 }
 

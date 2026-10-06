@@ -93,6 +93,7 @@ npm run build          # 프로덕션 빌드
 npm run typecheck      # 타입 검사
 npm run test:logic     # 수준 조정, 스쿱 색, 용어 표시 같은 순수 로직 점검
 npm run test:auth      # 웹·앱 저장소의 로그아웃 검증 (외부 요청 없음)
+npm run test:ingest    # 4편 상한, 병렬 처리, 타임아웃, 저장 검증 (모의 LLM·DB)
 npm run test:classify  # 분류기 정답률 (LLM 호출, 유료)
 npm run build:app      # 앱용 정적 번들 (out/)
 npm run app:run        # 번들 → cap sync → 안드로이드 빌드·설치·실행
@@ -103,3 +104,46 @@ npm run app:run        # 번들 → cap sync → 안드로이드 빌드·설치�
 Vercel에 올리면 `vercel.json`의 cron 9개가 매일 돈다. 한국 시간 오전 3시에 수집하고,
 오전 5시부터 8시 반까지 30분 간격으로 분류 하나씩 가공한다. 프로덕션에서는
 `CRON_SECRET`이 있어야 cron 호출이 통과한다.
+
+`INGEST_ARTICLES_PER_DOMAIN`은 분류별 한 실행의 성공 상한이다. 가공은 기사 최대 2편,
+각 기사의 세 수준을 병렬 생성하며 발행처당 성공은 한 편으로 제한한다.
+LLM 요청은 실행 인스턴스당 최대 6개다(여러 인스턴스를 아우르는 전역 제한은 아니다).
+새 기사 시작에는 110초가 남아 있어야 한다. 본문 요청은 20초, 기사 전체 작업은
+최대 240초이며 실행의 남은 시간에서 15초를 뺀 값보다 길게 실행하지 않는다.
+함수 상한 300초 중 30초 안전 여유도 별도로 유지한다.
+값을 4로 올려도 후보 부족·시간 제한·가공 실패가 있으면 4편보다 적게 끝날 수 있다.
+가공 중 게이트웨이의 429·502·503·504는 같은 기사 시간 제한 안에서 한 번만 재시도한다.
+
+실행 로그의 `[ingest:process:start]`에서 `articleCap`을 확인하면 환경변수 변경이
+실행에 반영됐는지 알 수 있다. `articleConcurrency`, `llmConcurrency`,
+`articleStartSeconds`, `articleTimeoutSeconds`도 함께 기록한다.
+`[ingest:process]`에는 `processed`, `stoppedBy`,
+전체 `queueDepth`, 조회한 `scanned`, 실패 내역과 사용량을 남긴다.
+`usage.retries`로 일시 오류 재시도 횟수를 확인할 수 있다. 개별 기사는
+`[ingest:article:start]`, `[ingest:article:ready]`, `[ingest:article:failed]`로 추적한다.
+`[llm:trace]`는 `runId`·`articleId`·`level`·`stage`별 호출을 기록한다.
+`queueMs`는 동시 요청 슬롯 대기, `requestMs`는 API 응답 시간이다. `pass: length`는
+분량 재요청, `repair: true`는 JSON 보정이며 `finishReason`과 `outputTokens`도 남긴다.
+프롬프트·본문·인증 정보는 이 로그에 넣지 않는다. 잘못된 `keyParagraphs`는 중요 문단
+표시만 생략하며, 이 선택적 표시 때문에 본문을 재생성하지 않는다.
+문자열 내부의 이스케이프되지 않은 줄바꿈은 내용을 유지한 채 JSON 형식으로 정규화한다.
+분량 보정 응답이 형식 검증에 실패하면 이미 검증된 초안을 유지한다. 최초 본문과 퀴즈의
+검증 실패, API 오류, 실행 시간 초과는 그대로 실패로 처리한다.
+
+읽기 전용 진단은 다음 순서로 실행한다. 결과는 Git에서 제외한 `spike-out/`에 저장된다.
+
+```bash
+node --env-file=.env.local --import=tsx scripts/audit-ingest.ts # DB 상태·날짜별 가공 수
+node --import=tsx scripts/probe-ingest.ts                     # 원문 표본 재검사
+node --env-file=.env.local --import=tsx scripts/benchmark-ingest.ts --two
+node --env-file=.env.local --import=tsx scripts/benchmark-ingest.ts --article=1400
+node --env-file=.env.local --import=tsx scripts/benchmark-ingest.ts --four
+```
+
+벤치마크는 실제 LLM을 호출하며 DB에는 저장하지 않는다. 기본 1편, `--two`는 2편,
+`--four`는 4편 상한이며 `--article=<ID>`는 감사 보고서의 특정 기사 한 편이다.
+단계별 계측은 `.jsonl`에도 즉시 기록하고 완료된 가공본은 `.variants.json`에 저장한다.
+
+배포 후 운영 검증은 `node --env-file=.env.local --import=tsx scripts/verify-ingest-production.ts --run-cloud`로
+실행한다. 이 명령은 **운영 cloud 가공을 한 번 실행해 DB에 저장**하며, 적용된 상한·새 ready 기사·
+세 수준의 가공본·퀴즈 각 4개를 확인한다. 오류가 나도 자동으로 재실행하지 않는다.
