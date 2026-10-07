@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { TermCheck } from "@/components/TermCheck";
@@ -293,7 +294,7 @@ function SignIn({ authFailed }: { authFailed?: boolean }) {
             disabled={busy || !email.includes("@")}
             className="rounded-xl bg-stone-900 px-4 text-sm font-medium text-white disabled:opacity-50"
           >
-            링크 받기
+          링크 받기
           </button>
         </div>
       )}
@@ -303,6 +304,7 @@ function SignIn({ authFailed }: { authFailed?: boolean }) {
           {error}
         </p>
       )}
+      <Link href="/account/delete/" className="mt-6 inline-block text-sm text-stone-500 underline underline-offset-4">계정 및 데이터 삭제 안내</Link>
     </main>
   );
 }

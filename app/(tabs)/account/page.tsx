@@ -1,6 +1,7 @@
 "use client";
 
 import type { User } from "@supabase/supabase-js";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
@@ -119,6 +120,11 @@ export default function AccountPage() {
         {busy && <p role="status" className="sr-only">로그아웃 중이에요.</p>}
         {error && <p role="alert" className="mt-3 text-sm text-red-700">{error}</p>}
       </div>
+      <section className="mt-10 border-t border-stone-200 pt-6" aria-labelledby="delete-account-heading">
+        <h2 id="delete-account-heading" className="text-sm font-semibold text-stone-900">회원 탈퇴</h2>
+        <p className="mt-2 text-sm leading-relaxed text-stone-600">계정과 학습 기록, 내 콘을 함께 삭제해요. 삭제한 기록은 복구할 수 없어요.</p>
+        <Link href="/account/delete/" className="mt-4 inline-flex min-h-12 items-center rounded-xl border border-red-200 px-4 py-3 text-sm font-medium text-red-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-800">계정 및 데이터 삭제</Link>
+      </section>
     </main>
   );
 }

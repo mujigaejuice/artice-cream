@@ -10,8 +10,8 @@ import { SUPABASE_ANON_KEY, SUPABASE_URL } from "./supabase/env";
  * Route Handler 공용 — 인증과 CORS (앱출시.md §2).
  *
  * 앱 번들은 정적 자산이라 Vercel과 다른 오리진에서 돌고, WebView는 쿠키를 같이
- * 보내지 않는다. 그래서 API는 `Authorization: Bearer <access token>`을 1순위로
- * 읽고, 쿠키는 웹에서 열었을 때를 위한 폴백으로만 남긴다.
+ * 보내지 않는다. API는 웹과 앱 모두 `Authorization: Bearer <access token>`으로
+ * 인증하며, 쿠키 인증 폴백은 없다.
  *
  * 서버 권위는 그대로다(정책.md §7) — 토큰에서 얻은 user.id로만 쓰고, 클라이언트가
  * 보낸 user id는 어디서도 믿지 않는다.
@@ -74,7 +74,7 @@ export function apiError(
   return json(request, { error: message }, { status });
 }
 
-function bearerToken(request: Request): string | null {
+export function bearerToken(request: Request): string | null {
   const header = request.headers.get("authorization");
   if (!header) return null;
   const match = header.match(/^Bearer\s+(.+)$/i);

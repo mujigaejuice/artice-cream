@@ -20,6 +20,7 @@ supabase/.temp/
 # 기획 문서와 시안
 *.md
 !/README.md
+!/docs/legal/*.md
 /*.png
 /*.jpg
 

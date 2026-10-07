@@ -5,6 +5,7 @@ import { useEffect } from "react";
 
 import { AUTH_FAILED_HREF, closeBrowser, isNative, parseAuthDeepLink } from "@/lib/native";
 import { createClient } from "@/lib/supabase/client";
+import { consumeDeletionReturn, deletionAuthFailure } from "@/lib/deletion-return";
 
 /**
  * 딥링크로 돌아온 로그인을 받는다 (T2 스펙 §7).
@@ -81,6 +82,8 @@ async function handleAuthUrl(
 ): Promise<void> {
   const link = parseAuthDeepLink(url);
   if (!link) return; // 우리 것이 아닌 딥링크는 지나간다
+  const next = consumeDeletionReturn(link.next);
+  const failed = deletionAuthFailure(next, AUTH_FAILED_HREF);
 
   // 기다리지 않는다. 열린 브라우저가 없을 때 Browser.close()가 응답을 안 주면
   // 여기서 멈춰서 화면이 영영 안 바뀐다. 탭이 닫히는 것과 화면을 옮기는 것은
@@ -88,7 +91,7 @@ async function handleAuthUrl(
   void closeBrowser().catch(() => {});
 
   if (!link.code) {
-    router.replace(AUTH_FAILED_HREF);
+    router.replace(failed);
     return;
   }
 
@@ -105,7 +108,7 @@ async function handleAuthUrl(
   }
 
   if (exchanged) {
-    router.replace(link.next);
+    router.replace(next);
     return;
   }
 
@@ -118,8 +121,8 @@ async function handleAuthUrl(
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    router.replace(user && user.is_anonymous !== true ? link.next : AUTH_FAILED_HREF);
+    router.replace(user && user.is_anonymous !== true ? next : failed);
   } catch {
-    router.replace(AUTH_FAILED_HREF);
+    router.replace(failed);
   }
 }

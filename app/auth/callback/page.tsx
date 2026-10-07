@@ -1,10 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 import { AUTH_FAILED_HREF } from "@/lib/native";
 import { safeNext } from "@/lib/routes";
+import { consumeDeletionReturn, deletionAuthFailure } from "@/lib/deletion-return";
 import { createClient } from "@/lib/supabase/client";
 
 /**
@@ -17,15 +18,19 @@ import { createClient } from "@/lib/supabase/client";
  */
 export default function AuthCallbackPage() {
   const router = useRouter();
+  const started = useRef(false);
 
   useEffect(() => {
+    if (started.current) return;
+    started.current = true;
     const url = new URL(window.location.href);
     const code = url.searchParams.get("code");
 
-    const next = safeNext(url.searchParams.get("next"));
+    const next = consumeDeletionReturn(safeNext(url.searchParams.get("next")));
+    const failed = deletionAuthFailure(next, AUTH_FAILED_HREF);
 
     if (!code) {
-      router.replace(AUTH_FAILED_HREF);
+      router.replace(failed);
       return;
     }
 
@@ -53,9 +58,9 @@ export default function AuthCallbackPage() {
         const {
           data: { user },
         } = await supabase.auth.getUser();
-        router.replace(user && user.is_anonymous !== true ? next : AUTH_FAILED_HREF);
+        router.replace(user && user.is_anonymous !== true ? next : failed);
       } catch {
-        router.replace(AUTH_FAILED_HREF);
+        router.replace(failed);
       }
     })();
   }, [router]);
