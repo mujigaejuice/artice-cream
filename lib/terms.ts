@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { DomainTermRow } from "./supabase/types";
+import { ARTICLE_RIGHTS_COLUMNS, articleAllows, getSourceRights, type ArticleRights } from "./content-rights";
 
 /**
  * 정책.md §15 — 온보딩 용어 체크에 쓰는 분야별 용어 목록.
@@ -24,10 +25,19 @@ export async function getDomainTerms(
 
   const { data } = await supabase
     .from("domain_terms")
-    .select("domain_id, term, tier")
+    .select("domain_id, term, tier, origin_article_ids")
     .in("domain_id", domainIds);
 
-  for (const row of (data ?? []) as DomainTermRow[]) {
+  const sources = await getSourceRights(supabase);
+  const terms = (data ?? []) as (DomainTermRow & { origin_article_ids: number[] })[];
+  const ids = [...new Set(terms.flatMap((row) => row.origin_article_ids ?? []))];
+  if (ids.length === 0 || sources.size === 0) return map;
+  const { data: articles } = await supabase.from("articles")
+    .select(`id, ${ARTICLE_RIGHTS_COLUMNS}`).in("id", ids);
+  const allowed = new Set((articles ?? []).filter((row) =>
+    articleAllows(row as ArticleRights, sources, "publish")).map((row) => row.id));
+  for (const row of terms) {
+    if (!row.origin_article_ids?.length || !row.origin_article_ids.every((id) => allowed.has(id))) continue;
     const entry = map.get(row.domain_id) ?? { easy: [], rare: [] };
     if (row.tier === "easy" && entry.easy.length < MAX_PER_TIER) entry.easy.push(row.term);
     if (row.tier === "rare" && entry.rare.length < MAX_PER_TIER) entry.rare.push(row.term);
@@ -50,22 +60,32 @@ export async function refreshDomainTerms(
 ): Promise<void> {
   const { data: variants, error: readError } = await admin
     .from("article_variants")
-    .select("level, glossary, articles!inner(domain_id)")
+    .select(`level, glossary, article_id, articles!inner(domain_id, ${ARTICLE_RIGHTS_COLUMNS})`)
     .eq("articles.domain_id", domainId)
     .abortSignal(signal);
   if (readError) throw new Error(`term source: ${readError.message}`);
+  const sources = await getSourceRights(admin);
 
   const easyCount = new Map<string, number>();
   const rareCount = new Map<string, number>();
+  const origins = new Map<string, Set<number>>();
 
   for (const row of (variants ?? []) as unknown as {
     level: number;
     glossary: Record<string, { term: string }>;
+    article_id: number;
+    articles: ArticleRights | null;
   }[]) {
+    if (!articleAllows(row.articles, sources, "publish")) continue;
     const terms = Object.values(row.glossary ?? {}).map((t) => t.term);
     const bucket = row.level === 1 ? easyCount : row.level === 3 ? rareCount : null;
     if (!bucket) continue;
-    for (const term of terms) bucket.set(term, (bucket.get(term) ?? 0) + 1);
+    for (const term of terms) {
+      bucket.set(term, (bucket.get(term) ?? 0) + 1);
+      const ids = origins.get(term) ?? new Set<number>();
+      ids.add(row.article_id);
+      origins.set(term, ids);
+    }
   }
 
   // 드문 축 = level 3에는 나왔지만 level 1에는 한 번도 안 나온 용어.
@@ -75,8 +95,10 @@ export async function refreshDomainTerms(
     [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, n).map(([term]) => term);
 
   const rows = [
-    ...topN(easyCount, 20).map((term) => ({ domain_id: domainId, term, tier: "easy" as const })),
-    ...topN(rareCount, 20).map((term) => ({ domain_id: domainId, term, tier: "rare" as const })),
+    ...topN(easyCount, 20).map((term) => ({ domain_id: domainId, term, tier: "easy" as const,
+      origin_article_ids: [...(origins.get(term) ?? [])] })),
+    ...topN(rareCount, 20).map((term) => ({ domain_id: domainId, term, tier: "rare" as const,
+      origin_article_ids: [...(origins.get(term) ?? [])] })),
   ];
 
   const { error: deleteError } = await admin.from("domain_terms").delete()

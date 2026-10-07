@@ -1,5 +1,6 @@
 import { apiError, getRequestContext, json, preflight } from "@/lib/api";
 import { hostLabel } from "@/lib/feed";
+import { canPublishArticle, type Attribution } from "@/lib/content-rights";
 import { getProgress, openArticle } from "@/lib/quota";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -34,7 +35,7 @@ export async function POST(request: Request) {
   const { data } = await supabase
     .from("article_variants")
     .select(
-      "id, level, title, content_html, glossary, reading_minutes, articles(id, source_url, published_at, domains(slug, name_ko))",
+      "id, level, title, content_html, glossary, reading_minutes, articles(id, source_url, published_at, rights_attribution, domains(slug, name_ko))",
     )
     .eq("id", variantId)
     .maybeSingle();
@@ -53,6 +54,7 @@ export async function POST(request: Request) {
       id: number;
       source_url: string;
       published_at: string | null;
+      rights_attribution: Attribution | null;
       domains: { slug: string; name_ko: string } | null;
     } | null;
   };
@@ -61,6 +63,7 @@ export async function POST(request: Request) {
   if (!article) return apiError(request, "not found", 404);
 
   const admin = createAdminClient();
+  if (!await canPublishArticle(admin, article.id)) return apiError(request, "not found", 404);
   const gate = await openArticle(admin, user.id, article.id, variant.id);
 
   // 잠겼으면 본문을 응답에 넣지 않는다. 화면만 가리는 것과 다르다.
@@ -87,6 +90,7 @@ export async function POST(request: Request) {
       domainLabel: article.domains?.name_ko ?? "",
       sourceName: hostLabel(article.source_url),
       sourceUrl: article.source_url,
+      attribution: article.rights_attribution,
       progressStatus: progress?.status ?? "started",
       quizScore: progress?.quizScore ?? null,
     },

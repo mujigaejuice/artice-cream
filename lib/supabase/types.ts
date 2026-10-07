@@ -1,4 +1,5 @@
 import type { QuizQuestion } from "@/lib/ai/schemas";
+import type { ArticleRights } from "@/lib/content-rights";
 
 /** supabase/migrations/0001_init.sql 행 타입 (spec §8). */
 
@@ -11,7 +12,7 @@ export type DomainRow = {
   active: boolean;
 };
 
-export type ArticleRow = {
+export type ArticleRow = ArticleRights & {
   id: number;
   /** 분류에서 버린(rejected) 후보는 도메인이 없다. */
   domain_id: number | null;

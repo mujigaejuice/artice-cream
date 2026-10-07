@@ -9,6 +9,7 @@ import { PageError, PageLoading } from "@/components/ScreenState";
 import { apiJson } from "@/lib/client-api";
 import type { PublicQuizQuestion } from "@/lib/supabase/types";
 import { useQueryParams } from "@/lib/use-query";
+import { useRefreshOnResume } from "@/lib/use-refresh-on-resume";
 
 /**
  * 퀴즈 (plan §5, 정책.md §7). 경로는 `/read/quiz?v=123` (앱출시.md §2).
@@ -45,6 +46,7 @@ export default function QuizPage() {
   }, [variantId]);
 
   useEffect(load, [load]);
+  useRefreshOnResume(load);
 
   useEffect(() => {
     if (error === "unauthenticated") router.replace("/onboarding");

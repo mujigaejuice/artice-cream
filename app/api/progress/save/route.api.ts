@@ -1,5 +1,6 @@
 import { apiError, getRequestContext, json, preflight } from "@/lib/api";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { canPublishArticle } from "@/lib/content-rights";
 
 /**
  * 저장 (정책.md §2, §13) — 결과 화면의 "콘에 올리기" 버튼이 부른다.
@@ -32,6 +33,7 @@ export async function POST(request: Request) {
   }
 
   const admin = createAdminClient();
+  if (!await canPublishArticle(admin, articleId)) return apiError(request, "not found", 404);
 
   const { data: progress } = await admin
     .from("user_article_progress")

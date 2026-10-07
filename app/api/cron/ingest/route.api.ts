@@ -16,6 +16,7 @@ import { feedSources, type NewsItem } from "@/lib/news/source";
 import { CLASSIFY_BATCH_SIZE } from "@/lib/policy";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { DomainRow } from "@/lib/supabase/types";
+import { articleAllows, getSourceRights, sourceAllows, type ArticleRights } from "@/lib/content-rights";
 
 /**
  * 인제스트 1단계 — 수집과 분류 (소스분류.md §3).
@@ -61,6 +62,14 @@ export async function GET(request: NextRequest) {
   const startedAt = Date.now();
   const clock = startDeadline(startedAt);
   const admin = createAdminClient();
+  const rights = await getSourceRights(admin);
+  const allowedSources = SOURCES.filter((source) => sourceAllows(rights.get(source.id), "collect") &&
+    sourceAllows(rights.get(source.id), "process"));
+  if (allowedSources.length === 0) {
+    return NextResponse.json({ ok: true, stage: "collect", stoppedBy: "rights", queued: 0,
+      classified: 0, allowedSources: 0, blockedSources: SOURCES.length },
+    { headers: { "Cache-Control": "no-store" } });
+  }
 
   const { data: domains, error } = await admin.from("domains").select("*").eq("active", true);
   if (error) {
@@ -70,7 +79,7 @@ export async function GET(request: NextRequest) {
 
   /* ── 1) 소스에서 후보 수집 — 동시에 여러 개를 연다 ───────────── */
 
-  const sources = feedSources(SOURCES);
+  const sources = feedSources(allowedSources);
   const collected = await mapPool(sources, FEED_CONCURRENCY, async (src) => {
     const report: SourceReport = { id: src.id, latest: 0, archive: 0 };
     const items: Candidate[] = [];
@@ -123,7 +132,30 @@ export async function GET(request: NextRequest) {
     for (const row of data ?? []) known.add(row.source_url as string);
   }
 
-  const candidates = deduped.filter(({ item }) => !known.has(item.url));
+  const fresh = deduped.filter(({ item }) => !known.has(item.url));
+  // Discovery only: new articles remain unreviewed. No RSS text reaches the LLM
+  // until the particular article has a reviewed permission and attribution record.
+  for (const part of chunk(fresh, 200)) {
+    const { error: discoverError } = await admin.from("articles").upsert(part.map(({ item }) => ({
+      source: item.sourceId, source_url: item.url, title: item.title,
+      published_at: item.publishedAt?.toISOString() ?? null,
+      status: "pending", rights_status: "unreviewed",
+    })), { onConflict: "source_url", ignoreDuplicates: true });
+    if (discoverError) return NextResponse.json({ error: "discovery_failed" }, { status: 503 });
+  }
+  const { data: reviewQueue, error: reviewError } = await admin.from("articles")
+    .select("id, source, source_url, title, published_at, status, rights_status, rights_evidence_url, rights_reviewed_at, rights_expires_at, rights_attribution")
+    .is("domain_id", null).eq("status", "pending").eq("rights_status", "permitted")
+    .in("source", allowedSources.map((s) => s.id)).order("id").limit(200);
+  if (reviewError) return NextResponse.json({ error: "rights_queue_unavailable" }, { status: 503 });
+  const candidates: Candidate[] = (reviewQueue ?? []).flatMap((row) => {
+    if (!articleAllows(row as ArticleRights, rights, "process")) return [];
+    const source = allowedSources.find((s) => s.id === row.source);
+    if (!source) return [];
+    return [{ kind: source.kind, item: { title: row.title ?? "", url: row.source_url,
+      sourceId: source.id, sourceName: source.id, summary: "",
+      publishedAt: row.published_at ? new Date(row.published_at) : null } }];
+  });
 
   /* ── 3) 분류 — CLASSIFY_BATCH_SIZE건씩 ──────────────────────── */
 
@@ -137,9 +169,18 @@ export async function GET(request: NextRequest) {
       ranOutOfTime = true;
       break;
     }
+    const latestRights = await getSourceRights(admin);
+    const { data: permissions, error: permissionError } = await admin.from("articles")
+      .select("source_url, source, status, rights_status, rights_evidence_url, rights_reviewed_at, rights_expires_at, rights_attribution")
+      .in("source_url", batch.map(({ item }) => item.url));
+    if (permissionError) continue;
+    const approvedUrls = new Set((permissions ?? []).filter((row) =>
+      articleAllows(row as ArticleRights, latestRights, "process")).map((row) => row.source_url));
+    const approvedBatch = batch.filter(({ item }) => approvedUrls.has(item.url));
+    if (approvedBatch.length === 0) continue;
     try {
       const results = await classifyCandidates(
-        batch.map(({ item }) => ({
+        approvedBatch.map(({ item }) => ({
           source: item.sourceId,
           title: item.title,
           summary: item.summary.slice(0, 300),
@@ -147,11 +188,11 @@ export async function GET(request: NextRequest) {
         meter,
       );
       for (const r of results) {
-        const c = batch[r.i];
+        const c = approvedBatch[r.i];
         if (c) labelled.push({ ...c, category: r.category });
       }
     } catch (cause) {
-      classifyFailed += batch.length;
+      classifyFailed += approvedBatch.length;
       console.error("[ingest] 분류 실패", cause);
     }
   }
@@ -177,12 +218,13 @@ export async function GET(request: NextRequest) {
   // ignoreDuplicates라 보낸 수와 들어간 수가 다르다. select로 실제로 들어간 것만 센다.
   let queued = 0;
   for (const part of chunk(rows, 200)) {
-    const { data: inserted, error: writeError } = await admin
-      .from("articles")
-      .upsert(part, { onConflict: "source_url", ignoreDuplicates: true })
-      .select("id");
-    if (writeError) console.error("[ingest] 후보 저장 실패", writeError);
-    else queued += inserted?.length ?? 0;
+    for (const row of part) {
+      const { data: updated, error: writeError } = await admin.from("articles")
+        .update({ domain_id: row.domain_id, status: row.status })
+        .eq("source_url", row.source_url).eq("rights_status", "permitted").select("id");
+      if (writeError) console.error("[ingest] 후보 저장 실패", writeError);
+      else queued += updated?.length ?? 0;
+    }
   }
 
   /* ── 5) 오래 묵은 대기열은 잘라낸다 ─────────────────────────── */
@@ -206,7 +248,10 @@ export async function GET(request: NextRequest) {
     ranOutOfTime,
     feedItems: raw.length,
     afterDedupe: deduped.length,
-    alreadyKnown: deduped.length - candidates.length,
+    alreadyKnown: known.size,
+    awaitingRightsReview: fresh.length,
+    allowedSources: allowedSources.length,
+    blockedSources: SOURCES.length - allowedSources.length,
     classified: labelled.length,
     classifyFailed,
     rejected: labelled.filter((c) => c.category === "reject").length,

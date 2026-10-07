@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { dayKey, monthRangeUtc } from "./day";
 import { clampLevel } from "./level";
 import type { DomainRow } from "./supabase/types";
+import { ARTICLE_RIGHTS_COLUMNS, articleAllows, getSourceRights, type ArticleRights } from "./content-rights";
 
 /**
  * 홈 화면 조회 (plan §5). 사용자 스코프 클라이언트로 돈다 — 남의 콘이 안 보이는 건
@@ -78,11 +79,13 @@ export async function getScoops(
 ): Promise<Scoop[]> {
   const targetMonth = month ?? dayKey().slice(0, 7);
   const [start, end] = monthRangeUtc(targetMonth);
+  const sources = await getSourceRights(supabase);
+  if (sources.size === 0) return [];
 
   const { data } = await supabase
     .from("user_article_progress")
     .select(
-      "id, variant_id, article_id, quiz_score, completed_at, article_variants(title, summary, articles(domains(slug, name_ko)))",
+      `id, variant_id, article_id, quiz_score, completed_at, article_variants(title, summary, articles(${ARTICLE_RIGHTS_COLUMNS}, domains(slug, name_ko)))`,
     )
     .eq("user_id", userId)
     .eq("status", "saved")
@@ -100,12 +103,12 @@ export async function getScoops(
       article_variants: {
         title: string;
         summary: string | null;
-        articles: { domains: { slug: string; name_ko: string } | null } | null;
+        articles: (ArticleRights & { domains: { slug: string; name_ko: string } | null }) | null;
       } | null;
     };
 
     const domain = r.article_variants?.articles?.domains;
-    if (!domain || !r.completed_at) return [];
+    if (!domain || !r.completed_at || !articleAllows(r.article_variants?.articles, sources, "publish")) return [];
 
     return [
       {
@@ -134,9 +137,11 @@ export async function getScoopMonths(
   supabase: SupabaseClient,
   userId: string,
 ): Promise<string[]> {
+  const sources = await getSourceRights(supabase);
+  if (sources.size === 0) return [];
   const { data } = await supabase
     .from("user_article_progress")
-    .select("completed_at")
+    .select(`completed_at, articles(${ARTICLE_RIGHTS_COLUMNS})`)
     .eq("user_id", userId)
     .eq("status", "saved")
     .not("completed_at", "is", null)
@@ -144,7 +149,9 @@ export async function getScoopMonths(
 
   const months = new Set<string>();
   for (const row of data ?? []) {
-    const completedAt = (row as { completed_at: string | null }).completed_at;
+    const item = row as unknown as { completed_at: string | null; articles: ArticleRights | null };
+    if (!articleAllows(item.articles, sources, "publish")) continue;
+    const completedAt = item.completed_at;
     if (completedAt) months.add(dayKey(new Date(completedAt)).slice(0, 7));
   }
   return [...months];
@@ -179,10 +186,12 @@ export async function getTodayPicks(
   domains: DomainRow[],
   levels: Map<number, number>,
 ): Promise<TodayPick[]> {
+  const sources = await getSourceRights(supabase);
+  if (sources.size === 0) return [];
   const { data: progressRows } = await supabase
     .from("user_article_progress")
     .select(
-      "article_id, variant_id, status, article_variants(title, summary, level, reading_minutes, articles(id, domain_id, source_url, image_url, published_at))",
+      `article_id, variant_id, status, article_variants(title, summary, level, reading_minutes, articles(id, domain_id, source_url, image_url, published_at, ${ARTICLE_RIGHTS_COLUMNS}))`,
     )
     .eq("user_id", userId)
     .in("status", ["completed", "saved"]);
@@ -196,7 +205,7 @@ export async function getTodayPicks(
       summary: string | null;
       level: number;
       reading_minutes: number | null;
-      articles: {
+      articles: ArticleRights & {
         id: number;
         domain_id: number;
         source_url: string;
@@ -213,7 +222,7 @@ export async function getTodayPicks(
     interacted.add(row.article_id);
     const variant = row.article_variants;
     const article = variant?.articles;
-    if (!variant || !article || row.status !== "completed") continue;
+    if (!variant || !article || row.status !== "completed" || !articleAllows(article, sources, "publish")) continue;
 
     const domain = domains.find((d) => d.id === article.domain_id);
     if (!domain || unsavedByDomain.has(domain.id)) continue;
@@ -227,7 +236,7 @@ export async function getTodayPicks(
       summary: variant.summary,
       readingMinutes: variant.reading_minutes,
       sourceName: hostLabel(article.source_url),
-      imageUrl: article.image_url,
+      imageUrl: null,
       publishedAt: article.published_at,
       completedNotSaved: true,
     });
@@ -247,16 +256,18 @@ export async function getTodayPicks(
     const { data } = await supabase
       .from("article_variants")
       .select(
-        "id, article_id, title, summary, reading_minutes, articles!inner(id, domain_id, source_url, image_url, status, published_at)",
+        `id, article_id, title, summary, reading_minutes, articles!inner(id, domain_id, source_url, image_url, published_at, ${ARTICLE_RIGHTS_COLUMNS})`,
       )
       .eq("level", level)
       .eq("articles.domain_id", domain.id)
       .eq("articles.status", "ready")
+      .eq("articles.rights_status", "permitted")
       .order("published_at", { referencedTable: "articles", ascending: false })
       .limit(12);
 
     const fresh = (data ?? []).find(
-      (row) => !interacted.has((row as { article_id: number }).article_id),
+      (row) => !interacted.has((row as { article_id: number }).article_id) &&
+        articleAllows((row as unknown as { articles: ArticleRights }).articles, sources, "publish"),
     ) as
       | {
           id: number;
@@ -279,7 +290,7 @@ export async function getTodayPicks(
       summary: fresh.summary,
       readingMinutes: fresh.reading_minutes,
       sourceName: hostLabel(fresh.articles.source_url),
-      imageUrl: fresh.articles.image_url,
+      imageUrl: null,
       publishedAt: fresh.articles.published_at,
       completedNotSaved: false,
     });

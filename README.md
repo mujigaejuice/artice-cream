@@ -8,6 +8,10 @@
 `npm run test:account-delete`로 권한·인증·실패 처리를 검사한다(외부 요청 없음).
 배포·검증 방법과 로그/백업의 남은 과제는 [계정 삭제 구현 기록](docs/legal/account-deletion.md)에 있다.
 
+콘텐츠는 소스와 개별 글의 권리 승인 후에만 처리·공개한다. 현재 운영 승인 0개로 수집·가공을 중단하고 기존 글을 숨긴다.
+필수 표시와 DB/API 차단, 재개·철회 방법은 [콘텐츠 권리 게이트](docs/legal/content-rights-gate.md)에 있다.
+`npm run test:rights`로 미확인 콘텐츠의 접근·쓰기·외부 요청 차단을 검사한다.
+
 오늘 나온 개발·AI 글을 내 읽기 수준에 맞게 다시 써 주는 읽기 앱. 다 읽으면
 퀴즈로 이해도를 확인하고, 한 편을 끝낼 때마다 콘에 아이스크림 스쿱이 하나씩 쌓인다.
 
@@ -54,8 +58,11 @@ cp .env.example .env.local   # 값을 채운다
 Supabase 프로젝트를 만들고 SQL 에디터에서 아래 세 파일을 순서대로 실행한다.
 
 1. `supabase/migrations/0001_init.sql`
-2. `supabase/policies.sql`
-3. `supabase/seed.sql`
+2. `supabase/migrations/0002_content_rights.sql`
+3. `supabase/policies.sql`
+4. `supabase/seed.sql`
+
+기존 DB에는 아직 적용하지 않은 변경만 실행한다. 0002의 기본값은 모든 기존 글의 공개를 제한한다.
 
 Authentication 설정에서 이메일과 Google 로그인을 켜고, 익명 로그인은 끈다.
 온보딩은 정식 계정 로그인부터 시작한다.

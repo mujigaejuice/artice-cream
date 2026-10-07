@@ -8,6 +8,7 @@ import { PageError, PageLoading } from "@/components/ScreenState";
 import { AdUnlockButton } from "@/components/AdUnlockButton";
 import { apiJson } from "@/lib/client-api";
 import { useQueryParams } from "@/lib/use-query";
+import { useRefreshOnResume } from "@/lib/use-refresh-on-resume";
 
 /**
  * 리더 (plan §5, 정책.md §7).
@@ -46,6 +47,7 @@ export default function ReadPage() {
   }, [variantId]);
 
   useEffect(load, [load]);
+  useRefreshOnResume(load);
 
   // 세션이 없으면 온보딩으로. API가 401로 답한다.
   useEffect(() => {

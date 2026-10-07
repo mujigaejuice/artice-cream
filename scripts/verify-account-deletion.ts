@@ -10,6 +10,11 @@ import { SUPABASE_ANON_KEY, SUPABASE_URL } from "../lib/supabase/env";
 import { GET, POST } from "../app/api/account/delete/route.api";
 
 async function main() {
+  const production = process.argv.includes("--production");
+  const base = production ? "https://artice-cream.vercel.app" : "http://localhost:3000";
+  const checkAccount = (request: Request) => production
+    ? fetch(request.url, { headers: request.headers, cache: "no-store" }) : GET(request);
+  const deleteAccount = (request: Request) => production ? fetch(request) : POST(request);
   const admin = createAdminClient();
   const run = randomUUID();
   const email = `deletion-check-${run}@example.com`;
@@ -56,18 +61,18 @@ async function main() {
     assert.ok(confirmed.data.session);
     const jwt = confirmed.data.session.access_token;
     const refreshToken = confirmed.data.session.refresh_token;
-    const makeRequest = () => new Request("http://localhost:3000/api/account/delete", {
+    const makeRequest = () => new Request(`${base}/api/account/delete`, {
       method: "POST", headers: { Authorization: `Bearer ${jwt}`, "Content-Type": "application/json" },
       body: JSON.stringify({ expectedUserId: fixtureId, confirmation: "계정 삭제" }),
     });
-    assert.equal((await (await GET(makeRequest())).json()).canDelete, true, "live authentication time recognized");
+    assert.equal((await (await checkAccount(makeRequest())).json()).canDelete, true, "live authentication time recognized");
     for (const table of tables) {
       const { count, error }: { count: number | null; error: unknown } = await admin.from(table).select("*", { count: "exact", head: true })
         .eq(table === "profiles" ? "id" : "user_id", fixtureId);
       assert.equal(error, null);
       assert.equal(count, 1, `fixture exists in ${table}`);
     }
-    const response = await POST(makeRequest());
+    const response = await deleteAccount(makeRequest());
     assert.equal(response.status, 200);
     assert.deepEqual(await response.json(), { deleted: true });
     for (const table of tables) {
@@ -78,10 +83,10 @@ async function main() {
     }
     const removedAuth = await admin.auth.admin.getUserById(fixtureId);
     assert.equal(removedAuth.data.user, null, "Auth user removed");
-    assert.equal((await GET(makeRequest())).status, 401, "old JWT cannot use account API");
-    assert.equal((await POST(makeRequest())).status, 401, "repeated request cannot act with old JWT");
-    const otherDeviceRequest = new Request("http://localhost:3000/api/account/delete", { headers: { Authorization: `Bearer ${otherDeviceJwt}` } });
-    assert.equal((await GET(otherDeviceRequest)).status, 401, "another device's JWT cannot access the account");
+    assert.equal((await checkAccount(makeRequest())).status, 401, "old JWT cannot use account API");
+    assert.equal((await deleteAccount(makeRequest())).status, 401, "repeated request cannot act with old JWT");
+    const otherDeviceRequest = new Request(`${base}/api/account/delete`, { headers: { Authorization: `Bearer ${otherDeviceJwt}` } });
+    assert.equal((await checkAccount(otherDeviceRequest)).status, 401, "another device's JWT cannot access the account");
 
     // Direct PostgREST and in-flight server writes cannot recreate the deleted user data.
     const stale = createClient(SUPABASE_URL(), SUPABASE_ANON_KEY(), {
@@ -101,7 +106,7 @@ async function main() {
     const shared = await admin.from("article_variants").select("id").eq("id", variant.id).single();
     assert.equal(shared.error, null);
     assert.equal(shared.data.id, variant.id, "shared content is preserved");
-    console.log("Live account deletion passed: email-link auth; Auth + 5 personal tables removed; both devices' JWT/API and refresh blocked; direct/late writes blocked; shared content preserved.");
+    console.log(`${production ? "Production" : "Local route with live DB"} account deletion passed: email-link auth; Auth + 5 personal tables removed; both devices' JWT/API and refresh blocked; direct/late writes blocked; shared content preserved.`);
   } finally {
     if (fixtureId) {
       const remaining = await admin.auth.admin.getUserById(fixtureId);

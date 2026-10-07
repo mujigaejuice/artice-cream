@@ -18,6 +18,7 @@ import { ARTICLES_PER_CATEGORY, INGEST_BUDGET_PER_CATEGORY_USD } from "@/lib/pol
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { ArticleRow, DomainRow } from "@/lib/supabase/types";
 import { refreshDomainTerms } from "@/lib/terms";
+import { ARTICLE_RIGHTS_COLUMNS, articleAllows, getSourceRights, sourceAllows, type ArticleRights } from "@/lib/content-rights";
 
 /**
  * 인제스트 2단계 — 분류 하나를 가공한다 (소스분류.md §3).
@@ -70,6 +71,13 @@ export async function GET(request: NextRequest, { params }: Params) {
     articleStartSeconds: ARTICLE_START_SECONDS,
     articleTimeoutSeconds: ARTICLE_TIMEOUT_SECONDS, model: CONTENT_MODEL };
   console.log("[ingest:process:start]", JSON.stringify(configured));
+  const rights = await getSourceRights(admin);
+  const allowedSources = [...rights.values()].filter((source) => sourceAllows(source, "process"));
+  if (allowedSources.length === 0) {
+    return NextResponse.json({ ok: true, stage: "process", ...configured,
+      stoppedBy: "rights", processed: 0, failed: 0, allowedSources: 0 },
+    { headers: { "Cache-Control": "no-store" } });
+  }
 
   const { data: domain, error: domainError } = await admin
     .from("domains")
@@ -85,9 +93,11 @@ export async function GET(request: NextRequest, { params }: Params) {
 
   const { data: queue, error, count } = await admin
     .from("articles")
-    .select("id, source, source_url, title, published_at", { count: "exact" })
+    .select(`id, source_url, title, published_at, ${ARTICLE_RIGHTS_COLUMNS}`, { count: "exact" })
     .eq("domain_id", (domain as DomainRow).id)
     .eq("status", "pending")
+    .eq("rights_status", "permitted")
+    .in("source", allowedSources.map((source) => source.source))
     .order("published_at", { ascending: false, nullsFirst: false })
     .order("id", { ascending: true })
     .limit(QUEUE_SCAN);
@@ -96,15 +106,16 @@ export async function GET(request: NextRequest, { params }: Params) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const pending = (queue ?? []) as Pick<
+  const pending = (queue ?? []) as (Pick<
     ArticleRow,
     "id" | "source" | "source_url" | "title" | "published_at"
-  >[];
+  > & ArticleRights)[];
 
   const meter = newMeter();
   let extractFailed = 0;
   let retryLater = 0;
   let failed = 0;
+  let blockedRights = 0;
   const failures: Record<string, unknown>[] = [];
   const { processed, skippedSource, stoppedBy } = await processQueue(pending, {
     cap: ARTICLES_PER_CATEGORY,
@@ -115,6 +126,13 @@ export async function GET(request: NextRequest, { params }: Params) {
       return null;
     },
     process: async (row) => {
+      const { data: current, error: rightsError } = await admin.from("articles")
+        .select(ARTICLE_RIGHTS_COLUMNS).eq("id", row.id).maybeSingle();
+      // Recheck the registry per article so a withdrawal during this run stops later jobs.
+      if (rightsError || !articleAllows(current as ArticleRights | null, await getSourceRights(admin), "process")) {
+        blockedRights++;
+        return false;
+      }
       const articleStartedAt = Date.now();
       const articleSignal = AbortSignal.timeout(articleTimeoutMs(clock.remainingSeconds()));
       const articleLog = { runId, category, articleId: row.id, source: row.source, url: row.source_url };
@@ -193,6 +211,8 @@ export async function GET(request: NextRequest, { params }: Params) {
     stoppedBy,
     queueDepth: count ?? pending.length,
     scanned: pending.length,
+    blockedRights,
+    allowedSources: allowedSources.length,
     skippedSource,
     processed,
     extractFailed,
@@ -234,6 +254,12 @@ async function buildArticle(
   );
   signal.throwIfAborted();
 
+  const { data: permission, error: permissionError } = await admin.from("articles")
+    .select(ARTICLE_RIGHTS_COLUMNS).eq("id", articleId).maybeSingle();
+  if (permissionError || !articleAllows(permission as ArticleRights | null, await getSourceRights(admin), "process")) {
+    throw new Error("article rights withdrawn during generation");
+  }
+
   const { error: deleteError } = await admin.from("article_variants").delete()
     .eq("article_id", articleId).abortSignal(signal);
   if (deleteError) throw new Error(`variant cleanup: ${deleteError.message}`);
@@ -274,8 +300,10 @@ async function buildArticle(
     .from("articles")
     .update({
       title: extracted.title,
-      image_url: extracted.imageUrl,
-      original_text: extracted.text,
+      // Publisher images are outside the text permission. Keep no original body
+      // after generation; a future permission may specify a separate retention policy.
+      image_url: null,
+      original_text: null,
       status: "ready",
     })
     .eq("id", articleId).abortSignal(signal);

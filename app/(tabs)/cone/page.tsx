@@ -9,6 +9,7 @@ import { apiJson } from "@/lib/client-api";
 import type { Scoop } from "@/lib/feed";
 import type { DomainRow } from "@/lib/supabase/types";
 import { useQueryParams } from "@/lib/use-query";
+import { useRefreshOnResume } from "@/lib/use-refresh-on-resume";
 
 /**
  * 콘 탭 — 쌓인 스쿱과, 스쿱을 눌렀을 때 뜨는 아티클 타이틀.
@@ -36,6 +37,7 @@ export default function ConePage() {
   }, []);
 
   useEffect(load, [load]);
+  useRefreshOnResume(load);
 
   useEffect(() => {
     if (data?.status === "onboarding") router.replace("/onboarding");

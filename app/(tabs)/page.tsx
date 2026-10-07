@@ -9,6 +9,7 @@ import { ArticleCard } from "@/components/ArticleCard";
 import { PageError, PageLoading } from "@/components/ScreenState";
 import { apiJson } from "@/lib/client-api";
 import type { TodayPick } from "@/lib/feed";
+import { useRefreshOnResume } from "@/lib/use-refresh-on-resume";
 
 /**
  * 오늘 탭 — 오늘 읽을 것만. 콘은 /cone으로 갈라져 나갔다.
@@ -40,6 +41,7 @@ export default function TodayPage() {
   }, []);
 
   useEffect(load, [load]);
+  useRefreshOnResume(load);
 
   // 세션이 없거나 수준 행이 없으면 온보딩을 끝내지 않은 것이다. 서버 컴포넌트가
   // redirect()로 하던 판정이 여기로 왔다.
@@ -71,7 +73,7 @@ export default function TodayPage() {
             읽을 아티클이 아직 준비되지 않았어요.
           </p>
           <p className="mt-1 text-xs text-stone-500">
-            매일 아침 새 아티클이 올라와요.
+            준비를 마친 아티클부터 보여 드릴게요.
           </p>
         </div>
       ) : (

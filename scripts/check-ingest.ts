@@ -27,8 +27,17 @@ async function main() {
   let brokenLengthRetry = false;
   const writes: { table: string; method: string; body: Record<string, unknown> | unknown[]; query: string }[] = [];
   const sources = ["removed", "limited", "aws-news", "aws-news", "aws-news", "cloudflare", "databricks", "gcp-blog"];
+  // These are synthetic permissions, never actual publisher approvals.
+  const reviewedAt = new Date(Date.now() - 60_000).toISOString();
+  const attribution = { author: "Test Author", originalTitle: "Test original", licenseLabel: "test permission",
+    licenseUrl: "https://publisher.invalid/license", changes: "Test adaptation", notices: "" };
+  const rightsRows = [...new Set(sources)].map((source) => ({ source, rights_status: "permitted",
+    evidence_url: "https://publisher.invalid/license", reviewed_at: reviewedAt, expires_at: null,
+    allow_collect: true, allow_process: true, allow_publish: true }));
   const queue = sources.map((source, index) => ({ id: index + 1, source,
-    source_url: `https://publisher.invalid/${index + 1}`, title: `Article ${index + 1}`, published_at: null }));
+    source_url: `https://publisher.invalid/${index + 1}`, title: `Article ${index + 1}`, published_at: null,
+    status: "pending", rights_status: "permitted", rights_evidence_url: "https://publisher.invalid/license",
+    rights_reviewed_at: reviewedAt, rights_expires_at: null, rights_attribution: attribution }));
   const html = (id: number, length = 2000) => `<html><head><title>${id === 3 ? "FAIL_REWRITE" : `Article ${id}`}</title></head><body><article><h1>Test article</h1><p>${"기술 본문 설명입니다. ".repeat(length)}</p></article></body></html>`;
 
   globalThis.fetch = async (input, init) => {
@@ -82,7 +91,12 @@ async function main() {
     const method = init?.method ?? "GET";
     if (method === "GET") {
       if (table === "domains") return Response.json([{ id: 1, slug: "cloud", active: true }]);
-      if (table === "articles") return Response.json(queue, { headers: { "content-range": "0-7/80" } });
+      if (table === "content_source_rights") return Response.json(rightsRows);
+      if (table === "articles") {
+        const id = url.searchParams.get("id");
+        return id ? Response.json(queue.find((row) => `eq.${row.id}` === id) ?? null) :
+          Response.json(queue, { headers: { "content-range": "0-7/80" } });
+      }
       if (table === "article_variants") return termReadFailure
         ? Response.json({ message: "term read failed" }, { status: 400 })
         : Response.json([]);

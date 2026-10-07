@@ -1,8 +1,9 @@
 # 소스별 권리 확인 목록
 
-기준: 2026-10-07, [SOURCES](../../lib/news/feeds.ts)의 활성 40개. 주석 처리된 `woowahan`은 제외했다.
-“보류”는 이용허락 확인 전 공개 가공 보류를 권고한다는 뜻이며 운영 설정 변경을 뜻하지 않는다.
-최종 승인 0개. 5개는 공개 약관/라이선스 1차 검토, 35개는 미확인이다. 개별 글·사진의 예외와 별도 계약은 아직 확인하지 않았다.
+기준: 2026-10-08, [SOURCES](../../lib/news/feeds.ts)의 등록 40개. 주석 처리된 `woowahan`은 제외했다.
+8개 소스의 공개 조건을 1차 검토했고 32개는 미확인이다. 수집·외부 가공·공개까지의 운영 승인과 개별 글 승인은 0개다.
+운영 DB에 권리 게이트를 적용했다. 모든 기존 글은 `unreviewed`, 아래 8개 소스는 `restricted`, 나머지는 `unreviewed`다.
+모든 소스의 `allow_collect`·`allow_process`·`allow_publish`는 false다. CC 허용 조건을 찾았다는 사실과 개별 글·제공사 처리까지의 운영 승인은 구별한다.
 
 | Source ID | 피드 | 확인 상태 | 근거·다음 조치 |
 |---|---|---|---|
@@ -10,7 +11,7 @@
 | gcp-blog | [RSS](https://cloudblog.withgoogle.com/rss/) | 미확인 | Google 개발자 문서의 라이선스를 블로그에 확대 적용하지 말고 해당 글 조건 확인 |
 | cloudflare | [RSS](https://blog.cloudflare.com/rss/) | 보류 | [사이트 약관](https://www.cloudflare.com/website-terms/): 명시적 허용 범위 및 블로그 추가 조건 확인 |
 | kubernetes | [RSS](https://kubernetes.io/feed.xml) | 조건부 후보 | [website LICENSE](https://raw.githubusercontent.com/kubernetes/website/main/LICENSE): CC BY 4.0, 개별 글 적용 범위·크레딧·변경 표시 확인 |
-| cncf | [RSS](https://www.cncf.io/feed/) | 미확인 | 사이트·게스트 글·이미지별 권리 확인 |
+| cncf | [RSS](https://www.cncf.io/feed/) | 조건부 후보 | [공식 블로그 기고 지침](https://github.com/cncf/foundation/blob/main/policies-guidance/blog-guidelines.md)이 CC Attribution을 명시. 정확한 버전·개별 글·게스트/재게시·이미지 예외 확인 |
 | thenewstack | [RSS](https://thenewstack.io/feed/) | 미확인 | 재게시·요약·AI 처리 허용 범위 확인 |
 | infoq | [RSS](https://feed.infoq.com/) | 요약+링크 후보 | [약관](https://www.infoq.com/terms-and-conditions/): 현재 장문 재작성까지 허용되는지 별도 확인 |
 | meta-eng | [RSS](https://engineering.fb.com/feed/) | 미확인 | 사이트 글과 소프트웨어 라이선스 구분 |
@@ -27,7 +28,7 @@
 | interconnects | [RSS](https://www.interconnects.ai/feed) | 미확인 | 저자·플랫폼 약관, 유료/무료 글 구분 |
 | aitimes | [RSS](https://www.aitimes.com/rss/allArticle.xml) | 미확인 | 언론사 기사 재가공·재배포 허락 확인 |
 | embracethered | [RSS](https://embracethered.com/blog/index.xml) | 미확인 | 저자 이용허락 및 화면 캡처 권리 확인 |
-| owasp-genai | [RSS](https://genai.owasp.org/feed/) | 미확인 | 프로젝트 자료 라이선스가 해당 글에도 적용되는지 확인 |
+| owasp-genai | [RSS](https://genai.owasp.org/feed/) | 조건부 후보 | [기여 안내](https://genai.owasp.org/contributing/)·[거버넌스](https://genai.owasp.org/download/45927/?tmstv=1742665818)는 프로젝트 자료의 CC BY-SA 4.0 등을 안내. 블로그별 적용·저자·동일조건변경허락 표시 확인 |
 | trailofbits | [RSS](https://blog.trailofbits.com/feed/) | 미확인 | 블로그 본문 및 제3자 자료 조건 확인 |
 | google-security | [RSS](https://security.googleblog.com/feeds/posts/default) | 미확인 | Google의 다른 사이트 라이선스와 구분해 확인 |
 | thehackernews | [RSS](https://feeds.feedburner.com/TheHackersNews) | 미확인 | 발행처 약관 및 기사·이미지 재배포 허락 확인 |
@@ -36,7 +37,7 @@
 | dailysecu | [RSS](https://www.dailysecu.com/rss/allArticle.xml) | 미확인 | 언론사 및 기고자 재가공 허락 확인 |
 | unit42 | [RSS](https://unit42.paloaltonetworks.com/feed/) | 미확인 | 회사 약관·연구 자료 별도 조건 확인 |
 | oldnewthing | [RSS](https://devblogs.microsoft.com/oldnewthing/feed) | 미확인 | 과거 글 아카이브 포함, 글별 조건·저자 권리 확인 |
-| lemire | [RSS](https://lemire.me/blog/feed/) | 미확인 | 과거 글 포함, 본문과 코드 라이선스 구분 |
+| lemire | [RSS](https://lemire.me/blog/feed/) | 조건부 후보 | [저자 이용 조건](https://lemire.me/blog/terms-of-use/)이 댓글을 제외한 본문에 [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)을 연결하고 상업적 재사용·수정·번역을 허용. 저자·원제·출처·라이선스·변경 표시와 제3자 인용/이미지 예외, 제공사 처리 조건 확인 |
 | murat | [RSS](https://muratbuffalo.blogspot.com/feeds/posts/default) | 미확인 | 과거 글 포함, 저자 허락·외부 인용자료 확인 |
 | eli-bendersky | [RSS](https://eli.thegreenplace.net/feeds/all.atom.xml) | 미확인 | 글과 코드의 이용허락 구분 |
 | brooker | [RSS](https://brooker.co.za/blog/rss.xml) | 미확인 | 전체 피드의 과거 글 포함, 저자 조건 확인 |
@@ -48,6 +49,8 @@
 | devsisters | [RSS](https://tech.devsisters.com/rss.xml) | 미확인 | 저자·회사 허락과 이미지 예외 확인 |
 
 ## 개별 글 승인 기록 양식
+
+실제 필드·승인/차단 절차는 [콘텐츠 권리 게이트](content-rights-gate.md)를 따른다. 소스 전체 허용만으로 기존 글이 공개되지는 않는다.
 
 - source ID / 원문 URL / 원제 / 저자 / 게시일:
 - 권리자 / 연락처 또는 공개 이용 조건 URL:

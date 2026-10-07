@@ -1,6 +1,7 @@
 import { apiError, getRequestContext, json, preflight } from "@/lib/api";
 import { applyQuiz, clampLevel } from "@/lib/level";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { canPublishArticle } from "@/lib/content-rights";
 import type {
   QuizQuestionRow,
   QuizReviewItem,
@@ -70,6 +71,10 @@ export async function POST(request: Request) {
       domains: { slug: string; name_ko: string };
     };
   };
+
+  if (!variant.articles || !await canPublishArticle(admin, variant.articles.id)) {
+    return apiError(request, "not found", 404);
+  }
 
   const { data: questionRows } = await admin
     .from("quiz_questions")

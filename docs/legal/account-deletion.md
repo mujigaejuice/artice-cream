@@ -1,6 +1,7 @@
 # 계정 삭제 구현·운영 확인
 
-2026-10-08 구현. 현재 작업 트리 기준이며 아직 배포하지 않았다.
+2026-10-08 구현·운영 배포 완료. 커밋 `24d2151`, Vercel success 확인.
+운영 API를 실제 전용 테스트 계정으로 검증했고, 실기기·브라우저 이메일 앱 왕복은 미검증이다.
 
 ## 이용 경로
 
@@ -36,6 +37,7 @@
 - `npm run test:auth`: 웹 localStorage·네이티브 Preferences 정리와 삭제된 사용자의 403/404 응답 처리.
 - `npm run test:logic`, `npm run typecheck`, `npm run build`, `npm run build:app`: 통과. Android 정적 번들에 공개 삭제 안내가 있고 서버 API는 포함되지 않는 점도 확인했다.
 - 실제 Supabase: 전용 테스트 계정과 5개 테이블의 시험 기록 생성·삭제. 이메일 링크 인증, Auth/관련 기록 0건, 두 기기 JWT·갱신 토큰 차단, 직접·서버 지연 쓰기 재생성 차단, 공유 가공본 보존 확인. 기존 이용자나 기사 변경 및 이메일 발송 없음.
+- 실제 운영 Vercel API: `scripts/verify-account-deletion.ts --production` 통과(10-08). 위 DB·세션 검증을 운영 HTTP 경로로 반복했으며 시험 계정만 삭제했다. 브라우저 UI·메일 앱을 조작한 검증과는 구분한다.
 
 ```sh
 node --env-file=.env.local --import=tsx scripts/verify-account-deletion.ts

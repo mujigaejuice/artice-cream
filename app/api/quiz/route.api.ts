@@ -1,5 +1,6 @@
 import { apiError, getRequestContext, json, preflight } from "@/lib/api";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { canPublishArticle } from "@/lib/content-rights";
 import type {
   PublicQuizQuestion,
   QuizQuestionRow,
@@ -52,6 +53,7 @@ export async function GET(request: Request) {
   if (!article) return apiError(request, "not found", 404);
 
   const admin = createAdminClient();
+  if (!await canPublishArticle(admin, article.id)) return apiError(request, "not found", 404);
 
   const { data: rows } = await admin
     .from("quiz_questions")

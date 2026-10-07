@@ -62,7 +62,7 @@ export function json(
 ): Response {
   return Response.json(body, {
     status: init.status ?? 200,
-    headers: corsHeaders(request),
+    headers: { ...corsHeaders(request), "Cache-Control": "no-store" },
   });
 }
 

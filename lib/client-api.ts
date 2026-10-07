@@ -31,7 +31,7 @@ export async function apiFetch(
     headers.set("Content-Type", "application/json");
   }
 
-  return fetch(`${BASE}${path}`, { ...init, headers });
+  return fetch(`${BASE}${path}`, { ...init, headers, cache: "no-store" });
 }
 
 /** 잘못된 응답을 호출자가 조용히 무시하지 못하게 여기서 던진다. */

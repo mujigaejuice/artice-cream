@@ -6,6 +6,7 @@ import { useEffect, useRef } from "react";
 import { coreColor } from "@/lib/color";
 import { levelShort } from "@/lib/level";
 import { quizHref } from "@/lib/routes";
+import type { Attribution } from "@/lib/content-rights";
 
 type GlossaryMap = Record<string, { term: string; definition: string }>;
 
@@ -22,6 +23,7 @@ export type ReaderProps = {
   domainLabel: string;
   sourceName: string | null;
   sourceUrl: string;
+  attribution?: Attribution | null;
   /** 이 아티클을 어디까지 진행했는지 — 하단 CTA 분기의 기준(화면구성.md §5). */
   progressStatus: "started" | "completed" | "saved";
   /** progressStatus가 completed·saved일 때의 점수. */
@@ -141,11 +143,19 @@ export function Reader(props: ReaderProps) {
 
       {/* 출처 표기는 선택이 아니다 — spec §11.1 저작권 완화책 (a). */}
       <footer className="mt-10 border-t border-stone-200 pt-4 text-xs text-stone-500">
+        {props.attribution && <div className="mb-3 space-y-1 leading-relaxed">
+          <p>원제: {props.attribution.originalTitle}</p>
+          <p>저자: {props.attribution.author}</p>
+          <p>이용 조건: <a href={props.attribution.licenseUrl} target="_blank" rel="noopener noreferrer" className="underline">{props.attribution.licenseLabel}</a></p>
+          <p>변경: {props.attribution.changes}</p>
+          {props.attribution.notices && <p className="whitespace-pre-wrap">{props.attribution.notices}</p>}
+        </div>}
         <p>
           이 글은 {props.sourceName && (
             <strong className="font-medium">{props.sourceName}</strong>
           )}
-          의 보도를 바탕으로 읽기 수준에 맞게 다시 쓴 것입니다.
+          의 글을 한국어 읽기 수준에 맞게 재구성하고 용어 설명·퀴즈를 덧붙였습니다.
+          원 발행처의 승인이나 보증을 의미하지 않습니다.
         </p>
         <a
           href={props.sourceUrl}
