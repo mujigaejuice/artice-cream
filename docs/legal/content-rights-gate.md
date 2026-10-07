@@ -1,12 +1,14 @@
 # 콘텐츠 권리 게이트
 
-2026-10-08 구현·운영 DB 적용. 현재 수집/가공/공개 승인 소스 0개, 개별 승인 글 0개.
+2026-10-08 구현·운영 DB·서버 배포 완료(`4afc7de`, Vercel success).
+05:55(KST) 실제 운영 API·직접 DB·9개 크론 검사 통과. 현재 수집/가공/공개 승인 소스 0개, 개별 승인 글 0개.
 권리 미확인은 침해 확정 판정을 뜻하지 않는다. 이용 근거가 확정되기 전 접근을 제한한다.
 
 ## 데이터와 적용 범위
 
 - `content_source_rights`: 소스 상태(`unreviewed`, `permitted`, `restricted`, `blocked`), 공개 근거 URL, 확인일, 만료일, `allow_collect`·`allow_process`·`allow_publish`. 내부 검토 메모는 클라이언트가 읽지 못한다.
 - `articles.rights_*`: 개별 글 상태·근거·확인일·만료일·필수 표시·내부 검토 메모. 기존 1,538건은 기본값 `unreviewed`로 보존한다. 적용 전 ready 82편과 가공본 246개도 공개에서 제외한다. 실제 기사·개인 기록을 삭제하는 작업은 아니다.
+- 서버 코드 배포 후 최종 스냅샷은 ready 86편·가공본 258개이며 공개 가능 글은 0편이다. DB 적용과 서버 배포 사이에 늘어난 가공본도 미확인으로 차단했다. DB 목록은 현재 40개와 과거 `woowahan`까지 41개를 포함한다.
 - `rights_attribution`: `author`, `originalTitle`, `licenseLabel`, `licenseUrl`, `changes`, `notices`. 마지막 항목은 원문에 제공된 권리·면책·기존 변경 고지를 보존하고, 없으면 빈 문자열을 기록한다. 허락을 임의로 만들어 넣지 않는다.
 - `domain_terms.origin_article_ids`: 파생 용어 목록의 근거 기사. 기존 목록은 근거가 없으므로 숨기며, 앞으로는 공개 가능한 가공본만 집계한다.
 
@@ -40,5 +42,10 @@ API 응답과 브라우저 요청은 `no-store`다. 탭 복귀와 브라우저 �
 - `npm run test:ingest`: 승인된 시험 자료의 기존 4편 상한·동시성·시간 가드·실패·저장 동작 회귀 검사.
 - [content_rights.sql](../../supabase/tests/content_rights.sql): 운영 SQL 트랜잭션 안에서 미확인 차단 → 승인 조회 → 소스 철회 → 개별 글 만료·컬럼 권한·정답 비공개를 검사하고 시험 자료를 모두 롤백. 실제 RLS 검사 통과.
 - `node --env-file=.env.local --import=tsx scripts/verify-content-rights.ts --production`: 배포 후 실제 인증·API·직접 DB·9개 크론 차단 검사. 전용 계정과 그 계정의 학습 기록만 만들고 종료 시 삭제하며 실제 기사와 이용자는 변경하지 않는다.
+
+운영 검사 결과(10-08): 읽기·퀴즈·채점·저장 404, 직접 기사/가공본/문항/진행 기록 조회 0건,
+원문 컬럼 접근 거절, 오늘 카드·콘·월 목록 0건, 차단된 열람의 쿼터 미소비,
+서버 내부 개인 저장 기록·공용 가공본 보존, 9개 크론 `stoppedBy: rights`·분류/가공 0건,
+공개 계정 삭제 페이지 HTTP 200. 시험 계정 정리 완료. 웹·Android 정적 빌드 통과.
 
 증빙: 공개 약관/라이선스는 [소스별 기록](source-rights-register.md), 운영 검사 결과는 로컬 `spike-out/content-rights-production.json`. 외부 업체 정보·계약·개인 연락처와 비밀키는 공개 문서에 보관하지 않는다.
