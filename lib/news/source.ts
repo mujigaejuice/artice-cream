@@ -3,7 +3,7 @@ import { XMLParser } from "fast-xml-parser";
 import type { Source, SourceKind } from "./feeds";
 
 /**
- * 소스 주도 뉴스 수집 (소스분류.md §3). 발행처 피드 41개를 직접 읽는다 —
+ * 소스 주도 뉴스 수집 (소스분류.md §3). 권리 승인된 발행처 피드를 직접 읽는다 —
  * 도메인마다 구글뉴스를 검색하던 이전 방식(GoogleNewsRss)은 지웠다. 분류는
  * 소스가 아니라 LLM이 글마다 정한다(lib/ai/pipeline.ts classifyCandidates).
  */

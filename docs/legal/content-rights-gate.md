@@ -6,6 +6,8 @@
 
 10-08 12:59(KST), Lemire 기존 ready 6편의 출처·라이선스·변경 표시를 보완하고 가공본 8개·퀴즈 10개를 운영 DB에서 수정했다. 18개 가공본·72개 문항 전체의 적용 값 대조와 SQL의 6편 공개 불가 확인을 통과했다. 6편은 `restricted`, 소스 행위 플래그는 모두 false로 유지했다. CC BY 3.0 재공개 근거와 게스트 저자 확인이 남아 있다. [상세 기록](lemire-review.md).
 
+10-08, [공개 라이선스 후보 검토](source-candidates.md)로 신규 7개를 등록하고 기존 DuckDB의 본문 저장소 근거를 추가했다. 코드 목록은 47개, DB는 과거 `woowahan` 포함 48개이며 16개 `restricted`·32개 `unreviewed`다. 운영 허용 플래그와 개별 글 상태는 바꾸지 않았으므로 승인 소스·공개 가능 글은 계속 0개다.
+
 ## 데이터와 적용 범위
 
 - `content_source_rights`: 소스 상태(`unreviewed`, `permitted`, `restricted`, `blocked`), 공개 근거 URL, 확인일, 만료일, `allow_collect`·`allow_process`·`allow_publish`. 내부 검토 메모는 클라이언트가 읽지 못한다.
@@ -38,7 +40,7 @@ API 응답과 브라우저 요청은 `no-store`다. 탭 복귀와 브라우저 �
 
 ## 적용과 검증
 
-기존 DB에는 [0002_content_rights.sql](../../supabase/migrations/0002_content_rights.sql)만 적용한다. 이미 적용된 운영 DB에서 이 파일을 다시 실행하거나 초기 스키마를 재실행하지 않는다. 새 DB 설치 순서는 0001 → 0002 → policies → seed다.
+기존 DB에는 아직 적용하지 않은 마이그레이션만 실행한다. 이미 적용된 0002나 초기 스키마를 재실행하지 않는다. 후보 등록은 [0003_source_candidates.sql](../../supabase/migrations/0003_source_candidates.sql)이며 새 DB 설치 순서는 0001 → 0002 → 0003 → policies → seed다. 0003은 후보 근거만 추가하며 기존 허용·차단 결정이나 글을 변경하지 않는다.
 
 - `npm run test:rights`: 실제 API 핸들러·SDK를 모의 HTTP와 연결해 권리 누락/만료/철회, 읽기·퀴즈·채점·저장, 쿼터·쓰기 차단, 저장 목록, 필수 표시, 크론의 외부 요청 차단 검사.
 - `npm run test:ingest`: 승인된 시험 자료의 기존 4편 상한·동시성·시간 가드·실패·저장 동작 회귀 검사.

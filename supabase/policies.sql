@@ -1,5 +1,5 @@
 -- RLS 정책 (spec §8 "RLS (Supabase 보안 자세)").
--- Apply migrations/0001_init.sql and 0002_content_rights.sql FIRST.
+-- Apply migrations/0001_init.sql, 0002_content_rights.sql and 0003_source_candidates.sql FIRST.
 -- 0002 installs restrictive rights policies; these permissive policies cannot bypass them.
 --
 --   * 사용자 스코프 테이블: 본인 행만.

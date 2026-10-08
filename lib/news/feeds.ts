@@ -3,6 +3,8 @@
 // scripts/spike-sources.ts가 이 SOURCES를 재는 데 썼던 원본이다. 소스를
 // 추가/제거하려면 여기와 소스분류.md를 같이 고친다.
 
+import { SOURCE_CANDIDATES } from "./source-candidates";
+
 export type SourceKind = "news" | "blog";
 
 export type Source = {
@@ -23,7 +25,7 @@ export type Source = {
   archive?: { url: string; match?: string; pages?: [number, number]; step?: number };
 };
 
-export const SOURCES: Source[] = [
+const existingSources: Source[] = [
   { id: "aws-news", url: "https://aws.amazon.com/blogs/aws/feed/", lang: "en", kind: "news" },
   { id: "gcp-blog", url: "https://cloudblog.withgoogle.com/rss/", lang: "en", kind: "news" },
   { id: "cloudflare", url: "https://blog.cloudflare.com/rss/", lang: "en", kind: "blog" },
@@ -108,4 +110,13 @@ export const SOURCES: Source[] = [
   { id: "duckdb", url: "https://duckdb.org/feed.xml", lang: "en", kind: "blog" },
   { id: "spotify-eng", url: "https://engineering.atspotify.com/feed/", lang: "en", kind: "blog" },
   { id: "devsisters", url: "https://tech.devsisters.com/rss.xml", lang: "ko", kind: "blog" },
+];
+
+// Register reviewed public-license candidates without granting collection, processing or publication.
+// Actual permissions are checked against content_source_rights before any source request.
+export const SOURCES: Source[] = [
+  ...existingSources,
+  ...SOURCE_CANDIDATES.map(({ source }) => source).filter(
+    (source) => !existingSources.some((existing) => existing.id === source.id),
+  ),
 ];
