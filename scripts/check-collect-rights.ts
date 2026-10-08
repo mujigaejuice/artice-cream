@@ -54,14 +54,28 @@ async function main() {
   assert.equal(summary.classified, 0); assert.equal(llmCalls, 0);
   const discovered = writes.find((write) => write.method === "POST")!.body as { rights_status: string }[];
   assert.equal(discovered[0].rights_status, "unreviewed");
+  // Collection approval alone may fetch/store metadata, even if a supposedly
+  // reviewed article is returned by the DB. It must never call the provider.
+  source.allow_process = false; source.allow_publish = false; mode = "approved"; writes = [];
+  summary = await (await GET(request())).json();
+  assert.equal(summary.allowedSources, 1); assert.equal(summary.processingSources, 0);
+  assert.equal(summary.classified, 0); assert.equal(llmCalls, 0);
+  assert.ok(writes.some((write) => write.method === "POST"));
+  assert.ok(!writes.some((write) => write.method === "PATCH"), "metadata-only collection must not classify or expire the queue");
+  source.allow_process = true;
   mode = "withdrawn"; writes = [];
   summary = await (await GET(request())).json();
   assert.equal(summary.classified, 0); assert.equal(llmCalls, 0, "withdrawal is checked immediately before classification");
   mode = "approved"; writes = [];
   summary = await (await GET(request())).json();
   assert.equal(summary.classified, 1); assert.equal(summary.queued, 1); assert.equal(llmCalls, 1);
-  assert.equal(feedCalls, 3);
+  assert.equal(feedCalls, 4);
   assert.ok(writes.some((write) => write.method === "PATCH" && (write.body as { domain_id?: number }).domain_id === 1));
+  source.allow_collect = false; writes = [];
+  summary = await (await GET(request())).json();
+  assert.equal(summary.allowedSources, 0); assert.equal(summary.processingSources, 1);
+  assert.equal(summary.classified, 1); assert.equal(llmCalls, 2); assert.equal(feedCalls, 4);
+  assert.ok(!writes.some((write) => write.method === "POST"), "existing approved articles classify without reopening collection");
   console.log("Collector rights: discovery stays unreviewed, no unreviewed summary reaches LLM, withdrawal blocks classification, reviewed articles classify and queue.");
 }
 main().catch((cause: unknown) => { console.error(cause); process.exitCode = 1; });

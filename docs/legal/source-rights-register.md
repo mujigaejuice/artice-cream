@@ -1,9 +1,9 @@
 # 소스별 권리 확인 목록
 
 기준: 2026-10-08, [SOURCES](../../lib/news/feeds.ts)의 등록 47개(기존 40 + 신규 7). 주석 처리된 `woowahan`은 제외했다.
-16개 소스의 공개 조건을 1차 검토했고 31개는 미확인이다. 정확한 본문 라이선스 근거가 있는 조건부 후보 10개는 [추가 후보 검토](source-candidates.md)에 적용 범위·표시 조건·실제 피드 공급량을 기록했다. 수집·외부 가공·공개까지의 운영 승인과 개별 글 승인은 0개다.
+16개 소스의 공개 조건을 1차 검토했고 31개는 미확인이다. 정확한 본문 라이선스 근거가 있는 조건부 후보 10개는 [추가 후보 검토](source-candidates.md)에 적용 범위·표시 조건·실제 피드 공급량을 기록했다. 현재 Kubernetes·Go의 수집 승인 2개, 가공·공개 소스 승인 0개, 개별 글의 본문 권리 승인 2편이다. [수집 재개 기록](licensed-collection.md).
 운영 DB에 권리 게이트를 적용했다. 기존 글은 기본 `unreviewed`이며, 10-08 개별 검토한 Lemire ready 6편은 출처를 보완한 뒤 `restricted`로 기록했다. 0003 후보 등록 후 검토한 16개 소스는 `restricted`, 나머지는 `unreviewed`다. DB에는 과거 `woowahan`까지 총 48개가 있다.
-모든 소스의 `allow_collect`·`allow_process`·`allow_publish`는 false다. CC 허용 조건을 찾았다는 사실과 개별 글·제공사 처리까지의 운영 승인은 구별한다.
+0004로 Kubernetes·Go만 `permitted`·`allow_collect=true`로 변경했다. DB는 `permitted` 2·`restricted` 14·`unreviewed` 32개이며 가공·공개 플래그는 모든 소스에서 false다. CC 허용 조건을 찾았다는 사실과 개별 글·제공사 처리까지의 운영 승인은 구별한다.
 
 ## 소스 축소 전 판정 기준 정정
 

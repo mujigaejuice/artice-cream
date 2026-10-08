@@ -21,9 +21,8 @@ import { articleAllows, getSourceRights, sourceAllows, type ArticleRights } from
 /**
  * 인제스트 1단계 — 수집과 분류 (소스분류.md §3).
  *
- *   피드 41개(최근 14일) ─┐
- *                        ├─▶ source_url 중복 제거 ─▶ 분류(LLM) ─▶ articles
- *   아카이브 5곳(무작위) ─┘                                      pending | rejected
+ *   수집 승인 피드/아카이브 ─▶ 중복 제거 ─▶ 미확인 메타데이터 저장
+ *   가공 승인 소스 + 개별 승인 글 ─▶ 분류(LLM) ─▶ pending | rejected
  *
  * 본문 추출도 재작성도 여기서 하지 않는다. 그건 분류별 2단계(`ingest/<분류>`)가
  * 한다 — lib/news/ingest.ts 머리말에 왜 그렇게 쪼갰는지 적어 뒀다.
@@ -63,11 +62,11 @@ export async function GET(request: NextRequest) {
   const clock = startDeadline(startedAt);
   const admin = createAdminClient();
   const rights = await getSourceRights(admin);
-  const allowedSources = SOURCES.filter((source) => sourceAllows(rights.get(source.id), "collect") &&
-    sourceAllows(rights.get(source.id), "process"));
-  if (allowedSources.length === 0) {
+  const allowedSources = SOURCES.filter((source) => sourceAllows(rights.get(source.id), "collect"));
+  const processingSources = SOURCES.filter((source) => sourceAllows(rights.get(source.id), "process"));
+  if (allowedSources.length === 0 && processingSources.length === 0) {
     return NextResponse.json({ ok: true, stage: "collect", stoppedBy: "rights", queued: 0,
-      classified: 0, allowedSources: 0, blockedSources: SOURCES.length },
+      classified: 0, allowedSources: 0, processingSources: 0, blockedSources: SOURCES.length },
     { headers: { "Cache-Control": "no-store" } });
   }
 
@@ -143,14 +142,15 @@ export async function GET(request: NextRequest) {
     })), { onConflict: "source_url", ignoreDuplicates: true });
     if (discoverError) return NextResponse.json({ error: "discovery_failed" }, { status: 503 });
   }
-  const { data: reviewQueue, error: reviewError } = await admin.from("articles")
+  const reviewQuery = processingSources.length ? await admin.from("articles")
     .select("id, source, source_url, title, published_at, status, rights_status, rights_evidence_url, rights_reviewed_at, rights_expires_at, rights_attribution")
     .is("domain_id", null).eq("status", "pending").eq("rights_status", "permitted")
-    .in("source", allowedSources.map((s) => s.id)).order("id").limit(200);
+    .in("source", processingSources.map((s) => s.id)).order("id").limit(200) : { data: [], error: null };
+  const { data: reviewQueue, error: reviewError } = reviewQuery;
   if (reviewError) return NextResponse.json({ error: "rights_queue_unavailable" }, { status: 503 });
   const candidates: Candidate[] = (reviewQueue ?? []).flatMap((row) => {
     if (!articleAllows(row as ArticleRights, rights, "process")) return [];
-    const source = allowedSources.find((s) => s.id === row.source);
+    const source = processingSources.find((s) => s.id === row.source);
     if (!source) return [];
     return [{ kind: source.kind, item: { title: row.title ?? "", url: row.source_url,
       sourceId: source.id, sourceName: source.id, summary: "",
@@ -230,11 +230,14 @@ export async function GET(request: NextRequest) {
   /* ── 5) 오래 묵은 대기열은 잘라낸다 ─────────────────────────── */
 
   const cutoff = new Date(Date.now() - PENDING_TTL_DAYS * 86_400_000).toISOString();
-  const { count: expired } = await admin
+  // A metadata-only run must not expire the stored processing/review queue.
+  const expiration = processingSources.length ? await admin
     .from("articles")
     .update({ status: "expired" }, { count: "exact" })
-    .eq("status", "pending")
-    .lt("fetched_at", cutoff);
+    .eq("status", "pending").eq("rights_status", "permitted").not("domain_id", "is", null)
+    .in("source", processingSources.map((source) => source.id))
+    .lt("fetched_at", cutoff) : { count: 0 };
+  const expired = expiration.count;
 
   /* ── 6) 요약 ───────────────────────────────────────────────── */
 
@@ -251,6 +254,7 @@ export async function GET(request: NextRequest) {
     alreadyKnown: known.size,
     awaitingRightsReview: fresh.length,
     allowedSources: allowedSources.length,
+    processingSources: processingSources.length,
     blockedSources: SOURCES.length - allowedSources.length,
     classified: labelled.length,
     classifyFailed,
@@ -265,5 +269,5 @@ export async function GET(request: NextRequest) {
   };
 
   console.log("[ingest:collect]", JSON.stringify(summary));
-  return NextResponse.json(summary);
+  return NextResponse.json(summary, { headers: { "Cache-Control": "no-store" } });
 }

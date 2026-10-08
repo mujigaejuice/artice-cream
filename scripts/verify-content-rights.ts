@@ -6,6 +6,7 @@ import { createClient } from "@supabase/supabase-js";
 import { createAdminClient } from "../lib/supabase/admin";
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "../lib/supabase/env";
 import { sourceAllows, type SourceRights } from "../lib/content-rights";
+import { SOURCES } from "../lib/news/feeds";
 
 async function main() {
   if (!process.argv.includes("--production")) throw new Error("Pass --production for this explicit production check");
@@ -21,7 +22,9 @@ async function main() {
     assert.equal(registry.error, null);
     assert.ok(registry.data?.length);
     assert.ok((registry.data as SourceRights[]).every((row) => !sourceAllows(row, "publish") &&
-      !sourceAllows(row, "collect") && !sourceAllows(row, "process")), "initial registry must have no operational approvals");
+      !sourceAllows(row, "process")), "this check requires processing/publication to remain disabled");
+    const registryBySource = new Map((registry.data as SourceRights[]).map((row) => [row.source, row]));
+    const collectionApprovals = SOURCES.filter((source) => sourceAllows(registryBySource.get(source.id), "collect")).length;
     const domains = await admin.from("domains").select("id").eq("active", true).limit(1);
     assert.equal(domains.error, null); assert.ok(domains.data?.length);
     const articleArgument = process.argv.find((arg) => arg.startsWith("--article-id="));
@@ -90,10 +93,17 @@ async function main() {
         cache: "no-store", signal: AbortSignal.timeout(60_000), headers: { Authorization: `Bearer ${process.env.CRON_SECRET}` },
       });
       assert.equal(response.status, 200);
-      const summary = await response.json(); assert.equal(summary.stoppedBy, "rights");
+      const summary = await response.json();
+      if (category || collectionApprovals === 0) assert.equal(summary.stoppedBy, "rights");
+      else {
+        assert.equal(summary.allowedSources, collectionApprovals);
+        assert.equal(summary.processingSources, 0);
+        assert.equal(summary.queued, 0); assert.equal(summary.usage.calls, 0);
+        results.metadataCollectionSources = collectionApprovals;
+      }
       assert.equal(category ? summary.processed : summary.classified, 0);
     }
-    results.cronsStoppedByRights = 9;
+    results.cronsStoppedByRights = collectionApprovals === 0 ? 9 : 8;
     const publicPage = await fetch(`${base}/account/delete/`, { cache: "no-store" });
     assert.equal(publicPage.status, 200); assert.ok((await publicPage.text()).includes("계정 및 데이터 삭제"));
     results.publicDeletionPage = 200;

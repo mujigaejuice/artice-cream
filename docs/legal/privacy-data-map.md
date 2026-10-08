@@ -28,7 +28,7 @@
 | Vercel | 웹/API·cron | [DPA](https://vercel.com/legal/dpa), [보안·법적 자료](https://security.vercel.com/?itemName=legal&itemUid=e3fae2ca-94a9-416b-b577-5c90e382df57) | 실행·로그 저장 국가, 요청/보안/분석 로그 여부와 기간, 캐시, 재위탁·지원 접근, 계약 법인 |
 | 로그인 메일 | Supabase를 통해 발송 | 실제 SMTP 설정 확인 후 해당 업체 문서 추가 | 기본 발송인지 별도 SMTP인지부터 확인; 특정 업체를 추정하지 않음 |
 | Google OAuth | 선택 로그인 | OAuth 동의 화면·설정에서 실제 범위 확인 | Google의 독립 처리와 우리 수탁 업무를 혼동하지 않기; Supabase가 받은 메타데이터 최소화 |
-| AI 게이트웨이 | 기사 분류·본문·용어·퀴즈, 모델명 `pickle-general` | 업체 문서 미제공 | 운영 법인·하위 제공사·국가·입출력 보관·학습 사용·삭제·계약상 허용 용도 |
+| AI 게이트웨이 | 기사 분류·본문·용어·퀴즈, PNU Cloud Pickle의 `llm.pcl.kr/v1`, `pickle-general` | [공식 연결 안내](https://pickle.pusan.ac.kr/docs/llm/connect), [약관](https://pickle.pusan.ac.kr/terms/TERMS_OF_SERVICE), [개인정보 방침](https://pickle.pusan.ac.kr/terms/PRIVACY_POLICY), [검토 기록](licensed-collection.md) | 공식 가이드상 학교 자체 서빙. 현재 키의 승인 용도·본문 기록·입출력 보관·학습 사용·삭제와 처리 위치 확인 필요 |
 | Anthropic | 게이트웨이 설정이 없을 때의 코드 대체 경로 | 실제 사용 전 계약·정책 확인 필요 | 코드에 존재하는 것과 현재 활성 제공사를 구분. 전환 전 데이터맵/방침 갱신 |
 
 프로젝트 문서의 “Supabase 서울 리전”은 국외 이전이 없다는 증거가 아니다. 국외 보관 외에 지원 과정의 국외 조회·재위탁도 확인한다. 국외 이전의 법적 근거와 공개/동의 사항은 [개인정보 보호법 제28조의8](https://www.law.go.kr/LSW/lsLinkCommonInfo.do?chrClsCd=010202&lsJoLnkSeq=1029332507)에 맞춰 업체별로 정리한다. 아직 “제3자 제공 없음”, “국외 이전 없음”, “AI 학습 사용 없음”을 확정 문구로 쓸 수 없다.
