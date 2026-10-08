@@ -4,6 +4,8 @@
 05:55(KST) 실제 운영 API·직접 DB·9개 크론 검사 통과. 현재 수집/가공/공개 승인 소스 0개, 개별 승인 글 0개.
 권리 미확인은 침해 확정 판정을 뜻하지 않는다. 이용 근거가 확정되기 전 접근을 제한한다.
 
+10-08 12:59(KST), Lemire 기존 ready 6편의 출처·라이선스·변경 표시를 보완하고 가공본 8개·퀴즈 10개를 운영 DB에서 수정했다. 18개 가공본·72개 문항 전체의 적용 값 대조와 SQL의 6편 공개 불가 확인을 통과했다. 6편은 `restricted`, 소스 행위 플래그는 모두 false로 유지했다. CC BY 3.0 재공개 근거와 게스트 저자 확인이 남아 있다. [상세 기록](lemire-review.md).
+
 ## 데이터와 적용 범위
 
 - `content_source_rights`: 소스 상태(`unreviewed`, `permitted`, `restricted`, `blocked`), 공개 근거 URL, 확인일, 만료일, `allow_collect`·`allow_process`·`allow_publish`. 내부 검토 메모는 클라이언트가 읽지 못한다.

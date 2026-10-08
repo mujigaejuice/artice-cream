@@ -24,10 +24,16 @@ async function main() {
       !sourceAllows(row, "collect") && !sourceAllows(row, "process")), "initial registry must have no operational approvals");
     const domains = await admin.from("domains").select("id").eq("active", true).limit(1);
     assert.equal(domains.error, null); assert.ok(domains.data?.length);
-    const variant = await admin.from("article_variants").select("id,article_id,articles!inner(rights_status,status)")
-      .eq("articles.status", "ready").eq("articles.rights_status", "unreviewed").limit(1);
-    assert.equal(variant.error, null); assert.ok(variant.data?.length, "an unreviewed stored variant is required");
+    const articleArgument = process.argv.find((arg) => arg.startsWith("--article-id="));
+    const articleId = articleArgument ? Number(articleArgument.slice("--article-id=".length)) : undefined;
+    if (articleId !== undefined) assert.ok(Number.isSafeInteger(articleId) && articleId > 0, "valid explicit article ID");
+    const variantQuery = admin.from("article_variants").select("id,article_id,articles!inner(rights_status,status)")
+      .eq("articles.status", "ready");
+    const variant = await (articleId === undefined ? variantQuery.eq("articles.rights_status", "unreviewed") :
+      variantQuery.eq("article_id", articleId).neq("articles.rights_status", "permitted")).limit(1);
+    assert.equal(variant.error, null); assert.ok(variant.data?.length, "a non-publishable stored variant is required");
     const fixtureArticle = variant.data[0];
+    results.fixtureArticleId = fixtureArticle.article_id;
     const created = await admin.auth.admin.createUser({ email, password, email_confirm: true,
       app_metadata: { content_rights_test: run } });
     if (created.error) throw new Error(`Fixture creation failed (${created.error.code ?? created.error.status})`);
@@ -92,7 +98,8 @@ async function main() {
     assert.equal(publicPage.status, 200); assert.ok((await publicPage.text()).includes("계정 및 데이터 삭제"));
     results.publicDeletionPage = 200;
     mkdirSync("spike-out", { recursive: true });
-    writeFileSync("spike-out/content-rights-production.json", JSON.stringify(results, null, 2));
+    writeFileSync(articleId === undefined ? "spike-out/content-rights-production.json" :
+      `spike-out/content-rights-production-${articleId}.json`, JSON.stringify(results, null, 2));
     console.log(JSON.stringify(results, null, 2));
   } finally {
     if (userId) {

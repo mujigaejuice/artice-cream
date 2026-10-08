@@ -2,7 +2,7 @@
 
 기준: 2026-10-08, [SOURCES](../../lib/news/feeds.ts)의 등록 40개. 주석 처리된 `woowahan`은 제외했다.
 8개 소스의 공개 조건을 1차 검토했고 32개는 미확인이다. 수집·외부 가공·공개까지의 운영 승인과 개별 글 승인은 0개다.
-운영 DB에 권리 게이트를 적용했다. 모든 기존 글은 `unreviewed`, 아래 8개 소스는 `restricted`, 나머지는 `unreviewed`다.
+운영 DB에 권리 게이트를 적용했다. 기존 글은 기본 `unreviewed`이며, 10-08 개별 검토한 Lemire ready 6편은 출처를 보완한 뒤 `restricted`로 기록했다. 아래 8개 소스는 `restricted`, 나머지는 `unreviewed`다.
 모든 소스의 `allow_collect`·`allow_process`·`allow_publish`는 false다. CC 허용 조건을 찾았다는 사실과 개별 글·제공사 처리까지의 운영 승인은 구별한다.
 
 | Source ID | 피드 | 확인 상태 | 근거·다음 조치 |
@@ -37,7 +37,7 @@
 | dailysecu | [RSS](https://www.dailysecu.com/rss/allArticle.xml) | 미확인 | 언론사 및 기고자 재가공 허락 확인 |
 | unit42 | [RSS](https://unit42.paloaltonetworks.com/feed/) | 미확인 | 회사 약관·연구 자료 별도 조건 확인 |
 | oldnewthing | [RSS](https://devblogs.microsoft.com/oldnewthing/feed) | 미확인 | 과거 글 아카이브 포함, 글별 조건·저자 권리 확인 |
-| lemire | [RSS](https://lemire.me/blog/feed/) | 조건부 후보 | [저자 이용 조건](https://lemire.me/blog/terms-of-use/)이 댓글을 제외한 본문에 [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)을 연결하고 상업적 재사용·수정·번역을 허용. 저자·원제·출처·라이선스·변경 표시와 제3자 인용/이미지 예외, 제공사 처리 조건 확인 |
+| lemire | [RSS](https://lemire.me/blog/feed/) | 재공개 보류 | [이용 조건](https://lemire.me/blog/terms-of-use/)은 댓글 외 본문에 CC BY 3.0을 연결. 기존 공개본의 필수 표시 누락을 발견했고 3.0은 자동 복구가 없어 명시적 재공개 근거를 확인해야 한다. [6편 검토·수정 기록](lemire-review.md), Antonio Badia 게스트 글 권리 범위와 제공사 조건도 확인 |
 | murat | [RSS](https://muratbuffalo.blogspot.com/feeds/posts/default) | 미확인 | 과거 글 포함, 저자 허락·외부 인용자료 확인 |
 | eli-bendersky | [RSS](https://eli.thegreenplace.net/feeds/all.atom.xml) | 미확인 | 글과 코드의 이용허락 구분 |
 | brooker | [RSS](https://brooker.co.za/blog/rss.xml) | 미확인 | 전체 피드의 과거 글 포함, 저자 조건 확인 |
