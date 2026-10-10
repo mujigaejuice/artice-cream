@@ -10,6 +10,8 @@
 
 10-08 18:38(KST), 0004로 Kubernetes·Go의 목록 수집을 승인하고 최신 3편 검토 중 2편의 권리·필수 표시를 반영했다. DB는 소스 `permitted` 2·`restricted` 14·`unreviewed` 32개이며, 승인 글은 `pending`으로 가공/공개에서 차단된다. 기사 메타데이터 2개가 추가돼 총 1,540개다. [상세 기록](licensed-collection.md).
 
+10-09, 0005로 DuckDB·Rust·web.dev·Chrome의 목록 수집을 승인하고 Kubernetes 5편·DuckDB 2편·Rust 2편·web.dev 1편·Chrome 1편의 본문 권리와 필수 표시를 반영했다. DB는 소스 `permitted` 6·`restricted` 10·`unreviewed` 32개, 글 `permitted` 13·`restricted` 6(Lemire)·`unreviewed` 1,525개(총 1,544)이며 가공/공개 소스 승인은 계속 0개다. 승인 글은 모두 `pending`이라 가공·공개에서 차단된다. [상세 기록](licensed-collection.md#2026-10-09-추가-승인).
+
 ## 데이터와 적용 범위
 
 - `content_source_rights`: 소스 상태(`unreviewed`, `permitted`, `restricted`, `blocked`), 공개 근거 URL, 확인일, 만료일, `allow_collect`·`allow_process`·`allow_publish`. 내부 검토 메모는 클라이언트가 읽지 못한다.

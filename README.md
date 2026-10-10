@@ -8,12 +8,12 @@
 `npm run test:account-delete`로 권한·인증·실패 처리를 검사한다(외부 요청 없음).
 배포·검증 방법과 로그/백업의 남은 과제는 [계정 삭제 구현 기록](docs/legal/account-deletion.md)에 있다.
 
-콘텐츠는 소스와 개별 글의 권리 승인 후에만 처리·공개한다. 현재 Kubernetes·Go의 목록 수집 2개를 승인했으며 가공·공개 승인은 0개다. 기존 가공본은 계속 숨긴다.
+콘텐츠는 소스와 개별 글의 권리 승인 후에만 처리·공개한다. 2026-10-09 기록 기준 Kubernetes·Go·DuckDB·Rust·web.dev·Chrome의 목록 수집 6개를 승인했으며 가공·공개 소스 승인은 0개다. 기존 가공본은 계속 숨긴다.
 필수 표시와 DB/API 차단, 재개·철회 방법은 [콘텐츠 권리 게이트](docs/legal/content-rights-gate.md)에 있다.
 `npm run test:rights`로 미확인 콘텐츠의 접근·쓰기·외부 요청 차단을 검사한다.
 등록 소스는 기존 40곳과 신규 후보 7곳으로 47곳이다. 본문 라이선스 근거가 확인된 후보 10곳의
 적용 범위·필수 표시·피드 공급량은 [후보 검토](docs/legal/source-candidates.md)에 있다. 후보 등록만으로 수집·공개를 재개하지 않는다.
-수집·가공 분리와 개별 글 2편의 권리 승인, Pickle 제공사 확인 결과는 [수집 재개 기록](docs/legal/licensed-collection.md)에 있다.
+수집·가공 분리와 개별 글 13편의 권리 승인, Pickle 제공사 확인 결과는 [수집 재개 기록](docs/legal/licensed-collection.md)에 있다. 글별 권리 승인 후에도 소스의 가공·공개 승인이 필요하다.
 
 오늘 나온 개발·AI 글을 내 읽기 수준에 맞게 다시 써 주는 읽기 앱. 다 읽으면
 퀴즈로 이해도를 확인하고, 한 편을 끝낼 때마다 콘에 아이스크림 스쿱이 하나씩 쌓인다.
@@ -64,8 +64,9 @@ Supabase 프로젝트를 만들고 SQL 에디터에서 아래 파일을 순서�
 2. `supabase/migrations/0002_content_rights.sql`
 3. `supabase/migrations/0003_source_candidates.sql`
 4. `supabase/migrations/0004_licensed_source_collection.sql`
-5. `supabase/policies.sql`
-6. `supabase/seed.sql`
+5. `supabase/migrations/0005_more_licensed_collection.sql`
+6. `supabase/policies.sql`
+7. `supabase/seed.sql`
 
 기존 DB에는 아직 적용하지 않은 변경만 실행한다. 0002의 기본값은 모든 기존 글의 공개를 제한한다.
 

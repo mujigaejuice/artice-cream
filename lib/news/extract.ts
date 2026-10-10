@@ -4,7 +4,7 @@ import { Readability } from "@mozilla/readability";
 // 이 라우트가 모듈을 불러오는 단계에서 죽는다. 올리려면 이 플래그로 먼저 확인한다.
 import { JSDOM, VirtualConsole } from "jsdom";
 
-import { MAX_BODY_CHARS } from "../policy";
+import { MAX_BLOG_BODY_CHARS, MAX_BODY_CHARS } from "../policy";
 import { USER_AGENT, type NewsItem } from "./source";
 import type { SourceKind } from "./feeds";
 
@@ -14,7 +14,7 @@ import type { SourceKind } from "./feeds";
  *
  * 길이 규칙은 소스 유형에 따라 다르다(소스분류.md §2):
  *   - news: 역피라미드라 앞에서 MAX_BODY_CHARS까지만 쓴다.
- *   - blog: 결론이 뒤에 오므로 자르지 않고, 넘으면 그 글을 건너뛴다.
+ *   - blog: 결론이 뒤에 오므로 자르지 않고, MAX_BLOG_BODY_CHARS를 넘으면 그 글을 건너뛴다.
  */
 
 export type ExtractFailure =
@@ -148,8 +148,8 @@ export async function extractArticle(
  * blog는 결론이 뒤에 있으므로 자르지 않고 넘으면 건너뛴다(null).
  */
 function boundBody(text: string, kind: SourceKind): string | null {
-  if (text.length <= MAX_BODY_CHARS) return text;
-  return kind === "news" ? text.slice(0, MAX_BODY_CHARS) : null;
+  if (kind === "news") return text.length <= MAX_BODY_CHARS ? text : text.slice(0, MAX_BODY_CHARS);
+  return text.length <= MAX_BLOG_BODY_CHARS ? text : null;
 }
 
 /** pre·code·table·figure를 뺀 본문 텍스트. 소스분류.md §2가 잰 길이와 같은 기준이다. */

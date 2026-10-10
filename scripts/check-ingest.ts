@@ -52,7 +52,9 @@ async function main() {
         assert.ok(signal, "extraction must set a deadline");
         await delay(1000, undefined, { signal });
       }
-      return new Response(html(id, id === 98 ? 2000 : 100), { headers: { "content-type": "text/html" } });
+      // 13자짜리 문장 반복: 98은 24천자 안팎, 97은 13.6천자, 96은 15.6천자.
+      const repeats: Record<number, number> = { 98: 2000, 97: 1050, 96: 1200 };
+      return new Response(html(id, repeats[id] ?? 100), { headers: { "content-type": "text/html" } });
     }
     if (url.origin === "https://llm.invalid") {
       gatewayAttempts += 1;
@@ -122,6 +124,16 @@ async function main() {
     assert.ok(!timedOut.ok && timedOut.reason === "timeout" && timedOut.retryable);
     const tooLong = await extractArticle({ url: "https://publisher.invalid/98", title: "" }, "blog");
     assert.ok(!tooLong.ok && tooLong.reason === "too-long" && !tooLong.retryable);
+
+    // 블로그 상한(15,000자)은 뉴스 자르기 기준(12,000자)과 따로 둔다.
+    const longBlog = await extractArticle({ url: "https://publisher.invalid/97", title: "" }, "blog");
+    assert.ok(longBlog.ok && longBlog.charCount > 12_000 && longBlog.charCount <= 15_000,
+      "a 13.6k blog fits under the 15k cap");
+    const overBlog = await extractArticle({ url: "https://publisher.invalid/96", title: "" }, "blog");
+    assert.ok(!overBlog.ok && overBlog.reason === "too-long" && (overBlog.charCount ?? 0) > 15_000,
+      "a 15.6k blog is still skipped");
+    const longNews = await extractArticle({ url: "https://publisher.invalid/97", title: "" }, "news");
+    assert.ok(longNews.ok && longNews.charCount === 12_000, "news is still truncated at 12k");
 
     const { processArticle, processArticleLevels, newMeter, callJSON } = await import("../lib/ai/pipeline");
     const { RewriteSchema } = await import("../lib/ai/schemas");

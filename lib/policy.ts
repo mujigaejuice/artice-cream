@@ -13,8 +13,15 @@ export const SUMMARY_CHARS: Record<Level, [number, number]> = {
 /** 정책.md §3 원문이 짧아 하한에 못 미쳐도, 원문 대비 이 비율을 넘으면 통과시킨다. */
 export const SUMMARY_MIN_RATIO = 0.6;
 
-/** 정책.md §3 원문 입력 상한(공백 제외 문자 수). 넘으면 앞에서부터 자른다(news) 또는 건너뛴다(blog). */
+/** 정책.md §3 뉴스 원문 입력 상한. 넘으면 앞에서부터 자른다(역피라미드라 안전). */
 export const MAX_BODY_CHARS = 12000;
+
+/**
+ * 정책.md §3 블로그 원문 입력 상한. 넘으면 그 글을 건너뛴다(결론이 뒤에 있어 자를 수 없다).
+ * 글별 권리 검토 대상 중 12,000~15,000자 블로그도 온전히 추출하도록 뉴스와 분리한다.
+ * 길이 제한과 별도로 소스·개별 글의 권리 게이트를 통과해야 가공·공개할 수 있다.
+ */
+export const MAX_BLOG_BODY_CHARS = 15000;
 
 /** 정책.md §4 수준별 하이라이트 용어 개수 상한. */
 export const GLOSSARY_MAX: Record<Level, number> = { 1: 12, 2: 8, 3: 5 };
