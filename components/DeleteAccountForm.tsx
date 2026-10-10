@@ -186,13 +186,13 @@ export function DeleteAccountForm() {
         {account && <button type="button" disabled={busy} onClick={async () => {
           if (locked.current) return;
           locked.current = true; setBusy(true); setError(null);
-          try { await signOutCurrentDevice(); setSent(false); setEmail(""); await load(); }
+          try { await signOutCurrentDevice(); clearDeletionReturn(); setSent(false); setEmail(""); await load(); }
           catch { setError("로그아웃하지 못했어요. 다시 시도해 주세요."); }
           finally { locked.current = false; setBusy(false); }
         }} className={`${buttonStyle} mt-3 w-full border border-stone-300 text-stone-700`}>다른 계정으로 확인</button>}
       </>}
       {error && <p role="alert" className="mt-4 text-sm leading-relaxed text-red-800">{error}</p>}
-      <Link href="/account" className="mt-5 inline-block text-sm text-stone-600 underline underline-offset-4">취소하고 돌아가기</Link>
+      <Link href="/account" onClick={clearDeletionReturn} className="mt-5 inline-block text-sm text-stone-600 underline underline-offset-4">취소하고 돌아가기</Link>
     </section>
   );
 }
