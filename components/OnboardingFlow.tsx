@@ -177,6 +177,7 @@ export function OnboardingFlow({
  */
 function SignIn({ authFailed }: { authFailed?: boolean }) {
   const supabase = createClient();
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   // 구글에 다녀왔는데 실패한 채로 돌아온 경우. 아무 말도 없으면 사용자는 화면만
@@ -196,6 +197,7 @@ function SignIn({ authFailed }: { authFailed?: boolean }) {
   }, [supabase]);
 
   async function withGoogle() {
+    if (!ageConfirmed) return;
     setBusy(true);
     setError(null);
 
@@ -236,6 +238,7 @@ function SignIn({ authFailed }: { authFailed?: boolean }) {
   }
 
   async function withEmail() {
+    if (!ageConfirmed) return;
     setBusy(true);
     setError(null);
 
@@ -258,10 +261,18 @@ function SignIn({ authFailed }: { authFailed?: boolean }) {
         읽은 글과 콘이 계정에 저장돼서, 다른 기기에서도 이어서 읽을 수 있어요.
       </p>
 
+      <label className="mt-6 flex items-center gap-3 rounded-xl border border-stone-200 p-4 text-sm text-stone-800">
+        <input type="checkbox" checked={ageConfirmed} disabled={busy}
+          onChange={(event) => setAgeConfirmed(event.target.checked)}
+          className="h-5 w-5 accent-stone-900" />
+        만 14세 이상입니다
+      </label>
+      <p className="mt-2 text-xs leading-relaxed text-stone-500">회원 가입은 만 14세 이상부터 가능해요. 생년월일은 수집하지 않아요.</p>
+
       <button
         type="button"
         onClick={withGoogle}
-        disabled={busy}
+        disabled={busy || !ageConfirmed}
         className="mt-6 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 font-medium text-stone-900 transition hover:bg-stone-50 disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-800"
       >
         구글로 계속하기
@@ -282,6 +293,7 @@ function SignIn({ authFailed }: { authFailed?: boolean }) {
             type="email"
             inputMode="email"
             autoComplete="email"
+            disabled={busy || !ageConfirmed}
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             placeholder="이메일 주소"
@@ -291,7 +303,7 @@ function SignIn({ authFailed }: { authFailed?: boolean }) {
           <button
             type="button"
             onClick={withEmail}
-            disabled={busy || !email.includes("@")}
+            disabled={busy || !ageConfirmed || !email.includes("@")}
             className="rounded-xl bg-stone-900 px-4 text-sm font-medium text-white disabled:opacity-50"
           >
           링크 받기
