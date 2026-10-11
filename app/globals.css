@@ -20,6 +20,44 @@ body {
   color: #241b33;
 }
 
+/* 기존 스쿱 팔레트와 종이 위 아티클을 이어 쓰는 첫 방문 안내. */
+.ac-welcome { color: #241b33; }
+.ac-intro-link {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  font-size: 0.8125rem;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  border-radius: 4px;
+}
+.ac-intro-link:focus-visible {
+  outline: 2px solid #241b33;
+  outline-offset: 3px;
+}
+.ac-intro-example {
+  margin-top: 24px;
+  padding: 24px;
+  border: 1px solid #ded8ce;
+  border-radius: 8px 24px 24px 24px;
+  background: #fffdf9;
+}
+.ac-intro-caption {
+  margin-bottom: 20px;
+  font-size: 0.75rem;
+  color: #57534d;
+}
+.ac-intro-answer {
+  min-height: 48px;
+  border: 1px solid #d6d3d1;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 0.875rem;
+  text-align: left;
+}
+.ac-intro-answer[aria-pressed="true"] { background: #e5f3eb; border-color: #537862; }
+.ac-intro-answer:focus-visible { outline: 2px solid #241b33; outline-offset: 3px; }
+
 /* ── 콘 (scoop-cone.jsx 프로토타입에서 이식) ──────────────────── */
 
 .ac-svg {

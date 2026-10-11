@@ -42,6 +42,10 @@ export default function DeleteAccountPage() {
       </section>
 
       <DeleteAccountForm />
+      <footer className="mt-8 flex flex-wrap gap-x-5 border-t border-stone-200 pt-4 text-stone-600">
+        <Link href="/privacy/" className="ac-intro-link">개인정보처리방침</Link>
+        <Link href="/onboarding/" className="ac-intro-link">서비스 소개</Link>
+      </footer>
     </main>
   );
 }

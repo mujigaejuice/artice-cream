@@ -125,6 +125,10 @@ export default function AccountPage() {
         <p className="mt-2 text-sm leading-relaxed text-stone-600">계정과 학습 기록, 내 콘을 함께 삭제해요. 삭제한 기록은 복구할 수 없어요.</p>
         <Link href="/account/delete/" className="mt-4 inline-flex min-h-12 items-center rounded-xl border border-red-200 px-4 py-3 text-sm font-medium text-red-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-800">계정 및 데이터 삭제</Link>
       </section>
+      <footer className="mt-8 flex flex-wrap gap-x-5 border-t border-stone-200 pt-4 text-stone-600">
+        <Link href="/privacy/" className="ac-intro-link">개인정보처리방침</Link>
+        <Link href="/onboarding/" className="ac-intro-link">관심 분야·수준 설정</Link>
+      </footer>
     </main>
   );
 }

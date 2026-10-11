@@ -1,10 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { TermCheck } from "@/components/TermCheck";
+import { WelcomeTutorial } from "@/components/WelcomeTutorial";
 import { coreColor } from "@/lib/color";
 import { authRedirectUrl, openExternal } from "@/lib/native";
 import { createClient } from "@/lib/supabase/client";
@@ -19,6 +19,7 @@ type Props = {
   isSignedIn: boolean;
   /** 딥링크·웹 콜백에서 로그인이 실패해 돌아온 경우. */
   authFailed?: boolean;
+  startAtLogin?: boolean;
 };
 
 export function OnboardingFlow({
@@ -27,6 +28,7 @@ export function OnboardingFlow({
   domainTerms,
   isSignedIn,
   authFailed = false,
+  startAtLogin = false,
 }: Props) {
   const router = useRouter();
   const supabase = createClient();
@@ -95,7 +97,11 @@ export function OnboardingFlow({
     router.push("/");
   }
 
-  if (!isSignedIn) return <SignIn authFailed={authFailed} />;
+  if (!isSignedIn) return (
+    <WelcomeTutorial startAtLogin={authFailed || startAtLogin}>
+      <SignIn authFailed={authFailed} />
+    </WelcomeTutorial>
+  );
 
   return (
     <main>
@@ -253,14 +259,7 @@ function SignIn({ authFailed }: { authFailed?: boolean }) {
   }
 
   return (
-    <main>
-      <h1 className="text-xl font-bold tracking-tight text-stone-900">
-        로그인하고 시작해요
-      </h1>
-      <p className="mt-2 text-sm text-stone-600">
-        읽은 글과 콘이 계정에 저장돼서, 다른 기기에서도 이어서 읽을 수 있어요.
-      </p>
-
+    <section aria-label="로그인">
       <label className="mt-6 flex items-center gap-3 rounded-xl border border-stone-200 p-4 text-sm text-stone-800">
         <input type="checkbox" checked={ageConfirmed} disabled={busy}
           onChange={(event) => setAgeConfirmed(event.target.checked)}
@@ -269,28 +268,17 @@ function SignIn({ authFailed }: { authFailed?: boolean }) {
       </label>
       <p className="mt-2 text-xs leading-relaxed text-stone-500">회원 가입은 만 14세 이상부터 가능해요. 생년월일은 수집하지 않아요.</p>
 
-      <button
-        type="button"
-        onClick={withGoogle}
-        disabled={busy || !ageConfirmed}
-        className="mt-6 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 font-medium text-stone-900 transition hover:bg-stone-50 disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-800"
-      >
-        구글로 계속하기
-      </button>
-
-      <div className="my-5 flex items-center gap-3 text-xs text-stone-400">
-        <span className="h-px flex-1 bg-stone-200" />또는
-        <span className="h-px flex-1 bg-stone-200" />
-      </div>
-
       {sent ? (
-        <p className="rounded-xl bg-stone-100 p-4 text-center text-sm text-stone-700">
+        <p role="status" className="mt-6 break-all rounded-xl bg-stone-100 p-4 text-center text-sm text-stone-700">
           {email}로 로그인 링크를 보냈어요.
         </p>
       ) : (
-        <div className="flex gap-2">
+        <form className="mt-6 grid gap-3" onSubmit={(event) => { event.preventDefault(); if (!busy && ageConfirmed) void withEmail(); }}>
+          <label htmlFor="signin-email" className="text-sm font-semibold text-stone-800">이메일로 시작하기</label>
           <input
+            id="signin-email"
             type="email"
+            required
             inputMode="email"
             autoComplete="email"
             disabled={busy || !ageConfirmed}
@@ -301,22 +289,30 @@ function SignIn({ authFailed }: { authFailed?: boolean }) {
             className="min-w-0 flex-1 rounded-xl border border-stone-300 px-3 py-3 text-sm focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-stone-800"
           />
           <button
-            type="button"
-            onClick={withEmail}
+            type="submit"
             disabled={busy || !ageConfirmed || !email.includes("@")}
-            className="rounded-xl bg-stone-900 px-4 text-sm font-medium text-white disabled:opacity-50"
+            className="min-h-12 rounded-xl bg-stone-900 px-4 py-3 text-sm font-medium text-white disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-800"
           >
-          링크 받기
+          {busy ? "로그인 준비 중…" : "로그인 링크 받기"}
           </button>
-        </div>
+          <p className="text-xs leading-5 text-stone-500">비밀번호 없이 메일로 로그인해요. 처음이라면 계정이 만들어져요.</p>
+        </form>
       )}
+
+      <div className="my-5 flex items-center gap-3 text-xs text-stone-500">
+        <span className="h-px flex-1 bg-stone-200" />또는
+        <span className="h-px flex-1 bg-stone-200" />
+      </div>
+      <button type="button" onClick={withGoogle} disabled={busy || !ageConfirmed}
+        className="min-h-12 w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm font-medium text-stone-900 transition hover:bg-stone-50 disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-800">
+        구글로 계속하기
+      </button>
 
       {error && (
         <p role="alert" className="mt-4 text-sm text-red-700">
           {error}
         </p>
       )}
-      <Link href="/account/delete/" className="mt-6 inline-block text-sm text-stone-500 underline underline-offset-4">계정 및 데이터 삭제 안내</Link>
-    </main>
+    </section>
   );
 }
