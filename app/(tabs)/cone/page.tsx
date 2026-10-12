@@ -1,11 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { ConeBoard } from "@/components/ConeBoard";
 import { PageError, PageLoading } from "@/components/ScreenState";
 import { apiJson } from "@/lib/client-api";
+import { dayKey, isMonthKey } from "@/lib/day";
 import type { Scoop } from "@/lib/feed";
 import type { DomainRow } from "@/lib/supabase/types";
 import { useQueryParams } from "@/lib/use-query";
@@ -27,16 +28,44 @@ export default function ConePage() {
   const query = useQueryParams();
   const [data, setData] = useState<ConeData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [month, setMonth] = useState<string | null>(null);
+  const requestId = useRef(0);
+  const currentMonth = dayKey().slice(0, 7);
+
+  useEffect(() => {
+    if (!query) return;
+    const requested = query.get("month");
+    setMonth(requested && isMonthKey(requested) ? requested : currentMonth);
+  }, [query, currentMonth]);
+
+  useEffect(() => {
+    function onPop() {
+      const requested = new URLSearchParams(window.location.search).get("month");
+      const next = requested && isMonthKey(requested) ? requested : currentMonth;
+      if (next === month) return;
+      requestId.current++;
+      setData(null);
+      setError(null);
+      setMonth(next);
+    }
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, [month, currentMonth]);
 
   const load = useCallback(() => {
+    if (!month) return;
+    const id = ++requestId.current;
     setError(null);
     setData(null);
-    apiJson<ConeData>("/api/cone")
-      .then(setData)
-      .catch((e: Error) => setError(e.message));
-  }, []);
+    apiJson<ConeData>(`/api/cone?month=${month}`)
+      .then((next) => { if (id === requestId.current) setData(next); })
+      .catch(() => { if (id === requestId.current) setError("저장한 학습 기록을 불러오지 못했어요."); });
+  }, [month]);
 
-  useEffect(load, [load]);
+  useEffect(() => {
+    load();
+    return () => { requestId.current++; };
+  }, [load]);
   useRefreshOnResume(load);
 
   useEffect(() => {
@@ -44,11 +73,24 @@ export default function ConePage() {
   }, [data, router]);
 
   if (error) return <PageError message={error} onRetry={load} />;
-  if (!data || data.status === "onboarding" || !query) {
+  if (!data || data.status === "onboarding" || !query || !month) {
     return <PageLoading label="콘을 불러오고 있어요" />;
   }
 
   const { domains, scoops } = data;
+  const months = [...new Set([currentMonth, month, ...data.months])].sort().reverse();
+
+  function selectMonth(next: string) {
+    const url = new URL(window.location.href);
+    url.searchParams.set("month", next);
+    url.searchParams.delete("scoop");
+    url.searchParams.delete("new");
+    window.history.replaceState(null, "", url.pathname + url.search);
+    // 이전 월 응답과 선택 상태가 새 월에 남지 않도록 즉시 비운다.
+    requestId.current++;
+    setData(null);
+    setMonth(next);
+  }
 
   // 있는 스쿱일 때만 초기 선택으로 인정한다 — 남의 id나 지난 달 id가 섞여
   // 들어오면 아무것도 안 고른 것으로 둔다.
@@ -66,12 +108,28 @@ export default function ConePage() {
         <p className="text-xs text-stone-500">스쿱 {scoops.length}개</p>
       </header>
 
+      <label className="mb-3 flex items-center gap-2 text-sm text-stone-600">
+        월 선택
+        <select
+          value={month}
+          onChange={(event) => selectMonth(event.target.value)}
+          className="rounded-lg border border-stone-200 bg-white px-3 py-2 text-stone-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-800"
+        >
+          {months.map((value) => (
+            <option key={value} value={value}>
+              {value.slice(0, 4)}년 {Number(value.slice(5))}월{value === currentMonth ? " (이번 달)" : ""}
+            </option>
+          ))}
+        </select>
+      </label>
+
       <ConeBoard
+        key={month}
         scoops={scoops}
         domains={domains}
-        initialScoopId={asScoopId(query.get("scoop"))}
+        initialScoopId={asScoopId(new URLSearchParams(window.location.search).get("scoop"))}
         // 저장 직후 결과 화면이 ?new=<progress id>로 보낸다.
-        justAddedId={asScoopId(query.get("new"))}
+        justAddedId={asScoopId(new URLSearchParams(window.location.search).get("new"))}
       />
     </main>
   );

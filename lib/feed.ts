@@ -6,14 +6,15 @@ import type { DomainRow } from "./supabase/types";
 import { ARTICLE_RIGHTS_COLUMNS, articleAllows, getSourceRights, type ArticleRights } from "./content-rights";
 
 /**
- * 홈 화면 조회 (plan §5). 사용자 스코프 클라이언트로 돈다 — 남의 콘이 안 보이는 건
- * 이 쿼리들이 아니라 RLS가 보장한다.
+ * 홈은 사용자 스코프 클라이언트와 RLS로 조회한다. 콘의 저장 기록 조회는 서버의
+ * 인증된 사용자 필터와 메타데이터 제거를 사용한다(getScoops·getScoopMonths).
  */
 
 /** 콘에 올라가는 스쿱 한 개. scoop-cone.jsx의 scoops 항목과 같은 모양. */
 export type Scoop = {
   id: number;
-  variantId: number;
+  /** 비공개 기사도 학습 기록은 남지만 리더 링크는 제공하지 않는다. */
+  variantId: number | null;
   articleId: number;
   /** domains.slug — lib/color.ts의 DOMAIN_FLAVORS 키. */
   domain: string;
@@ -71,6 +72,8 @@ export async function getLevels(
  * 저장까지 끝난 진행 행에서 스쿱을 파생한다(정책.md §2 — 별도 테이블 없음, 저장을
  * 눌러야 생긴다). `month`가 'YYYY-MM'이면 그 달(KST 기준)만 반환하고, 없으면
  * 이번 달(정책.md §1 — 콘 하나 = 한 달).
+ * 서버에서만 service-role client와 인증된 사용자 ID로 호출한다.
+ * 기사 RLS를 우회해 읽은 메타데이터는 공개 여부에 따라 아래에서 제거한다.
  */
 export async function getScoops(
   supabase: SupabaseClient,
@@ -79,19 +82,20 @@ export async function getScoops(
 ): Promise<Scoop[]> {
   const targetMonth = month ?? dayKey().slice(0, 7);
   const [start, end] = monthRangeUtc(targetMonth);
-  const sources = await getSourceRights(supabase);
-  if (sources.size === 0) return [];
-
-  const { data } = await supabase
-    .from("user_article_progress")
-    .select(
-      `id, variant_id, article_id, quiz_score, completed_at, article_variants(title, summary, articles(${ARTICLE_RIGHTS_COLUMNS}, domains(slug, name_ko)))`,
-    )
-    .eq("user_id", userId)
-    .eq("status", "saved")
-    .gte("completed_at", start)
-    .lt("completed_at", end)
-    .order("completed_at", { ascending: true });
+  const [sources, { data, error }] = await Promise.all([
+    getSourceRights(supabase),
+    supabase
+      .from("user_article_progress")
+      .select(
+        `id, variant_id, article_id, quiz_score, completed_at, article_variants(title, summary, articles(${ARTICLE_RIGHTS_COLUMNS}, domains(slug, name_ko)))`,
+      )
+      .eq("user_id", userId)
+      .eq("status", "saved")
+      .gte("completed_at", start)
+      .lt("completed_at", end)
+      .order("completed_at", { ascending: true }),
+  ]);
+  if (error) throw new Error("저장한 학습 기록을 불러오지 못했어요.");
 
   return (data ?? []).flatMap((row) => {
     const r = row as unknown as {
@@ -108,18 +112,19 @@ export async function getScoops(
     };
 
     const domain = r.article_variants?.articles?.domains;
-    if (!domain || !r.completed_at || !articleAllows(r.article_variants?.articles, sources, "publish")) return [];
+    if (!r.completed_at) return [];
+    const readable = articleAllows(r.article_variants?.articles, sources, "publish");
 
     return [
       {
         id: r.id,
-        variantId: r.variant_id,
+        variantId: readable ? r.variant_id : null,
         articleId: r.article_id,
-        domain: domain.slug,
-        domainLabel: domain.name_ko,
+        domain: domain?.slug ?? "unknown",
+        domainLabel: domain?.name_ko ?? "학습 기록",
         date: dayKey(new Date(r.completed_at)),
-        title: r.article_variants?.title ?? "제목 없음",
-        summaryFirstLine: firstSentence(r.article_variants?.summary ?? null),
+        title: readable ? r.article_variants?.title ?? "제목 없음" : "현재 열람 불가",
+        summaryFirstLine: readable ? firstSentence(r.article_variants?.summary ?? null) : null,
         score: r.quiz_score ?? 0,
       },
     ];
@@ -132,26 +137,23 @@ function firstSentence(summary: string | null): string | null {
   return (match?.[0] ?? summary).trim() || null;
 }
 
-/** 스쿱이 있는 달 목록(최신순, 'YYYY-MM'). 월 전환 UI가 빈 달로 넘어가지 않게 한다. */
+/** 서버 전용. 인증된 사용자의 저장 기록으로 월 목록을 만든다. 비공개 기사도 포함한다. */
 export async function getScoopMonths(
   supabase: SupabaseClient,
   userId: string,
 ): Promise<string[]> {
-  const sources = await getSourceRights(supabase);
-  if (sources.size === 0) return [];
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("user_article_progress")
-    .select(`completed_at, articles(${ARTICLE_RIGHTS_COLUMNS})`)
+    .select("completed_at")
     .eq("user_id", userId)
     .eq("status", "saved")
     .not("completed_at", "is", null)
     .order("completed_at", { ascending: false });
+  if (error) throw new Error("저장한 학습 기록을 불러오지 못했어요.");
 
   const months = new Set<string>();
   for (const row of data ?? []) {
-    const item = row as unknown as { completed_at: string | null; articles: ArticleRights | null };
-    if (!articleAllows(item.articles, sources, "publish")) continue;
-    const completedAt = item.completed_at;
+    const completedAt = row.completed_at as string | null;
     if (completedAt) months.add(dayKey(new Date(completedAt)).slice(0, 7));
   }
   return [...months];

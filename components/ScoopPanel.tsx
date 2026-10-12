@@ -56,15 +56,25 @@ export function ScoopPanel({
         <span className="text-stone-400">· {formatDate(scoop.date)}</span>
       </p>
 
-      <Link
-        href={readHref(scoop.variantId, base)}
-        className={`ac-link mt-0.5 line-clamp-2 block text-[13px] font-semibold leading-tight text-stone-900 underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-stone-800 ${writeClass}`}
-        style={{ animationDelay: "90ms" }}
-      >
-        {scoop.title}
-      </Link>
+      {scoop.variantId !== null ? (
+        <Link
+          href={readHref(scoop.variantId, base)}
+          className={`ac-link mt-0.5 line-clamp-2 block text-[13px] font-semibold leading-tight text-stone-900 underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-stone-800 ${writeClass}`}
+          style={{ animationDelay: "90ms" }}
+        >
+          {scoop.title}
+        </Link>
+      ) : (
+        <p className={`mt-0.5 text-[13px] font-semibold leading-tight text-stone-700 ${writeClass}`} style={{ animationDelay: "90ms" }}>
+          현재 열람 불가
+        </p>
+      )}
 
-      {scoop.summaryFirstLine && (
+      {scoop.variantId === null ? (
+        <p className={`mt-0.5 text-[11px] leading-4 text-stone-600 ${writeClass}`} style={{ animationDelay: "180ms" }}>
+          아티클은 비공개지만 학습 기록은 남아 있어요.
+        </p>
+      ) : scoop.summaryFirstLine && (
         <p
           className={`mt-0.5 truncate text-[11px] leading-4 text-stone-600 ${writeClass}`}
           style={{ animationDelay: "180ms" }}
@@ -77,13 +87,17 @@ export function ScoopPanel({
         className={`mt-0.5 text-[11px] leading-4 text-stone-500 ${writeClass}`}
         style={{ animationDelay: "270ms" }}
       >
-        퀴즈 {Math.round(scoop.score * 100)}점 ·{" "}
-        <Link
-          href={readHref(scoop.variantId, base)}
-          className="ac-link font-medium text-stone-700 hover:text-stone-900"
-        >
-          다시 읽기 →
-        </Link>
+        퀴즈 {Math.round(scoop.score * 100)}점
+        {scoop.variantId !== null && (
+          <> ·{" "}
+            <Link
+              href={readHref(scoop.variantId, base)}
+              className="ac-link font-medium text-stone-700 hover:text-stone-900"
+            >
+              다시 읽기 →
+            </Link>
+          </>
+        )}
       </p>
     </div>
   );

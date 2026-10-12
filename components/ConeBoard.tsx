@@ -84,7 +84,10 @@ export function ConeBoard({
       window.history.back(); // popstate 핸들러가 상태를 비운다
       return;
     }
-    window.history.replaceState(null, "", window.location.pathname);
+    const url = new URL(window.location.href);
+    url.searchParams.delete("scoop");
+    url.searchParams.delete("new");
+    window.history.replaceState(null, "", url.pathname + url.search);
     setSelectedId(null);
   }, []);
 
@@ -94,7 +97,10 @@ export function ConeBoard({
         close();
         return;
       }
-      const url = `${window.location.pathname}?scoop=${scoop.id}`;
+      const location = new URL(window.location.href);
+      location.searchParams.set("scoop", String(scoop.id));
+      location.searchParams.delete("new");
+      const url = location.pathname + location.search;
       if (selectedId == null) {
         window.history.pushState(null, "", url);
         pushed.current = true;

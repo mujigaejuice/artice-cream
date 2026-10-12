@@ -21,6 +21,7 @@
     "test:retention": "tsx scripts/check-data-retention.ts",
     "test:sign-in-age": "tsx scripts/check-sign-in-age.tsx",
     "test:entry": "tsx scripts/check-entry.tsx",
+    "test:scoops": "tsx scripts/check-scoop-history.tsx",
     "test:rights": "tsx scripts/check-content-rights.ts && tsx scripts/check-collect-rights.ts",
     "test:ingest": "tsx scripts/check-ingest.ts",
     "build:app": "node scripts/build-app.mjs build",

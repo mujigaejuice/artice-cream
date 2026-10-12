@@ -43,3 +43,8 @@ export function monthRangeUtc(month: string): [string, string] {
 export function monthKey(d: Date | string): string {
   return dayKey(typeof d === "string" ? new Date(d) : d).slice(0, 7);
 }
+
+/** 월 경계 계산에 넘길 수 있는 YYYY-MM 값만 허용한다. */
+export function isMonthKey(value: string): boolean {
+  return /^[1-9]\d{3}-(0[1-9]|1[0-2])$/.test(value);
+}

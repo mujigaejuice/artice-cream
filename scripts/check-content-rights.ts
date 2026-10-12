@@ -112,8 +112,12 @@ async function main() {
     const admin = createAdminClient();
     current = { ...article, rights_status: "blocked" };
     assert.deepEqual(await getTodayPicks(admin, userId, [domain], new Map([[1, 2]])), []);
-    assert.deepEqual(await getScoops(admin, userId), []);
-    assert.deepEqual(await getScoopMonths(admin, userId), []);
+    const hiddenScoops = await getScoops(admin, userId);
+    assert.equal(hiddenScoops.length, 1, "saved learning history survives withdrawal");
+    assert.equal(hiddenScoops[0].variantId, null);
+    assert.equal(hiddenScoops[0].title, "현재 열람 불가");
+    assert.equal(hiddenScoops[0].summaryFirstLine, null);
+    assert.equal((await getScoopMonths(admin, userId)).length, 1);
     current = article;
     assert.equal((await getTodayPicks(admin, userId, [domain], new Map([[1, 2]]))).length, 1);
     assert.equal((await getScoops(admin, userId)).length, 1);
