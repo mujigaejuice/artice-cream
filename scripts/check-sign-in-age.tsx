@@ -12,13 +12,17 @@ async function main() {
   }
   Object.assign(process.env, { NEXT_PUBLIC_SUPABASE_URL: "https://age-test.invalid", NEXT_PUBLIC_SUPABASE_ANON_KEY: "test-key" });
   let emails = 0;
+  let expectedEmail = "reader@example.test";
+  let otpStatus = 200;
+  const receivedEmails: string[] = [];
   globalThis.fetch = async (input, init) => {
     const url = new URL(input instanceof Request ? input.url : String(input));
     assert.equal(url.origin, "https://age-test.invalid");
     assert.equal(url.pathname, "/auth/v1/otp");
-    assert.equal(JSON.parse(String(init?.body)).email, "reader@example.test");
+    receivedEmails.push(JSON.parse(String(init?.body)).email);
+    assert.equal(receivedEmails.at(-1), expectedEmail);
     emails++;
-    return Response.json({});
+    return Response.json(otpStatus === 200 ? {} : { code: "over_email_send_rate_limit", msg: "Too many requests" }, { status: otpStatus });
   };
   const { createRoot } = await import("react-dom/client");
   const { AppRouterContext } = await import("next/dist/shared/lib/app-router-context.shared-runtime");
@@ -37,6 +41,14 @@ async function main() {
     };
     const title = () => container.querySelector("h1")!.textContent!;
     const loginHidden = () => container.querySelector('[aria-label="로그인"]')!.parentElement!.hidden;
+    // SDK의 PKCE 암호화는 React act 밖의 비동기 작업이므로 완료 상태까지 기다린다.
+    async function finishLogin() {
+      const ageInput = () => container.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
+      for (let i = 0; i < 200 && ageInput().disabled; i++) {
+        await act(async () => { await new Promise((resolve) => setTimeout(resolve, 5)); });
+      }
+      assert.equal(ageInput().disabled, false, "login request should settle and unlock the form");
+    }
     assert.match(title(), /내 속도로/);
     assert.equal(loginHidden(), true);
     assert.ok(container.querySelector('a[href^="/privacy"]'));
@@ -102,9 +114,48 @@ async function main() {
     assert.equal(emails, 0);
     await act(async () => { age.click(); });
     await act(async () => { send.click(); });
+    await finishLogin();
     assert.equal(emails, 1);
     assert.match(container.textContent!, /로그인 링크를 보냈어요/);
     assert.equal(container.querySelector('input[type="date"]'), null, "no birthdate collection");
+    await act(async () => { age.click(); });
+    const beforeBlocked = emails;
+    await act(async () => { button("로그인 링크 다시 받기").click(); });
+    assert.equal(emails, beforeBlocked, "resend also requires the age confirmation");
+    await act(async () => { age.click(); });
+    const beforeResend = emails;
+    await act(async () => { button("로그인 링크 다시 받기").click(); button("로그인 링크 다시 받기").click(); });
+    await finishLogin();
+    assert.equal(emails, beforeResend + 1, "same-tick double click sends only one request");
+    otpStatus = 429;
+    await act(async () => { button("로그인 링크 다시 받기").click(); });
+    await finishLogin();
+    assert.match(container.querySelector('[role="alert"]')!.textContent!, /잠시 기다린/);
+    assert.equal(button("로그인 링크 받기").disabled, false);
+    assert.equal(container.querySelector('[role="status"]'), null, "failed resend does not advertise an older link");
+    otpStatus = 200;
+    await act(async () => { button("로그인 링크 받기").click(); });
+    await finishLogin();
+    await act(async () => { button("이메일 주소 수정").click(); });
+    const corrected = container.querySelector<HTMLInputElement>('input[type="email"]')!;
+    assert.equal(corrected.value, "reader@example.test");
+    expectedEmail = "corrected@example.test";
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(dom.window.HTMLInputElement.prototype, "value")!.set!.call(corrected, expectedEmail);
+      corrected.dispatchEvent(new dom.window.Event("input", { bubbles: true }));
+    });
+    const auth = createClient().auth;
+    const originalOtp = auth.signInWithOtp;
+    auth.signInWithOtp = async () => { throw new Error("unhandled transport failure"); };
+    await act(async () => { button("로그인 링크 받기").click(); });
+    await finishLogin();
+    assert.match(container.querySelector('[role="alert"]')!.textContent!, /연결을 확인/);
+    assert.equal(button("로그인 링크 받기").disabled, false, "unexpected exception releases the form");
+    auth.signInWithOtp = originalOtp;
+    await act(async () => { button("로그인 링크 받기").click(); });
+    await finishLogin();
+    assert.ok(container.querySelector('[role="status"]'), JSON.stringify({ receivedEmails, text: container.textContent }));
+    assert.match(container.querySelector('[role="status"]')!.textContent!, /corrected@example.test/);
     await act(async () => { root.render(createElement(AppRouterContext.Provider, { value: router },
       createElement(OnboardingFlow, { key: "failed", domains: [], initialLevels: {}, domainTerms: {}, isSignedIn: false, authFailed: true }))); });
     assert.equal(loginHidden(), false, "failed auth returns directly to login");
@@ -120,8 +171,7 @@ async function main() {
     await act(async () => { root.render(createElement(AppRouterContext.Provider, { value: router },
       createElement(OnboardingPage))); });
     assert.match(title(), /내 속도로/, "signed-out page shows tutorial without an API call");
-    assert.equal(emails, 1);
-    console.log("Tutorial: navigation, swipe, examples, login shortcuts and state retention passed. Age gate + mock email passed.");
+    console.log("Tutorial + sign-in: navigation, age gate, resend, rate limits, address correction, duplicate clicks and exception recovery passed.");
   } finally {
     await act(async () => { root.unmount(); });
     await createClient().auth.stopAutoRefresh();

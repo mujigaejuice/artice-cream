@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { TermCheck } from "@/components/TermCheck";
 import { WelcomeTutorial } from "@/components/WelcomeTutorial";
@@ -192,6 +192,7 @@ function SignIn({ authFailed }: { authFailed?: boolean }) {
     authFailed ? "로그인하지 못했어요. 다시 시도해 주세요." : null,
   );
   const [busy, setBusy] = useState(false);
+  const signingIn = useRef(false);
 
   // 게스트 모드를 없애기 전에 만든 익명 세션이 남아 있을 수 있다. 서버는 이미
   // 로그인 안 한 것으로 보지만(lib/api.ts `signedInUser`), 두면 토큰이 계속
@@ -203,59 +204,68 @@ function SignIn({ authFailed }: { authFailed?: boolean }) {
   }, [supabase]);
 
   async function withGoogle() {
-    if (!ageConfirmed) return;
+    if (!ageConfirmed || signingIn.current) return;
+    signingIn.current = true;
     setBusy(true);
     setError(null);
 
-    // 주소는 lib/native.ts가 정한다 — 앱이면 딥링크, 웹이면 같은 오리진.
-    // skipBrowserRedirect가 없으면 supabase-js가 WebView 자체를 구글로 보내서
-    // 앱 셸을 잃는다. 웹에서는 openExternal이 같은 탭을 옮기므로 동작이 같다.
-    // prompt=select_account가 없으면 구글이 브라우저에 로그인된 계정을 말없이
-    // 고른다. 기록이 계정에 쌓이므로 어느 계정으로 들어갈지 사용자가 보고 골라야 한다.
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: authRedirectUrl(),
-        skipBrowserRedirect: true,
-        queryParams: { prompt: "select_account" },
-      },
-    });
-
-    if (error || !data?.url) {
-      setError("구글 로그인에 실패했어요.");
-      setBusy(false);
-      return;
-    }
-
-    // 브라우저가 없는 기기에서는 Browser.open이 거부한다. 잡지 않으면 busy가
-    // true로 남아 폼 전체가 잠긴다.
     try {
-      await openExternal(data.url);
+      // 앱은 WebView를 유지한 채 시스템 브라우저를 열고 딥링크로 돌아온다.
+      // 계정별 기록을 구분할 수 있도록 Google 계정 선택을 항상 표시한다.
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: authRedirectUrl(),
+          skipBrowserRedirect: true,
+          queryParams: { prompt: "select_account" },
+        },
+      });
+      if (error || !data?.url) {
+        setError("구글 로그인에 실패했어요. 잠시 후 다시 시도해 주세요.");
+        return;
+      }
+      try {
+        await openExternal(data.url);
+      } catch {
+        setError("브라우저를 열지 못했어요.");
+      }
     } catch {
-      setError("브라우저를 열지 못했어요.");
+      setError("구글 로그인에 실패했어요. 연결을 확인하고 다시 시도해 주세요.");
+    } finally {
+      // 앱에서 브라우저를 닫고 돌아오거나 예외가 나도 다시 시도할 수 있어야 한다.
+      signingIn.current = false;
       setBusy(false);
-      return;
     }
-
-    // 네이티브에서는 시스템 브라우저가 위에 뜰 뿐 이 화면이 그대로 살아 있다.
-    // 로그인을 마치지 않고 돌아왔을 때 버튼이 잠긴 채로 남으면 다시 시도할 수도,
-    // 매직링크로 넘어갈 수도 없다. 웹은 여기서 이미 페이지를 떠난 뒤다.
-    setBusy(false);
   }
 
   async function withEmail() {
-    if (!ageConfirmed) return;
+    if (!ageConfirmed || signingIn.current) return;
+    signingIn.current = true;
     setBusy(true);
     setError(null);
 
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: authRedirectUrl() },
-    });
-
-    if (error) setError("메일을 보내지 못했어요.");
-    else setSent(true);
-    setBusy(false);
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: email.trim(),
+        options: { emailRedirectTo: authRedirectUrl() },
+      });
+      if (error) {
+        // 재요청은 PKCE 검증값을 바꾸므로 실패 뒤 이전 메일로 진행하라고 안내하지 않는다.
+        setSent(false);
+        setError(error.status === 429
+          ? "메일 요청이 많아요. 잠시 기다린 뒤 다시 받아 주세요."
+          : "메일을 보내지 못했어요. 주소와 연결을 확인하고 다시 시도해 주세요.");
+      } else {
+        setEmail(email.trim());
+        setSent(true);
+      }
+    } catch {
+      setSent(false);
+      setError("메일을 보내지 못했어요. 연결을 확인하고 다시 시도해 주세요.");
+    } finally {
+      signingIn.current = false;
+      setBusy(false);
+    }
   }
 
   return (
@@ -269,9 +279,14 @@ function SignIn({ authFailed }: { authFailed?: boolean }) {
       <p className="mt-2 text-xs leading-relaxed text-stone-500">회원 가입은 만 14세 이상부터 가능해요. 생년월일은 수집하지 않아요.</p>
 
       {sent ? (
-        <p role="status" className="mt-6 break-all rounded-xl bg-stone-100 p-4 text-center text-sm text-stone-700">
-          {email}로 로그인 링크를 보냈어요.
-        </p>
+        <div className="mt-6 rounded-xl bg-stone-100 p-4 text-sm text-stone-700">
+          <p role="status" className="break-all">{email}로 로그인 링크를 보냈어요.</p>
+          <p className="mt-3 leading-6">스팸함도 확인해 주세요. 가장 최근에 받은 링크를 로그인을 요청한 브라우저에서 열어 주세요. 앱에서 요청했다면 같은 기기의 앱으로 돌아와 주세요.</p>
+          <div className="mt-3 flex flex-wrap gap-x-5">
+            <button type="button" disabled={busy || !ageConfirmed} onClick={withEmail} className="ac-intro-link disabled:opacity-50">{busy ? "전송 중…" : "로그인 링크 다시 받기"}</button>
+            <button type="button" disabled={busy} onClick={() => { setSent(false); setError(null); }} className="ac-intro-link disabled:opacity-50">이메일 주소 수정</button>
+          </div>
+        </div>
       ) : (
         <form className="mt-6 grid gap-3" onSubmit={(event) => { event.preventDefault(); if (!busy && ageConfirmed) void withEmail(); }}>
           <label htmlFor="signin-email" className="text-sm font-semibold text-stone-800">이메일로 시작하기</label>

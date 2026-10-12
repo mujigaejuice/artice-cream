@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { AdUnlockButton } from "@/components/AdUnlockButton";
 import { ArticleCard } from "@/components/ArticleCard";
 import { PageError, PageLoading } from "@/components/ScreenState";
 import { apiJson } from "@/lib/client-api";
 import type { TodayPick } from "@/lib/feed";
+import { createClient } from "@/lib/supabase/client";
 import { useRefreshOnResume } from "@/lib/use-refresh-on-resume";
 
 /**
@@ -31,16 +32,35 @@ export default function TodayPage() {
   const router = useRouter();
   const [feed, setFeed] = useState<Feed | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const request = useRef(0);
 
   const load = useCallback(() => {
+    const current = ++request.current;
     setError(null);
     setFeed(null);
-    apiJson<Feed>("/api/feed")
-      .then(setFeed)
-      .catch((e: Error) => setError(e.message));
+    void (async () => {
+      try {
+        const { data: { session }, error: sessionError } = await createClient().auth.getSession();
+        if (current !== request.current) return;
+        if (sessionError) throw sessionError;
+        // 앱 시작 주소에서도 공개 소개까지 가는 데 기사 API가 필요하지 않다.
+        // 로그인 상태는 화면 분기용이며, 실제 데이터 접근은 API가 다시 검증한다.
+        if (!session || session.user.is_anonymous) {
+          setFeed({ status: "onboarding" });
+          return;
+        }
+        const next = await apiJson<Feed>("/api/feed");
+        if (current === request.current) setFeed(next);
+      } catch {
+        if (current === request.current) setError("잠시 후 다시 시도해 주세요.");
+      }
+    })();
   }, []);
 
-  useEffect(load, [load]);
+  useEffect(() => {
+    load();
+    return () => { request.current++; };
+  }, [load]);
   useRefreshOnResume(load);
 
   // 세션이 없거나 수준 행이 없으면 온보딩을 끝내지 않은 것이다. 서버 컴포넌트가
@@ -49,7 +69,16 @@ export default function TodayPage() {
     if (feed?.status === "onboarding") router.replace("/onboarding");
   }, [feed, router]);
 
-  if (error) return <PageError message={error} onRetry={load} />;
+  if (error) return (
+    <>
+      <PageError message={error} onRetry={load} />
+      <nav aria-label="공개 안내" className="flex flex-wrap justify-center gap-x-5 text-stone-600">
+        <Link href="/onboarding/" className="ac-intro-link">서비스 소개·로그인</Link>
+        <Link href="/privacy/" className="ac-intro-link">개인정보처리방침</Link>
+        <Link href="/account/delete/" className="ac-intro-link">계정 및 데이터 삭제</Link>
+      </nav>
+    </>
+  );
   if (!feed || feed.status === "onboarding") {
     return <PageLoading label="오늘의 아티클을 불러오고 있어요" />;
   }
