@@ -143,8 +143,14 @@ npm run dev
 
 현재 공개한 기사 8편은 선택한 관심 분야와 읽기 수준에 맞춰 홈에 표시된다. 이미 저장한 글은 다시 추천하지 않으므로,
 분야별 1편을 모두 저장한 뒤에는 추가 공개 전까지 새 글 목록이 비어 있을 수 있다.
-수집만 승인한 소스는 기사 목록을 모으며, 소스·글의 가공 승인과 공개 승인을 마친 뒤에 홈이 채워진다.
-수집·분류를 먼저 돌리고 그다음 분류별로 가공한다. 현재 자동 가공은 비활성 상태다.
+수집만 허용한 소스는 기사 목록을 모은다. 가공이 허용된 소스의 글은 수집 cron이
+원문의 라이선스 표시·저자·글별 예외를 자동 검사해 승인하고, 같은 실행에서 분류한다.
+이후 분야별 cron이 본문·용어·퀴즈를 생성한다. 글마다 수동으로 동의할 필요가 없다.
+자동 검토 대상은 Kubernetes·Go·DuckDB·Rust·web.dev·Chrome for Developers·Google Cloud 문서·Google ML 문서다.
+기존 미검토 pending도 회당 최대 32편씩 처리한다. 조건 불충족·통신 실패는 사유를 남기고
+12시간 이후 다시 검사하며, 다른 글은 계속 진행한다. 차단·제한된 글은 자동 승인하지 않는다.
+공개 여부는 소스의 `allow_publish` 설정을 따른다. 자동 검토는 소스 허용 설정을 변경하지 않는다.
+수집 응답/로그의 `autoReview`에서 검토·승인·보류·시간 부족과 사유별 건수를 확인할 수 있다.
 
 ```bash
 AUTH="Authorization: Bearer $CRON_SECRET"
@@ -167,6 +173,7 @@ npm run typecheck      # 타입 검사
 npm run test:logic     # 수준 조정, 스쿱 색, 용어 표시 같은 순수 로직 점검
 npm run test:auth      # 웹·앱 저장소의 로그아웃 검증 (외부 요청 없음)
 npm run test:ingest    # 4편 상한, 병렬 처리, 타임아웃, 저장 검증 (모의 LLM·DB)
+npm run test:auto-review # 소스별 자동 승인, 철회·재시도·기존 대기열 분류 검증 (모의 HTTP)
 npm run test:classify  # 분류기 정답률 (LLM 호출, 유료)
 npm run build:app      # 앱용 정적 번들 (out/)
 npm run app:run        # 번들 → cap sync → 안드로이드 빌드·설치·실행

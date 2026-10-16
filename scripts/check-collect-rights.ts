@@ -42,6 +42,8 @@ async function main() {
     if (table === "domains") return Response.json([{ id: 1, slug: "infra", active: true }]);
     assert.equal(table, "articles");
     if (url.searchParams.get("select") === "source_url") return Response.json([]);
+    // Automatic review has its own integration test; this fixture isolates the existing gates.
+    if (url.searchParams.get("rights_status") === "eq.unreviewed") return Response.json([]);
     if (mode === "unreviewed") return Response.json([{ ...reviewedArticle, rights_status: "unreviewed" }]);
     if (mode === "withdrawn" && !url.searchParams.has("domain_id")) {
       return Response.json([{ ...reviewedArticle, rights_status: "blocked" }]);

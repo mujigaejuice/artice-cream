@@ -255,31 +255,37 @@ export async function getTodayPicks(
 
     const level = clampLevel(levels.get(domain.id) ?? 2);
 
-    const { data } = await supabase
-      .from("article_variants")
-      .select(
-        `id, article_id, title, summary, reading_minutes, articles!inner(id, domain_id, source_url, image_url, published_at, ${ARTICLE_RIGHTS_COLUMNS})`,
-      )
-      .eq("level", level)
-      .eq("articles.domain_id", domain.id)
-      .eq("articles.status", "ready")
-      .eq("articles.rights_status", "permitted")
-      .order("published_at", { referencedTable: "articles", ascending: false })
-      .limit(12);
-
-    const fresh = (data ?? []).find(
-      (row) => !interacted.has((row as { article_id: number }).article_id) &&
-        articleAllows((row as unknown as { articles: ArticleRights }).articles, sources, "publish"),
-    ) as
-      | {
-          id: number;
-          article_id: number;
-          title: string;
-          summary: string | null;
-          reading_minutes: number | null;
-          articles: { source_url: string; image_url: string | null; published_at: string | null };
-        }
-      | undefined;
+    type FreshVariant = {
+      id: number;
+      article_id: number;
+      title: string;
+      summary: string | null;
+      reading_minutes: number | null;
+      articles: ArticleRights & { source_url: string; image_url: string | null; published_at: string | null };
+    };
+    let fresh: FreshVariant | undefined;
+    const pageSize = 12;
+    // Read past saved or withdrawn items until an eligible unread article is found.
+    // Order the parent variants by publication date, with a stable tie-breaker.
+    for (let offset = 0; !fresh; offset += pageSize) {
+      const { data, error } = await supabase
+        .from("article_variants")
+        .select(
+          `id, article_id, title, summary, reading_minutes, articles!inner(id, domain_id, source_url, image_url, published_at, ${ARTICLE_RIGHTS_COLUMNS})`,
+        )
+        .eq("level", level)
+        .eq("articles.domain_id", domain.id)
+        .eq("articles.status", "ready")
+        .eq("articles.rights_status", "permitted")
+        .order("articles(published_at)", { ascending: false, nullsFirst: false })
+        .order("id", { ascending: false })
+        .range(offset, offset + pageSize - 1);
+      if (error) break;
+      const page = (data ?? []) as unknown as FreshVariant[];
+      fresh = page.find((row) => !interacted.has(row.article_id) &&
+        articleAllows(row.articles, sources, "publish"));
+      if (page.length < pageSize) break;
+    }
 
     if (!fresh) continue;
 

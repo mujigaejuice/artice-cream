@@ -15,6 +15,7 @@
     "spike:sources": "tsx scripts/spike-sources.ts",
     "test:classify": "tsx tests/classify/run.ts",
     "test:logic": "tsx scripts/check-logic.ts",
+    "test:feed": "tsx scripts/check-feed-pagination.ts",
     "test:auth": "tsx scripts/check-auth-session.ts && tsx scripts/check-auth-session.ts --native",
     "test:account-delete": "tsx scripts/check-account-deletion.ts",
     "test:account-delete-ui": "tsx scripts/check-account-deletion-ui.tsx",
@@ -24,6 +25,7 @@
     "test:scoops": "tsx scripts/check-scoop-history.tsx",
     "test:rights": "tsx scripts/check-content-rights.ts && tsx scripts/check-collect-rights.ts",
     "test:ingest": "tsx scripts/check-ingest.ts",
+    "test:auto-review": "tsx scripts/check-auto-review.ts",
     "build:app": "node scripts/build-app.mjs build",
     "app:dev": "node scripts/build-app.mjs dev",
     "app:run": "node scripts/build-app.mjs run"

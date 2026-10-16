@@ -17,6 +17,7 @@ import { CLASSIFY_BATCH_SIZE } from "@/lib/policy";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { DomainRow } from "@/lib/supabase/types";
 import { articleAllows, getSourceRights, sourceAllows, type ArticleRights } from "@/lib/content-rights";
+import { reviewPendingArticles } from "@/lib/news/review-queue";
 
 /**
  * 인제스트 1단계 — 수집과 분류 (소스분류.md §3).
@@ -63,7 +64,8 @@ export async function GET(request: NextRequest) {
   const admin = createAdminClient();
   const rights = await getSourceRights(admin);
   const allowedSources = SOURCES.filter((source) => sourceAllows(rights.get(source.id), "collect"));
-  const processingSources = SOURCES.filter((source) => sourceAllows(rights.get(source.id), "process"));
+  const processingSources = [...rights.values()].filter((source) => sourceAllows(source, "process"))
+    .map((source) => ({ id: source.source, kind: SOURCES.find(s => s.id === source.source)?.kind ?? "blog" as const }));
   if (allowedSources.length === 0 && processingSources.length === 0) {
     return NextResponse.json({ ok: true, stage: "collect", stoppedBy: "rights", queued: 0,
       classified: 0, allowedSources: 0, processingSources: 0, blockedSources: SOURCES.length },
@@ -132,8 +134,8 @@ export async function GET(request: NextRequest) {
   }
 
   const fresh = deduped.filter(({ item }) => !known.has(item.url));
-  // Discovery only: new articles remain unreviewed. No RSS text reaches the LLM
-  // until the particular article has a reviewed permission and attribution record.
+  // Store metadata first, then automatically verify source-specific license and attribution.
+  // RSS descriptions never enter the LLM before article-level approval.
   for (const part of chunk(fresh, 200)) {
     const { error: discoverError } = await admin.from("articles").upsert(part.map(({ item }) => ({
       source: item.sourceId, source_url: item.url, title: item.title,
@@ -141,6 +143,13 @@ export async function GET(request: NextRequest) {
       status: "pending", rights_status: "unreviewed",
     })), { onConflict: "source_url", ignoreDuplicates: true });
     if (discoverError) return NextResponse.json({ error: "discovery_failed" }, { status: 503 });
+  }
+  let autoReview;
+  try {
+    autoReview = await reviewPendingArticles(admin, rights, clock);
+  } catch (cause) {
+    console.error("[ingest:auto-review]", cause);
+    return NextResponse.json({ error: "auto_review_unavailable" }, { status: 503 });
   }
   const reviewQuery = processingSources.length ? await admin.from("articles")
     .select("id, source, source_url, title, published_at, status, rights_status, rights_evidence_url, rights_reviewed_at, rights_expires_at, rights_attribution")
@@ -236,8 +245,12 @@ export async function GET(request: NextRequest) {
     .update({ status: "expired" }, { count: "exact" })
     .eq("status", "pending").eq("rights_status", "permitted").not("domain_id", "is", null)
     .in("source", processingSources.map((source) => source.id))
-    .lt("fetched_at", cutoff) : { count: 0 };
+    .lt("fetched_at", cutoff).lt("rights_reviewed_at", cutoff) : { count: 0 };
   const expired = expiration.count;
+  const awaitingReview = processingSources.length ? await admin.from("articles")
+    .select("id", { count: "exact" }).eq("status", "pending").eq("rights_status", "unreviewed")
+    .in("source", processingSources.map(source => source.id)).limit(1) : { count: 0, error: null };
+  if (awaitingReview.error) console.error("[ingest] review count unavailable", awaitingReview.error);
 
   /* ── 6) 요약 ───────────────────────────────────────────────── */
 
@@ -252,7 +265,9 @@ export async function GET(request: NextRequest) {
     feedItems: raw.length,
     afterDedupe: deduped.length,
     alreadyKnown: known.size,
-    awaitingRightsReview: fresh.length,
+    discovered: fresh.length,
+    awaitingRightsReview: awaitingReview.error ? null : awaitingReview.count,
+    autoReview,
     allowedSources: allowedSources.length,
     processingSources: processingSources.length,
     blockedSources: SOURCES.length - allowedSources.length,
