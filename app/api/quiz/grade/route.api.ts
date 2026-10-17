@@ -76,6 +76,16 @@ export async function POST(request: Request) {
     return apiError(request, "not found", 404);
   }
 
+  // A direct quiz submission must not create an uncharged first-open record.
+  const { data: existingProgress, error: progressReadError } = await admin
+    .from("user_article_progress")
+    .select("id, status, quiz_score")
+    .eq("user_id", user.id)
+    .eq("article_id", variant.articles.id)
+    .maybeSingle();
+  if (progressReadError) return apiError(request, "reading temporarily unavailable", 503);
+  if (!existingProgress) return apiError(request, "article not opened", 403);
+
   const { data: questionRows } = await admin
     .from("quiz_questions")
     .select("*")
@@ -115,13 +125,6 @@ export async function POST(request: Request) {
 
   // 정책.md §7 — 진행 행이 이미 있으면(completed 또는 saved) 이 제출은 복습이다.
   // 점수·수준·저장 상태 어느 것도 건드리지 않는다.
-  const { data: existingProgress } = await admin
-    .from("user_article_progress")
-    .select("id, status, quiz_score")
-    .eq("user_id", user.id)
-    .eq("article_id", variant.articles.id)
-    .maybeSingle();
-
   const isReview =
     existingProgress?.status === "completed" || existingProgress?.status === "saved";
 

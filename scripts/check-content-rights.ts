@@ -41,6 +41,10 @@ async function main() {
   let current: ArticleRights = { ...article, rights_status: "unreviewed" };
   let registryMode: "valid" | "blocked" | "missing" = "valid";
   let articleReadFails = false;
+  let progressMissing = false;
+  let progressReadFails = false;
+  let openResult: unknown = { opened: true };
+  let openFails = false;
   const writes: string[] = [];
   let quizReads = 0;
   let publisherRequests = 0;
@@ -61,6 +65,9 @@ async function main() {
     const table = url.pathname.split("/").pop();
     if (init?.method && init.method !== "GET") {
       writes.push(table!);
+      if (table === "open_article_with_quota") return openFails
+        ? Response.json({ message: "storage error", code: "XX000" }, { status: 500 })
+        : Response.json(openResult);
       return Response.json([]);
     }
     if (table === "content_source_rights") return registryMode === "missing"
@@ -70,6 +77,8 @@ async function main() {
       ? Response.json({ code: "XX000", message: "unavailable" }, { status: 503 })
       : Response.json({ ...article, ...current });
     if (table === "article_variants") return Response.json(url.searchParams.has("level") ? [variant()] : variant());
+    if (table === "user_article_progress" && progressReadFails) return Response.json({ message: "storage error" }, { status: 500 });
+    if (table === "user_article_progress" && progressMissing) return Response.json(null);
     if (table === "user_article_progress") return Response.json(url.searchParams.has("article_id") ? saved() :
       [{ ...saved(), ...(url.searchParams.get("status")?.startsWith("in.") ? { status: "completed" } : {}) }]);
     if (table === "quiz_questions") { quizReads++; return Response.json([]); }
@@ -126,7 +135,26 @@ async function main() {
     assert.equal(opened.status, 200);
     assert.deepEqual((await opened.json()).reader.attribution, article.rights_attribution);
     assert.equal((await save(request("/api/progress/save", { articleId: 1 }))).status, 200);
-    assert.ok(writes.includes("user_article_progress"), "approved reads still use the usual progress gate");
+    assert.ok(writes.includes("open_article_with_quota"), "approved reads must use the atomic progress/quota gate");
+    for (const failure of ["database", "missing", "malformed", "progress"] as const) {
+      openFails = failure === "database";
+      progressReadFails = failure === "progress";
+      openResult = failure === "missing" ? null : failure === "malformed" ? {} : { opened: true };
+      const response = await open(request("/api/read/open", { variantId: 2 }));
+      assert.equal(response.status, 503);
+      assert.equal((await response.json()).reader, undefined, "DB failure never releases article content");
+    }
+    openFails = false; progressReadFails = false;
+    openResult = { opened: false, quota: { canUnlockWithAd: false } };
+    assert.deepEqual(await (await open(request("/api/read/open", { variantId: 2 }))).json(),
+      { opened: false, quota: { canUnlockWithAd: false } });
+    progressMissing = true;
+    const writesBeforeGrade = writes.length;
+    assert.equal((await grade(request("/api/quiz/grade", { variantId: 2, answers: {} }))).status, 403);
+    assert.equal(writes.length, writesBeforeGrade, "grading cannot create a free first-open record");
+    progressMissing = false; progressReadFails = true;
+    assert.equal((await grade(request("/api/quiz/grade", { variantId: 2, answers: {} }))).status, 503);
+    progressReadFails = false;
     registryMode = "blocked";
     const cronRequest = new NextRequest("https://app.invalid/api/cron/ingest", { headers: { Authorization: "Bearer rights-test" } });
     assert.equal((await (await collect(cronRequest)).json()).stoppedBy, "rights");

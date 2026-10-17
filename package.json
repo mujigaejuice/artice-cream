@@ -15,6 +15,8 @@
     "spike:sources": "tsx scripts/spike-sources.ts",
     "test:classify": "tsx tests/classify/run.ts",
     "test:logic": "tsx scripts/check-logic.ts",
+    "test:quota": "tsx scripts/check-quota.ts",
+    "test:quota-db": "node scripts/check-quota-db.mjs",
     "test:feed": "tsx scripts/check-feed-pagination.ts",
     "test:auth": "tsx scripts/check-auth-session.ts && tsx scripts/check-auth-session.ts --native",
     "test:account-delete": "tsx scripts/check-account-deletion.ts",

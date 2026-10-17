@@ -64,7 +64,14 @@ export async function POST(request: Request) {
 
   const admin = createAdminClient();
   if (!await canPublishArticle(admin, article.id)) return apiError(request, "not found", 404);
-  const gate = await openArticle(admin, user.id, article.id, variant.id);
+  let gate;
+  let progress;
+  try {
+    gate = await openArticle(admin, user.id, article.id, variant.id);
+    if (gate.opened) progress = await getProgress(admin, user.id, article.id);
+  } catch {
+    return apiError(request, "reading temporarily unavailable", 503);
+  }
 
   // 잠겼으면 본문을 응답에 넣지 않는다. 화면만 가리는 것과 다르다.
   if (!gate.opened) {
@@ -73,8 +80,6 @@ export async function POST(request: Request) {
       quota: { canUnlockWithAd: gate.quota.canUnlockWithAd },
     });
   }
-
-  const progress = await getProgress(admin, user.id, article.id);
 
   return json(request, {
     opened: true,

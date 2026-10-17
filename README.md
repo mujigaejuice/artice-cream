@@ -174,12 +174,31 @@ npm run test:logic     # 수준 조정, 스쿱 색, 용어 표시 같은 순수 
 npm run test:auth      # 웹·앱 저장소의 로그아웃 검증 (외부 요청 없음)
 npm run test:ingest    # 4편 상한, 병렬 처리, 타임아웃, 저장 검증 (모의 LLM·DB)
 npm run test:auto-review # 소스별 자동 승인, 철회·재시도·기존 대기열 분류 검증 (모의 HTTP)
+npm run test:quota     # 읽기·광고 보상 API의 오류 및 재시도 검증 (모의 HTTP)
+npm run test:quota-db  # 임시 Docker PostgreSQL에서 동시 요청·롤백·권한 검증
 npm run test:classify  # 분류기 정답률 (LLM 호출, 유료)
 npm run build:app      # 앱용 정적 번들 (out/)
 npm run app:run        # 번들 → cap sync → 안드로이드 빌드·설치·실행
 ```
 
 ## 배포
+
+읽기 횟수·광고 보상 API를 배포하기 전에 `supabase/migrations/0006_atomic_quota.sql`을 적용한다.
+무료 1회와 광고 보상 최대 3회는 DB의 KST 날짜를 기준으로 계산한다. 같은 사용자의 열람과 보상은
+DB 잠금으로 순서대로 처리하며, 열람 기록·횟수 차감과 광고 기록·보상 지급은 각각 함께 커밋한다.
+같은 글의 재열람·수준 변경은 추가 차감하지 않으며, 유효한 보상 nonce를 재전송하면 중복 지급 없이
+현재 잔여 횟수를 반환한다. DB 오류는 503으로 응답하고 열람을 허용하지 않는다.
+`test:quota-db`는 별도 임시 컨테이너만 사용하고 종료 시 제거하며 운영 DB에는 연결하지 않는다.
+
+2026-10-17 운영 DB에 `0006_atomic_quota.sql`을 적용했다. `supabase/tests/atomic_quota.sql`로
+실제 서비스 역할의 열람 차감·재열람·보상 재시도·일일 상한과 함수 접근 권한을 검증했고,
+검증용 계정과 이용 기록은 전부 롤백했다. 적용 전후 기존 프로필·학습·일일 횟수·광고 기록 건수가 일치했다.
+아래 읽기 전용 검증은 운영 REST 경로의 함수 등록·응답 형식·비로그인 호출 차단을 확인한다.
+존재하지 않는 임의 사용자 ID를 사용하므로 계정이나 이용 기록을 생성하지 않는다.
+
+```bash
+node --env-file=.env.local --import=tsx scripts/verify-quota-rpc.ts --production
+```
 
 Vercel에 올리면 `vercel.json`의 cron 10개가 매일 돈다. 한국 시간 오전 3시에 수집하고,
 오전 5시부터 8시 반까지 30분 간격으로 분류 하나씩 가공한다. 프로덕션에서는

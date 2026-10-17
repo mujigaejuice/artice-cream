@@ -33,8 +33,10 @@ function sign(payload: string): string {
 }
 
 function verify(nonce: string): { userId: string; issuedAt: number } | null {
-  const [userId, issuedAt, signature] = nonce.split(".");
-  if (!userId || !issuedAt || !signature) return null;
+  const parts = nonce.split(".");
+  const [userId, issuedAt, signature] = parts;
+  if (parts.length !== 3 || !userId || !/^\d+-[a-f0-9]{8}$/.test(issuedAt) ||
+    !/^[a-f0-9]{64}$/.test(signature)) return null;
 
   const expected = sign(`${userId}.${issuedAt}`);
   const a = Buffer.from(signature, "hex");
@@ -44,7 +46,8 @@ function verify(nonce: string): { userId: string; issuedAt: number } | null {
   // `issuedAt` is `<millis>-<random>` (see GET), so it has to be split before it
   // parses as a number. `Number()` on the whole thing is NaN.
   const at = Number(issuedAt.split("-")[0]);
-  if (!Number.isFinite(at) || Date.now() - at > NONCE_TTL_MS) return null;
+  const age = Date.now() - at;
+  if (!Number.isSafeInteger(at) || age < 0 || age > NONCE_TTL_MS) return null;
 
   return { userId, issuedAt: at };
 }
@@ -72,37 +75,28 @@ export async function POST(request: Request) {
     return apiError(request, "unauthenticated", 401);
   }
 
-  let nonce: string | undefined;
+  let nonce: unknown;
   try {
     nonce = (await request.json())?.nonce;
   } catch {
     // handled below
   }
 
-  const claim = nonce ? verify(nonce) : null;
+  if (typeof nonce !== "string" || nonce.length > 512) {
+    return apiError(request, "invalid nonce", 400);
+  }
+  const claim = verify(nonce);
   if (!claim || claim.userId !== user.id) {
     return apiError(request, "invalid nonce", 400);
   }
 
-  const admin = createAdminClient();
-
-  // The unique constraint — not a prior SELECT — is what makes this single-use.
-  const { error: insertError } = await admin
-    .from("ad_views")
-    .insert({ user_id: user.id, nonce, reward_verified: false });
-
-  if (insertError) {
-    return apiError(request, "nonce already used", 409);
+  try {
+    const result = await grantAdUnlock(createAdminClient(), user.id, nonce);
+    if (result.status === "conflict") return apiError(request, "nonce already used", 409);
+    if (result.status === "limit") return apiError(request, "daily ad unlock limit reached", 429);
+    // A verified replay returns success and the current balance, without a new grant.
+    return json(request, { quota: result.quota });
+  } catch {
+    return apiError(request, "reward temporarily unavailable", 503);
   }
-
-  const quota = await grantAdUnlock(admin, user.id);
-  if (!quota) {
-    return apiError(request, "daily ad unlock limit reached", 429);
-  }
-
-  // `lib/quota.ts` counts the daily cap off this flag, so it has to be the last
-  // write — a row flipped before the grant would count a view that never paid out.
-  await admin.from("ad_views").update({ reward_verified: true }).eq("nonce", nonce);
-
-  return json(request, { quota });
 }
