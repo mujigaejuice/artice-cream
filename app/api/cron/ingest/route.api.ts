@@ -39,6 +39,10 @@ export const dynamic = "force-dynamic";
 /** 브로커·줄리아 에반스처럼 아카이브 전체가 피드 하나/사이트맵에 있는 소스는 여러 편을 뽑는다. */
 const WIDE_ARCHIVE_SOURCES = new Set(["brooker", "julia-evans"]);
 
+// A stalled provider must leave time to persist completed batches and return diagnostics.
+const CLASSIFY_TIMEOUT_MS = 60_000;
+const CLASSIFY_FINISH_RESERVE_SECONDS = 15;
+
 type Candidate = { item: NewsItem; kind: SourceKind };
 
 /** 소스 한 곳이 이번 런에 무엇을 내놓았는지. "왜 이 분류가 비었나"는 여기서부터 본다. */
@@ -60,6 +64,7 @@ export async function GET(request: NextRequest) {
   }
 
   const startedAt = Date.now();
+  const runId = crypto.randomUUID();
   const clock = startDeadline(startedAt);
   const admin = createAdminClient();
   const rights = await getSourceRights(admin);
@@ -172,9 +177,11 @@ export async function GET(request: NextRequest) {
   const labelled: (Candidate & { category: CategorySlug | "reject" })[] = [];
   let classifyFailed = 0;
   let ranOutOfTime = false;
+  const failures: { stage: "permissions" | "classify" | "save"; articleIds?: number[];
+    errorType?: string; httpStatus?: number; timedOut?: boolean; code?: string }[] = [];
 
   for (const batch of chunk(candidates, CLASSIFY_BATCH_SIZE)) {
-    if (clock.expired()) {
+    if (clock.remainingSeconds() <= CLASSIFY_FINISH_RESERVE_SECONDS) {
       ranOutOfTime = true;
       break;
     }
@@ -182,11 +189,23 @@ export async function GET(request: NextRequest) {
     const { data: permissions, error: permissionError } = await admin.from("articles")
       .select("source_url, source, status, rights_status, rights_evidence_url, rights_reviewed_at, rights_expires_at, rights_attribution")
       .in("source_url", batch.map(({ item }) => item.url));
-    if (permissionError) continue;
+    if (permissionError) {
+      failures.push({ stage: "permissions", code: permissionError.code });
+      break;
+    }
     const approvedUrls = new Set((permissions ?? []).filter((row) =>
       articleAllows(row as ArticleRights, latestRights, "process")).map((row) => row.source_url));
     const approvedBatch = batch.filter(({ item }) => approvedUrls.has(item.url));
     if (approvedBatch.length === 0) continue;
+    const remainingMs = (clock.remainingSeconds() - CLASSIFY_FINISH_RESERVE_SECONDS) * 1000;
+    if (remainingMs <= 0) {
+      ranOutOfTime = true;
+      break;
+    }
+    const signal = AbortSignal.timeout(Math.min(CLASSIFY_TIMEOUT_MS, remainingMs));
+    let httpStatus: number | undefined;
+    const articleIds = (reviewQueue ?? []).filter(row => approvedUrls.has(row.source_url)).map(row => row.id);
+    console.log("[ingest:classify:start]", JSON.stringify({ runId, articleIds, count: approvedBatch.length }));
     try {
       const results = await classifyCandidates(
         approvedBatch.map(({ item }) => ({
@@ -195,6 +214,10 @@ export async function GET(request: NextRequest) {
           summary: item.summary.slice(0, 300),
         })),
         meter,
+        signal,
+        { runId, onTrace: event => {
+          if (event.event === "call") httpStatus = typeof event.httpStatus === "number" ? event.httpStatus : undefined;
+        } },
       );
       for (const r of results) {
         const c = approvedBatch[r.i];
@@ -202,7 +225,12 @@ export async function GET(request: NextRequest) {
       }
     } catch (cause) {
       classifyFailed += approvedBatch.length;
-      console.error("[ingest] 분류 실패", cause);
+      const failure = { stage: "classify" as const, articleIds, httpStatus, timedOut: signal.aborted,
+        errorType: cause instanceof Error ? cause.name : "Error" };
+      failures.push(failure);
+      // Do not include provider response bodies, prompts or credentials in diagnostics.
+      console.error("[ingest:classify:failed]", JSON.stringify({ runId, ...failure }));
+      break;
     }
   }
 
@@ -231,7 +259,10 @@ export async function GET(request: NextRequest) {
       const { data: updated, error: writeError } = await admin.from("articles")
         .update({ domain_id: row.domain_id, status: row.status })
         .eq("source_url", row.source_url).eq("rights_status", "permitted").select("id");
-      if (writeError) console.error("[ingest] 후보 저장 실패", writeError);
+      if (writeError) {
+        failures.push({ stage: "save", code: writeError.code });
+        console.error("[ingest] 후보 저장 실패", writeError);
+      }
       else queued += updated?.length ?? 0;
     }
   }
@@ -258,8 +289,9 @@ export async function GET(request: NextRequest) {
   for (const c of labelled) byCategory[c.category] = (byCategory[c.category] ?? 0) + 1;
 
   const summary = {
-    ok: true,
+    ok: failures.length === 0 && !ranOutOfTime,
     stage: "collect" as const,
+    runId,
     seconds: clock.elapsedSeconds(),
     ranOutOfTime,
     feedItems: raw.length,
@@ -272,7 +304,9 @@ export async function GET(request: NextRequest) {
     processingSources: processingSources.length,
     blockedSources: SOURCES.length - allowedSources.length,
     classified: labelled.length,
+    classificationCandidates: candidates.length,
     classifyFailed,
+    failures,
     rejected: labelled.filter((c) => c.category === "reject").length,
     queued,
     expired: expired ?? 0,
@@ -284,5 +318,6 @@ export async function GET(request: NextRequest) {
   };
 
   console.log("[ingest:collect]", JSON.stringify(summary));
-  return NextResponse.json(summary, { headers: { "Cache-Control": "no-store" } });
+  return NextResponse.json(summary, { status: summary.ok ? 200 : 503,
+    headers: { "Cache-Control": "no-store" } });
 }

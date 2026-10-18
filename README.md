@@ -151,6 +151,10 @@ npm run dev
 12시간 이후 다시 검사하며, 다른 글은 계속 진행한다. 차단·제한된 글은 자동 승인하지 않는다.
 공개 여부는 소스의 `allow_publish` 설정을 따른다. 자동 검토는 소스 허용 설정을 변경하지 않는다.
 수집 응답/로그의 `autoReview`에서 검토·승인·보류·시간 부족과 사유별 건수를 확인할 수 있다.
+분류 요청은 배치당 최대 60초이며 함수의 남은 시간도 함께 적용한다. 분류·권한 조회·저장
+실패나 분류 시간 부족은 HTTP 503과 `ok: false`로 반환한다. `runId`,
+`classificationCandidates`, `classifyFailed`, `failures`로 승인 이후 중단 지점을 확인한다.
+분류 실패 시 나머지 배치는 호출하지 않으며, 미분류 글은 다음 실행에 다시 시도한다.
 
 ```bash
 AUTH="Authorization: Bearer $CRON_SECRET"

@@ -583,6 +583,8 @@ export async function processArticleLevels(
 export async function classifyCandidates(
   candidates: ClassifyCandidate[],
   meter?: UsageMeter,
+  signal?: AbortSignal,
+  context?: TraceContext,
 ): Promise<Classify["items"]> {
   if (candidates.length === 0) return [];
   const result = await callJSON(
@@ -593,6 +595,8 @@ export async function classifyCandidates(
     Math.max(500, candidates.length * 40),
     0,
     meter,
+    signal,
+    context ? { ...context, stage: "classify" } : undefined,
   );
   return result.items;
 }

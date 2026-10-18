@@ -1,5 +1,6 @@
 /** Collector regression: discovered or withdrawn articles must never reach classification. */
 import assert from "node:assert/strict";
+import { setTimeout as delay } from "node:timers/promises";
 import { NextRequest } from "next/server";
 
 async function main() {
@@ -17,6 +18,10 @@ async function main() {
   let mode: "unreviewed" | "approved" | "withdrawn" = "unreviewed";
   let llmCalls = 0;
   let feedCalls = 0;
+  let llmFailure: "none" | "auth" | "timeout" = "none";
+  let permissionFailure = false;
+  let consumeDeadline = false, elapsedOffset = 0;
+  let reviewedArticles = [reviewedArticle];
   let writes: { method: string; body: unknown; query: string }[] = [];
   globalThis.fetch = async (input, init) => {
     const url = new URL(input instanceof Request ? input.url : String(input));
@@ -26,6 +31,9 @@ async function main() {
     }
     if (url.origin === "https://collect-llm.invalid") {
       llmCalls++;
+      assert.ok(init?.signal, "classification must carry a deadline to the provider");
+      if (llmFailure === "auth") return Response.json({ error: "PRIVATE_PROVIDER_RESPONSE" }, { status: 401 });
+      if (llmFailure === "timeout") await delay(1000, undefined, { signal: init.signal });
       assert.ok(String(init?.body).includes("Reviewed fixture"));
       assert.ok(!String(init?.body).includes("PRIVATE_UNREVIEWED_SUMMARY"));
       return Response.json({ choices: [{ message: { content: JSON.stringify({ items: [{ i: 0, category: "infra" }] }) }, finish_reason: "stop" }],
@@ -48,7 +56,12 @@ async function main() {
     if (mode === "withdrawn" && !url.searchParams.has("domain_id")) {
       return Response.json([{ ...reviewedArticle, rights_status: "blocked" }]);
     }
-    return Response.json([reviewedArticle]);
+    if (permissionFailure && url.searchParams.has("source_url")) {
+      return Response.json({ code: "TEST_PERMISSION_READ", message: "read failed" }, { status: 503 });
+    }
+    if (consumeDeadline && url.searchParams.has("source_url")) elapsedOffset = 260_000;
+    return Response.json(reviewedArticles.filter(row => !url.searchParams.has("source_url") ||
+      url.searchParams.get("source_url")!.includes(row.source_url)));
   };
   const { GET } = await import("../app/api/cron/ingest/route.api");
   const request = () => new NextRequest("https://app.invalid/api/cron/ingest", { headers: { Authorization: "Bearer test-cron" } });
@@ -78,6 +91,50 @@ async function main() {
   assert.equal(summary.allowedSources, 0); assert.equal(summary.processingSources, 1);
   assert.equal(summary.classified, 1); assert.equal(llmCalls, 2); assert.equal(feedCalls, 4);
   assert.ok(!writes.some((write) => write.method === "POST"), "existing approved articles classify without reopening collection");
+
+  reviewedArticles = Array.from({ length: 25 }, (_, i) => ({ ...reviewedArticle, id: i + 1,
+    source_url: `https://kubernetes.io/blog/fixture-${i}/` }));
+  llmFailure = "auth"; writes = [];
+  let callsBefore = llmCalls;
+  let response = await GET(request());
+  summary = await response.json();
+  assert.equal(response.status, 503); assert.equal(summary.ok, false);
+  assert.equal(summary.classificationCandidates, 25); assert.equal(summary.classifyFailed, 20);
+  assert.equal(llmCalls - callsBefore, 1, "stop after the first failing batch instead of waiting on every batch");
+  assert.equal(summary.queued, 0); assert.equal(summary.failures[0].httpStatus, 401);
+  assert.ok(!JSON.stringify(summary).includes("PRIVATE_PROVIDER_RESPONSE"));
+  assert.ok(!writes.some(write => (write.body as { domain_id?: number }).domain_id), "failed classification remains queued");
+
+  llmFailure = "timeout";
+  const originalTimeout = AbortSignal.timeout;
+  let boundedDeadline = false;
+  AbortSignal.timeout = ms => {
+    if (ms === 60_000) { boundedDeadline = true; return originalTimeout(5); }
+    return originalTimeout(ms);
+  };
+  try {
+    callsBefore = llmCalls;
+    response = await GET(request());
+    summary = await response.json();
+    assert.equal(response.status, 503); assert.equal(summary.ok, false);
+    assert.equal(summary.failures[0].timedOut, true); assert.equal(summary.queued, 0);
+    assert.equal(llmCalls - callsBefore, 1); assert.equal(boundedDeadline, true);
+  } finally { AbortSignal.timeout = originalTimeout; }
+
+  llmFailure = "none"; permissionFailure = true; callsBefore = llmCalls;
+  response = await GET(request()); summary = await response.json();
+  assert.equal(response.status, 503); assert.equal(summary.ok, false);
+  assert.equal(summary.failures[0].stage, "permissions"); assert.equal(llmCalls, callsBefore);
+
+  permissionFailure = false; consumeDeadline = true;
+  const originalNow = Date.now;
+  Date.now = () => originalNow() + elapsedOffset;
+  try {
+    response = await GET(request()); summary = await response.json();
+    assert.equal(response.status, 503); assert.equal(summary.ranOutOfTime, true);
+    assert.equal(llmCalls, callsBefore, "a slow permission read must not start a request past the deadline");
+  } finally { Date.now = originalNow; }
   console.log("Collector rights: discovery stays unreviewed, no unreviewed summary reaches LLM, withdrawal blocks classification, reviewed articles classify and queue.");
+  console.log("Collector failures: stalled and unauthorized providers stop promptly, failed reads return 503, and diagnostics omit provider response bodies.");
 }
 main().catch((cause: unknown) => { console.error(cause); process.exitCode = 1; });
