@@ -61,13 +61,13 @@
   용어와 퀴즈는 원문이 아니라 다시 쓴 본문에서 나온다.
 - 퀴즈 결과에 따라 다음 글의 수준이 오르내린다.
 - 읽은 글은 분류별 색의 스쿱이 되어 한 달짜리 콘에 올라간다.
-- 이메일 로그인 링크나 구글 계정으로 로그인한 뒤 관심 분야를 고른다.
+- 이메일 인증번호나 구글 계정으로 로그인한 뒤 관심 분야를 고른다.
 - 하단의 나 탭에서 로그인한 계정을 확인하고 로그아웃해 다른 계정으로 바꿀 수 있다.
 
 ## 기술 스택
 
 - Next.js 16, React 19, Tailwind CSS 4
-- Supabase: Postgres, 인증(매직 링크·구글), RLS
+- Supabase: Postgres, 인증(이메일 인증번호·구글), RLS
 - LLM: Anthropic SDK, 또는 OpenAI 호환 게이트웨이
 - Capacitor 8: 안드로이드 앱
 - Vercel: API와 매일 도는 인제스트 cron
@@ -131,8 +131,20 @@ Authentication → URL Configuration에는 다음 주소를 등록한다.
 
 Google OAuth의 Authorized redirect URI는 앱 주소가 아니라
 `https://<project-ref>.supabase.co/auth/v1/callback`이다.
-이메일 링크는 로그인을 요청한 브라우저에서 열고, 앱에서 요청했다면 같은 기기의
-앱으로 돌아와야 한다. PKCE 검증에 요청 당시 저장한 값이 필요하다.
+이메일 로그인과 계정 삭제 본인 확인은 메일의 인증번호를 요청한 화면에 입력한다.
+`verifyOtp({ email, token, type: "email" })`가 그 브라우저·앱에 세션을 만들므로
+메일은 다른 브라우저나 기기에서 읽어도 된다. Google 로그인에는 기존 PKCE 콜백을 사용한다.
+
+**이메일 인증번호 전환 시 Supabase 설정도 필요하다.** Authentication → Email Templates의
+Magic Link와 Confirm signup 양식을 `supabase/templates/email-code.html`로 설정하고
+제목은 `artice cream 인증번호`로 지정한다. 기존 계정과 신규 가입 모두 `{{ .Token }}`이
+메일에 표시되어야 한다. 번호 입력은 프로젝트에서 설정한 6~10자리 숫자를 받는다.
+발송 제한과 만료 시간은 Supabase 설정을 따른다.
+
+운영 전환은 기존 링크에 인증번호를 추가한 임시 메일 양식 → 웹 배포·앱 업데이트 →
+신규/기존 계정 및 삭제 본인 확인 검증 → 번호 전용 양식 적용 순으로 진행한다.
+이전 앱 버전의 링크 로그인이 필요하면 해당 버전이 교체될 때까지 링크를 함께 유지한다.
+코드 배포만으로 운영 메일 양식이 바뀌지는 않는다.
 
 LLM은 `.env.local`에 `BASE_URL`, `MODEL_ID`, `API_KEY`가 모두 있으면 OpenAI 호환
 게이트웨이로, 없으면 `ANTHROPIC_API_KEY`로 Anthropic을 직접 부른다.

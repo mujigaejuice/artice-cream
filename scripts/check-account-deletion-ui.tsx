@@ -18,6 +18,8 @@ async function main() {
   let postStatus = 200;
   let posts = 0;
   let emails = 0;
+  let verifies = 0;
+  let verifyStatus = 400;
   let logoutStatus = 204;
   globalThis.fetch = async (input, init) => {
     const url = new URL(input instanceof Request ? input.url : String(input));
@@ -37,8 +39,17 @@ async function main() {
       const body = JSON.parse(String(init?.body));
       assert.equal(body.email, account.email);
       assert.equal(body.create_user, false);
-      assert.equal(url.searchParams.get("redirect_to"), "https://app.invalid/auth/callback");
+      assert.equal(url.searchParams.has("redirect_to"), false);
       return Response.json({});
+    }
+    if (url.pathname === "/auth/v1/verify") {
+      verifies++;
+      const body = JSON.parse(String(init?.body));
+      assert.equal(body.email, account.email);
+      assert.equal(body.token, "012345");
+      assert.equal(body.type, "email");
+      return verifyStatus === 200 ? Response.json({ ...JSON.parse(session), expires_in: 3600 }) :
+        Response.json({ code: "otp_expired", msg: "Invalid or expired OTP" }, { status: verifyStatus });
     }
     assert.equal(url.pathname, "/auth/v1/logout", "unexpected auth request");
     if (logoutStatus !== 204) return Response.json({ msg: "test failure" }, { status: logoutStatus });
@@ -77,9 +88,9 @@ async function main() {
     await act(async () => { element.click(); });
     await flush();
   };
-  const fill = async (id: string, value: string) => {
-    const input = container.querySelector<HTMLInputElement>(`#${id}`);
-    assert.ok(input, `missing input: ${id}`);
+  const fill = async (selector: string, value: string) => {
+    const input = container.querySelector<HTMLInputElement>(selector);
+    assert.ok(input, `missing input: ${selector}`);
     await act(async () => {
       Object.getOwnPropertyDescriptor(dom.window.HTMLInputElement.prototype, "value")!.set!.call(input, value);
       input.dispatchEvent(new dom.window.Event("input", { bubbles: true }));
@@ -89,7 +100,7 @@ async function main() {
     await mount();
     assert.match(container.textContent!, /reader@example.test/);
     assert.equal(button("계정과 데이터 영구 삭제").disabled, true);
-    await fill("delete-confirmation", "삭제");
+    await fill("#delete-confirmation", "삭제");
     assert.equal(button("계정과 데이터 영구 삭제").disabled, true);
     assert.equal(posts, 0, "loading and typing cannot delete an account");
 
@@ -114,25 +125,37 @@ async function main() {
     await mount();
     await click(button("다른 계정으로 확인"));
     assert.equal(consumeDeletionReturn("/"), "/");
-    assert.ok(container.querySelector("#deletion-email"), container.textContent ?? "empty form");
+    assert.ok(container.querySelector('input[type="email"]'), container.textContent ?? "empty form");
     assert.equal(posts, 0);
 
-    // Email verification requests never delete; a later callback must return to deletion.
-    await fill("deletion-email", account.email);
-    await click(button("본인 확인 링크 받기"));
+    // Verification stays in this page, never creates users and never deletes by itself.
+    await fill('input[type="email"]', account.email);
+    await click(button("인증번호 받기"));
     assert.equal(emails, 1);
     assert.equal(posts, 0);
-    assert.equal(consumeDeletionReturn("/"), "/account/delete/");
-    assert.match(container.querySelector('[role="status"]')!.textContent!, /최종 버튼/);
+    assert.equal(consumeDeletionReturn("/"), "/", "OTP needs no callback return hint");
+    assert.match(container.textContent!, /최종 버튼/);
+    await fill('input[autocomplete="one-time-code"]', "012345");
+    await click(button("인증번호 확인"));
+    assert.equal(verifies, 1);
+    assert.match(container.querySelector('[role="alert"]')!.textContent!, /올바르지 않거나 만료/);
+    assert.equal(posts, 0);
+    verifyStatus = 200;
+    await click(button("인증번호 확인"));
+    assert.equal(verifies, 2);
+    assert.match(container.textContent!, /reader@example.test/);
+    assert.ok(container.querySelector("#delete-confirmation"), "same page advances to explicit confirmation");
+    assert.equal(button("계정과 데이터 영구 삭제").disabled, true);
+    assert.equal(posts, 0, "successful OTP must not delete the account");
 
     // Expired reauthentication returns to the email form and clears confirmation text.
     dom.window.localStorage.setItem("artice-auth", session);
     postStatus = 403;
     await mount();
-    await fill("delete-confirmation", "계정 삭제");
+    await fill("#delete-confirmation", "계정 삭제");
     await click(button("계정과 데이터 영구 삭제"));
     assert.equal(posts, 1);
-    assert.ok(container.querySelector("#deletion-email"));
+    assert.ok(container.querySelector('input[type="email"]'));
     assert.equal(container.querySelector("#delete-confirmation"), null);
     assert.match(container.querySelector('[role="alert"]')!.textContent!, /본인 확인 시간이 지났어요/);
 
@@ -141,7 +164,7 @@ async function main() {
     canDelete = true;
     await mount();
     rememberDeletionReturn();
-    await fill("delete-confirmation", "계정 삭제");
+    await fill("#delete-confirmation", "계정 삭제");
     await click(button("계정과 데이터 영구 삭제"));
     assert.equal(posts, 2);
     assert.match(container.textContent!, /계정 삭제가 완료됐어요/);

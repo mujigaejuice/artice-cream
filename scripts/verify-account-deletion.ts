@@ -53,10 +53,10 @@ async function main() {
     assert.ok(signed.data.session);
     const otherDeviceJwt = signed.data.session.access_token;
     const otherRefreshToken = signed.data.session.refresh_token;
-    // Generate (do not email) the same existing-account magic link used by the UI.
+    // Generate an email OTP without sending a message, then verify it as the UI does.
     const link = await admin.auth.admin.generateLink({ type: "magiclink", email });
     if (link.error) throw new Error(`Fixture link failed (${link.error.code ?? link.error.status})`);
-    const confirmed = await client.auth.verifyOtp({ type: "magiclink", token_hash: link.data.properties.hashed_token });
+    const confirmed = await client.auth.verifyOtp({ type: "email", email, token: link.data.properties.email_otp });
     if (confirmed.error) throw new Error(`Fixture confirmation failed (${confirmed.error.code ?? confirmed.error.status})`);
     assert.ok(confirmed.data.session);
     const jwt = confirmed.data.session.access_token;

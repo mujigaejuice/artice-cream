@@ -14,13 +14,35 @@ async function main() {
   let emails = 0;
   let expectedEmail = "reader@example.test";
   let otpStatus = 200;
+  let verifyStatus = 400;
+  let verifies = 0;
+  let onboardingLoads = 0;
+  let navigations = 0;
+  let expectedCode = "012345";
   const receivedEmails: string[] = [];
   globalThis.fetch = async (input, init) => {
-    const url = new URL(input instanceof Request ? input.url : String(input));
+    const url = new URL(input instanceof Request ? input.url : String(input), "https://app.invalid");
+    if (url.origin === "https://app.invalid" && url.pathname === "/api/onboarding") {
+      onboardingLoads++;
+      assert.equal(new Headers(init?.headers).get("authorization"), "Bearer test-access-token");
+      return Response.json({ domains: [{ id: 1, slug: "cloud", name_ko: "클라우드" }], levels: {}, domainTerms: {}, isSignedIn: true });
+    }
     assert.equal(url.origin, "https://age-test.invalid");
+    if (url.pathname === "/auth/v1/verify") {
+      verifies++;
+      const body = JSON.parse(String(init?.body));
+      assert.equal(body.email, expectedEmail);
+      assert.equal(body.token, expectedCode, "leading zeroes survive verification");
+      assert.equal(body.type, "email");
+      return verifyStatus === 200 ? Response.json({ access_token: "test-access-token", refresh_token: "test-refresh-token",
+        token_type: "bearer", expires_in: 3600, user: { id: "reader-id", email: expectedEmail } }) :
+        Response.json({ code: verifyStatus === 429 ? "over_request_rate_limit" : "otp_expired", msg: "Invalid or expired OTP" }, { status: verifyStatus });
+    }
     assert.equal(url.pathname, "/auth/v1/otp");
     receivedEmails.push(JSON.parse(String(init?.body)).email);
     assert.equal(receivedEmails.at(-1), expectedEmail);
+    assert.equal(JSON.parse(String(init?.body)).create_user, true);
+    assert.equal(url.searchParams.has("redirect_to"), false, "email codes need no browser redirect");
     emails++;
     return Response.json(otpStatus === 200 ? {} : { code: "over_email_send_rate_limit", msg: "Too many requests" }, { status: otpStatus });
   };
@@ -28,7 +50,7 @@ async function main() {
   const { AppRouterContext } = await import("next/dist/shared/lib/app-router-context.shared-runtime");
   const { OnboardingFlow } = await import("../components/OnboardingFlow");
   const { createClient } = await import("../lib/supabase/client");
-  const router = { back() {}, forward() {}, refresh() {}, hmrRefresh() {}, push() {}, replace() {}, prefetch() {}, bfcacheId: "test" };
+  const router = { back() {}, forward() {}, refresh() { navigations++; }, hmrRefresh() {}, push() { navigations++; }, replace() { navigations++; }, prefetch() {}, bfcacheId: "test" };
   const container = dom.window.document.getElementById("root")!;
   const root = createRoot(container);
   try {
@@ -87,7 +109,7 @@ async function main() {
     const age = container.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
     const email = container.querySelector<HTMLInputElement>('input[type="email"]')!;
     const google = [...container.querySelectorAll("button")].find((button) => button.textContent?.includes("구글로"))!;
-    const send = [...container.querySelectorAll("button")].find((button) => button.textContent?.includes("링크 받기"))!;
+    const send = [...container.querySelectorAll("button")].find((button) => button.textContent?.includes("인증번호 받기"))!;
     assert.equal(age.checked, false);
     assert.equal(email.disabled, true);
     assert.equal(google.disabled, true);
@@ -116,25 +138,25 @@ async function main() {
     await act(async () => { send.click(); });
     await finishLogin();
     assert.equal(emails, 1);
-    assert.match(container.textContent!, /로그인 링크를 보냈어요/);
+    assert.match(container.textContent!, /인증번호를 보냈어요/);
     assert.equal(container.querySelector('input[type="date"]'), null, "no birthdate collection");
     await act(async () => { age.click(); });
     const beforeBlocked = emails;
-    await act(async () => { button("로그인 링크 다시 받기").click(); });
+    await act(async () => { button("인증번호 다시 받기").click(); });
     assert.equal(emails, beforeBlocked, "resend also requires the age confirmation");
     await act(async () => { age.click(); });
     const beforeResend = emails;
-    await act(async () => { button("로그인 링크 다시 받기").click(); button("로그인 링크 다시 받기").click(); });
+    await act(async () => { button("인증번호 다시 받기").click(); button("인증번호 다시 받기").click(); });
     await finishLogin();
     assert.equal(emails, beforeResend + 1, "same-tick double click sends only one request");
     otpStatus = 429;
-    await act(async () => { button("로그인 링크 다시 받기").click(); });
+    await act(async () => { button("인증번호 다시 받기").click(); });
     await finishLogin();
     assert.match(container.querySelector('[role="alert"]')!.textContent!, /잠시 기다린/);
-    assert.equal(button("로그인 링크 받기").disabled, false);
-    assert.equal(container.querySelector('[role="status"]'), null, "failed resend does not advertise an older link");
+    assert.equal(button("인증번호 다시 받기").disabled, false);
+    assert.ok(container.querySelector('input[autocomplete="one-time-code"]'), "failed resend keeps code entry available");
     otpStatus = 200;
-    await act(async () => { button("로그인 링크 받기").click(); });
+    await act(async () => { button("인증번호 다시 받기").click(); });
     await finishLogin();
     await act(async () => { button("이메일 주소 수정").click(); });
     const corrected = container.querySelector<HTMLInputElement>('input[type="email"]')!;
@@ -147,12 +169,12 @@ async function main() {
     const auth = createClient().auth;
     const originalOtp = auth.signInWithOtp;
     auth.signInWithOtp = async () => { throw new Error("unhandled transport failure"); };
-    await act(async () => { button("로그인 링크 받기").click(); });
+    await act(async () => { button("인증번호 받기").click(); });
     await finishLogin();
     assert.match(container.querySelector('[role="alert"]')!.textContent!, /연결을 확인/);
-    assert.equal(button("로그인 링크 받기").disabled, false, "unexpected exception releases the form");
+    assert.equal(button("인증번호 받기").disabled, false, "unexpected exception releases the form");
     auth.signInWithOtp = originalOtp;
-    await act(async () => { button("로그인 링크 받기").click(); });
+    await act(async () => { button("인증번호 받기").click(); });
     await finishLogin();
     assert.ok(container.querySelector('[role="status"]'), JSON.stringify({ receivedEmails, text: container.textContent }));
     assert.match(container.querySelector('[role="status"]')!.textContent!, /corrected@example.test/);
@@ -171,7 +193,59 @@ async function main() {
     await act(async () => { root.render(createElement(AppRouterContext.Provider, { value: router },
       createElement(OnboardingPage))); });
     assert.match(title(), /내 속도로/, "signed-out page shows tutorial without an API call");
-    console.log("Tutorial + sign-in: navigation, age gate, resend, rate limits, address correction, duplicate clicks and exception recovery passed.");
+    assert.equal(onboardingLoads, 0);
+    await act(async () => { button("바로 로그인").click(); });
+    const pageAge = container.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
+    await act(async () => { pageAge.click(); });
+    async function fill(selector: string, value: string) {
+      const input = container.querySelector<HTMLInputElement>(selector)!;
+      assert.ok(input, `input: ${selector}`);
+      await act(async () => {
+        Object.getOwnPropertyDescriptor(dom.window.HTMLInputElement.prototype, "value")!.set!.call(input, value);
+        input.dispatchEvent(new dom.window.Event("input", { bubbles: true }));
+      });
+    }
+    await fill('input[type="email"]', expectedEmail);
+    await act(async () => { button("인증번호 받기").click(); });
+    await finishLogin();
+    const codeSelector = 'input[autocomplete="one-time-code"]';
+    assert.equal(button("인증번호 확인하고 로그인").disabled, true);
+    await fill(codeSelector, "12ab56");
+    assert.equal(button("인증번호 확인하고 로그인").disabled, true);
+    await fill(codeSelector, "012 345");
+    await act(async () => { pageAge.click(); });
+    await act(async () => { button("인증번호 확인하고 로그인").click(); });
+    assert.equal(verifies, 0, "verification also requires age confirmation");
+    await act(async () => { pageAge.click(); });
+    await act(async () => { button("인증번호 확인하고 로그인").click(); button("인증번호 확인하고 로그인").click(); });
+    await finishLogin();
+    assert.equal(verifies, 1, "double verification clicks make one request");
+    assert.match(container.querySelector('[role="alert"]')!.textContent!, /올바르지 않거나 만료/);
+    assert.equal(dom.window.localStorage.getItem("artice-auth"), null);
+    verifyStatus = 429;
+    await act(async () => { button("인증번호 확인하고 로그인").click(); });
+    await finishLogin();
+    assert.match(container.querySelector('[role="alert"]')!.textContent!, /잠시 기다린/);
+    const originalVerify = auth.verifyOtp;
+    auth.verifyOtp = async () => { throw new Error("connection interrupted"); };
+    await act(async () => { button("인증번호 확인하고 로그인").click(); });
+    await finishLogin();
+    assert.match(container.querySelector('[role="alert"]')!.textContent!, /연결을 확인/);
+    auth.verifyOtp = originalVerify;
+    // A project configured for eight digits works too; the code remains a string.
+    expectedCode = "00123456";
+    await fill(codeSelector, expectedCode);
+    verifyStatus = 200;
+    await act(async () => { button("인증번호 확인하고 로그인").click(); });
+    for (let attempt = 0; attempt < 100 && !container.textContent?.includes("어떤 뉴스를"); attempt++) {
+      await act(async () => { await new Promise((resolve) => setTimeout(resolve, 5)); });
+    }
+    assert.match(title(), /어떤 뉴스를/, "OTP completes in the requesting page");
+    assert.equal(onboardingLoads, 1, "fetch authenticated onboarding data once after verification");
+    assert.ok((await auth.getSession()).data.session);
+    assert.equal(container.querySelector<HTMLInputElement>('input[type="checkbox"]')?.checked, true, "new domains initialize after login");
+    assert.equal(navigations, 0, "no callback navigation or page refresh required");
+    console.log("Tutorial + email OTP: age gate, resend, rate limits, invalid/expired codes, duplicate clicks, recovery and same-page login passed.");
   } finally {
     await act(async () => { root.unmount(); });
     await createClient().auth.stopAutoRefresh();

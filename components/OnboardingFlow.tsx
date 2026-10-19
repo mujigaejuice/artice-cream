@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
+import { EmailCodeForm } from "@/components/EmailCodeForm";
 import { TermCheck } from "@/components/TermCheck";
 import { WelcomeTutorial } from "@/components/WelcomeTutorial";
 import { coreColor } from "@/lib/color";
@@ -20,6 +21,7 @@ type Props = {
   /** 딥링크·웹 콜백에서 로그인이 실패해 돌아온 경우. */
   authFailed?: boolean;
   startAtLogin?: boolean;
+  onSignedIn?: () => void;
 };
 
 export function OnboardingFlow({
@@ -29,6 +31,7 @@ export function OnboardingFlow({
   isSignedIn,
   authFailed = false,
   startAtLogin = false,
+  onSignedIn,
 }: Props) {
   const router = useRouter();
   const supabase = createClient();
@@ -99,7 +102,7 @@ export function OnboardingFlow({
 
   if (!isSignedIn) return (
     <WelcomeTutorial startAtLogin={authFailed || startAtLogin}>
-      <SignIn authFailed={authFailed} />
+      <SignIn authFailed={authFailed} onSignedIn={onSignedIn ?? (() => router.replace("/"))} />
     </WelcomeTutorial>
   );
 
@@ -181,11 +184,9 @@ export function OnboardingFlow({
  * 접었다 — 이미 있는 계정으로 돌아온 사람은 붙이기가 거부돼 자기 계정에 들어갈
  * 수 없었고, 게스트 기록을 기존 계정과 합치는 방법도 없었다.
  */
-function SignIn({ authFailed }: { authFailed?: boolean }) {
+function SignIn({ authFailed, onSignedIn }: { authFailed?: boolean; onSignedIn: () => void }) {
   const supabase = createClient();
   const [ageConfirmed, setAgeConfirmed] = useState(false);
-  const [email, setEmail] = useState("");
-  const [sent, setSent] = useState(false);
   // 구글에 다녀왔는데 실패한 채로 돌아온 경우. 아무 말도 없으면 사용자는 화면만
   // 바뀐 것으로 본다.
   const [error, setError] = useState<string | null>(
@@ -238,36 +239,6 @@ function SignIn({ authFailed }: { authFailed?: boolean }) {
     }
   }
 
-  async function withEmail() {
-    if (!ageConfirmed || signingIn.current) return;
-    signingIn.current = true;
-    setBusy(true);
-    setError(null);
-
-    try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email: email.trim(),
-        options: { emailRedirectTo: authRedirectUrl() },
-      });
-      if (error) {
-        // 재요청은 PKCE 검증값을 바꾸므로 실패 뒤 이전 메일로 진행하라고 안내하지 않는다.
-        setSent(false);
-        setError(error.status === 429
-          ? "메일 요청이 많아요. 잠시 기다린 뒤 다시 받아 주세요."
-          : "메일을 보내지 못했어요. 주소와 연결을 확인하고 다시 시도해 주세요.");
-      } else {
-        setEmail(email.trim());
-        setSent(true);
-      }
-    } catch {
-      setSent(false);
-      setError("메일을 보내지 못했어요. 연결을 확인하고 다시 시도해 주세요.");
-    } finally {
-      signingIn.current = false;
-      setBusy(false);
-    }
-  }
-
   return (
     <section aria-label="로그인">
       <label className="mt-6 flex items-center gap-3 rounded-xl border border-stone-200 p-4 text-sm text-stone-800">
@@ -278,41 +249,8 @@ function SignIn({ authFailed }: { authFailed?: boolean }) {
       </label>
       <p className="mt-2 text-xs leading-relaxed text-stone-500">회원 가입은 만 14세 이상부터 가능해요. 생년월일은 수집하지 않아요.</p>
 
-      {sent ? (
-        <div className="mt-6 rounded-xl bg-stone-100 p-4 text-sm text-stone-700">
-          <p role="status" className="break-all">{email}로 로그인 링크를 보냈어요.</p>
-          <p className="mt-3 leading-6">스팸함도 확인해 주세요. 가장 최근에 받은 링크를 로그인을 요청한 브라우저에서 열어 주세요. 앱에서 요청했다면 같은 기기의 앱으로 돌아와 주세요.</p>
-          <div className="mt-3 flex flex-wrap gap-x-5">
-            <button type="button" disabled={busy || !ageConfirmed} onClick={withEmail} className="ac-intro-link disabled:opacity-50">{busy ? "전송 중…" : "로그인 링크 다시 받기"}</button>
-            <button type="button" disabled={busy} onClick={() => { setSent(false); setError(null); }} className="ac-intro-link disabled:opacity-50">이메일 주소 수정</button>
-          </div>
-        </div>
-      ) : (
-        <form className="mt-6 grid gap-3" onSubmit={(event) => { event.preventDefault(); if (!busy && ageConfirmed) void withEmail(); }}>
-          <label htmlFor="signin-email" className="text-sm font-semibold text-stone-800">이메일로 시작하기</label>
-          <input
-            id="signin-email"
-            type="email"
-            required
-            inputMode="email"
-            autoComplete="email"
-            disabled={busy || !ageConfirmed}
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="이메일 주소"
-            aria-label="이메일 주소"
-            className="min-w-0 flex-1 rounded-xl border border-stone-300 px-3 py-3 text-sm focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-stone-800"
-          />
-          <button
-            type="submit"
-            disabled={busy || !ageConfirmed || !email.includes("@")}
-            className="min-h-12 rounded-xl bg-stone-900 px-4 py-3 text-sm font-medium text-white disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-800"
-          >
-          {busy ? "로그인 준비 중…" : "로그인 링크 받기"}
-          </button>
-          <p className="text-xs leading-5 text-stone-500">비밀번호 없이 메일로 로그인해요. 처음이라면 계정이 만들어져요.</p>
-        </form>
-      )}
+      <EmailCodeForm disabled={busy || !ageConfirmed} onVerified={onSignedIn}
+        onBusyChange={(next) => { signingIn.current = next; setBusy(next); if (next) setError(null); }} />
 
       <div className="my-5 flex items-center gap-3 text-xs text-stone-500">
         <span className="h-px flex-1 bg-stone-200" />또는

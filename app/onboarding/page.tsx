@@ -52,6 +52,7 @@ export default function OnboardingPage() {
 
   return (
     <OnboardingFlow
+      key={data.isSignedIn ? "signed-in" : "signed-out"}
       domains={data.domains}
       initialLevels={data.levels}
       domainTerms={data.domainTerms}
@@ -60,6 +61,7 @@ export default function OnboardingPage() {
       authFailed={query.get("error") === "auth"}
       startAtLogin={query.get("step") === "login"}
       isSignedIn={data.isSignedIn}
+      onSignedIn={load}
     />
   );
 }
