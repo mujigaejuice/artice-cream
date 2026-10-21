@@ -52,9 +52,13 @@ export function EmailCodeForm({ initialEmail = "", disabled = false, shouldCreat
         options: { shouldCreateUser },
       });
       if (authError) {
-        setError(authError.status === 429
-          ? "메일 요청이 많아요. 잠시 기다린 뒤 다시 받아 주세요."
-          : "메일을 보내지 못했어요. 주소와 연결을 확인하고 다시 시도해 주세요.");
+        if (authError.status === 429) {
+          setError("메일 요청이 많아요. 잠시 기다린 뒤 다시 받아 주세요.");
+        } else if (authError.status !== undefined && authError.status >= 500) {
+          setError("인증 메일 발송 서비스에 문제가 있어 메일을 보내지 못했어요. 잠시 후 다시 시도해 주세요. 계속되면 고객지원에 문의해 주세요.");
+        } else {
+          setError("메일을 보내지 못했어요. 주소와 연결을 확인하고 다시 시도해 주세요.");
+        }
         return;
       }
       setEmail(address);

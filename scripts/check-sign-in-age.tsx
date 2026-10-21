@@ -44,7 +44,9 @@ async function main() {
     assert.equal(JSON.parse(String(init?.body)).create_user, true);
     assert.equal(url.searchParams.has("redirect_to"), false, "email codes need no browser redirect");
     emails++;
-    return Response.json(otpStatus === 200 ? {} : { code: "over_email_send_rate_limit", msg: "Too many requests" }, { status: otpStatus });
+    return Response.json(otpStatus === 200 ? {} : otpStatus === 500
+      ? { code: "unexpected_failure", msg: "Error sending confirmation email" }
+      : { code: "over_email_send_rate_limit", msg: "Too many requests" }, { status: otpStatus });
   };
   const { createRoot } = await import("react-dom/client");
   const { AppRouterContext } = await import("next/dist/shared/lib/app-router-context.shared-runtime");
@@ -155,6 +157,13 @@ async function main() {
     assert.match(container.querySelector('[role="alert"]')!.textContent!, /잠시 기다린/);
     assert.equal(button("인증번호 다시 받기").disabled, false);
     assert.ok(container.querySelector('input[autocomplete="one-time-code"]'), "failed resend keeps code entry available");
+    otpStatus = 500;
+    await act(async () => { button("인증번호 다시 받기").click(); });
+    await finishLogin();
+    assert.match(container.querySelector('[role="alert"]')!.textContent!, /발송 서비스에 문제/);
+    assert.doesNotMatch(container.querySelector('[role="alert"]')!.textContent!, /주소와 연결/);
+    assert.equal(button("인증번호 다시 받기").disabled, false);
+    assert.ok(container.querySelector('input[autocomplete="one-time-code"]'), "SMTP failure preserves code entry for a previous email");
     otpStatus = 200;
     await act(async () => { button("인증번호 다시 받기").click(); });
     await finishLogin();
@@ -174,6 +183,13 @@ async function main() {
     assert.match(container.querySelector('[role="alert"]')!.textContent!, /연결을 확인/);
     assert.equal(button("인증번호 받기").disabled, false, "unexpected exception releases the form");
     auth.signInWithOtp = originalOtp;
+    otpStatus = 500;
+    await act(async () => { button("인증번호 받기").click(); });
+    await finishLogin();
+    assert.match(container.querySelector('[role="alert"]')!.textContent!, /발송 서비스에 문제/);
+    assert.equal(container.querySelector('[role="status"]'), null, "SMTP failure must not claim an email was sent");
+    assert.equal(button("인증번호 받기").disabled, false);
+    otpStatus = 200;
     await act(async () => { button("인증번호 받기").click(); });
     await finishLogin();
     assert.ok(container.querySelector('[role="status"]'), JSON.stringify({ receivedEmails, text: container.textContent }));
