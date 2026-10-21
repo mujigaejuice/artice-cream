@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { apiJson } from "@/lib/client-api";
 import { PROMOTE_AT, levelLabel } from "@/lib/level";
+import { prepareScoopSound } from "@/lib/scoop-sound";
 import type { QuizReviewItem } from "@/lib/supabase/types";
 
 /** /api/quiz/grade의 응답 그대로. Quiz가 파싱 없이 넘기므로 모양이 일치해야 한다. */
@@ -44,6 +45,7 @@ export function Result({
   const [error, setError] = useState<string | null>(null);
 
   async function save() {
+    prepareScoopSound();
     setSaving(true);
     setError(null);
     try {

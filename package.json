@@ -25,6 +25,7 @@
     "test:sign-in-age": "tsx scripts/check-sign-in-age.tsx",
     "test:entry": "tsx scripts/check-entry.tsx",
     "test:scoops": "tsx scripts/check-scoop-history.tsx",
+    "test:scoop-arrival": "tsx scripts/check-scoop-arrival.tsx",
     "test:rights": "tsx scripts/check-content-rights.ts && tsx scripts/check-collect-rights.ts",
     "test:ingest": "tsx scripts/check-ingest.ts",
     "test:auto-review": "tsx scripts/check-auto-review.ts",

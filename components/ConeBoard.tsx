@@ -55,17 +55,13 @@ export function ConeBoard({
     prevSelectedId.current = selectedId;
   }, [selectedId]);
 
-  /**
-   * 떨어지는 건 한 번뿐이다. 새로고침이나 뒤로가기로 같은 URL에 돌아왔을 때
-   * 다시 떨어지지 않도록, 애니메이션이 걸린 뒤 쿼리에서 ?new= 를 떼어 둔다.
-   */
-  useEffect(() => {
-    if (justAddedId == null) return;
+  // Consume the arrival only after it was shown, not while the cone is mounting.
+  const finishArrival = useCallback((id: number) => {
     const url = new URL(window.location.href);
-    if (!url.searchParams.has("new")) return;
+    if (url.searchParams.get("new") !== String(id)) return;
     url.searchParams.delete("new");
-    window.history.replaceState(null, "", url.pathname + url.search);
-  }, [justAddedId]);
+    window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
+  }, []);
 
   const ordered = useMemo(
     () => [...scoops].sort((a, b) => a.date.localeCompare(b.date)),
@@ -190,6 +186,7 @@ export function ConeBoard({
           scoops={ordered}
           selectedId={selectedId}
           justAddedId={justAddedId}
+          onArrivalComplete={finishArrival}
           onSelect={select}
         />
 

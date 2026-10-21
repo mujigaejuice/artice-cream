@@ -40,6 +40,7 @@ import {
   waveMarkPath,
 } from "@/lib/cone";
 import type { Scoop } from "@/lib/feed";
+import { useScoopArrival } from "@/lib/use-scoop-arrival";
 
 /**
  * 콘 — 아이스크림 도안.png(시안 4번 물결형)의 플랫 일러스트를 따른다.
@@ -70,10 +71,15 @@ type Props = {
   selectedId?: number | null;
   justAddedId?: number | null;
   onSelect?: (scoop: Scoop) => void;
+  onArrivalComplete?: (id: number) => void;
 };
 
-export function ScoopCone({ scoops, selectedId, justAddedId, onSelect }: Props) {
+export function ScoopCone({ scoops, selectedId, justAddedId, onSelect, onArrivalComplete }: Props) {
   const [focusedId, setFocusedId] = useState<number | null>(null);
+  const arrival = useScoopArrival(
+    scoops.some((scoop) => scoop.id === justAddedId) ? justAddedId ?? null : null,
+    onArrivalComplete,
+  );
 
   // 오래된 것이 아래. 날짜 문자열 비교로 정렬한다(YYYY-MM-DD라 사전순 = 시간순).
   const ordered = useMemo(
@@ -159,13 +165,21 @@ export function ScoopCone({ scoops, selectedId, justAddedId, onSelect }: Props) 
         return (
           <g
             key={s.id}
+            ref={s.id === justAddedId ? arrival.slotRef : undefined}
             className="ac-slot"
             transform={`translate(${x} ${cy}) scale(${scale})`}
           >
             <g
-              className={`ac-scoop${s.id === justAddedId ? " ac-plop" : ""}`}
+              className={`ac-scoop${s.id === justAddedId && arrival.waiting ? " ac-scoop-waiting" : ""}${s.id === justAddedId && arrival.falling ? " ac-plop" : ""}`}
+              style={s.id === justAddedId && arrival.falling ? { animationPlayState: arrival.paused ? "paused" : "running" } : undefined}
+              onAnimationEnd={(event) => {
+                if (event.target !== event.currentTarget || s.id !== justAddedId) return;
+                if (event.animationName === "ac-plop") arrival.land();
+                if (event.animationName === "ac-settle") arrival.complete();
+              }}
               role="button"
-              tabIndex={0}
+              tabIndex={s.id === justAddedId && arrival.waiting ? -1 : 0}
+              aria-hidden={s.id === justAddedId && arrival.waiting ? true : undefined}
               aria-pressed={isSel}
               aria-label={`${s.domainLabel} · ${formatDate(s.date)} · ${s.title}`}
               onClick={() => onSelect?.(s)}

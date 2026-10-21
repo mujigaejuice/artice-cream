@@ -95,14 +95,25 @@ body {
   transform: translateY(-5px);
 }
 
+.ac-scoop.ac-scoop-waiting {
+  visibility: hidden;
+  pointer-events: none;
+}
+
 @keyframes ac-plop {
   0% {
     transform: translateY(-46px) scale(1.12);
     opacity: 0;
   }
-  60% {
+  100% {
     transform: translateY(4px) scaleY(0.9) scaleX(1.06);
     opacity: 1;
+  }
+}
+
+@keyframes ac-settle {
+  0% {
+    transform: translateY(4px) scaleY(0.9) scaleX(1.06);
   }
   100% {
     transform: translateY(0) scale(1);
@@ -111,7 +122,7 @@ body {
 }
 
 .ac-scoop.ac-plop {
-  animation: ac-plop 0.52s cubic-bezier(0.3, 1.25, 0.5, 1) both;
+  animation: ac-plop 0.42s ease-in both, ac-settle 0.22s 0.42s ease-out forwards;
 }
 
 /*
