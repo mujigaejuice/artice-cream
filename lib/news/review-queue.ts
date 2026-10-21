@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSourceRights, sourceAllows, type ArticleRights, type SourceRights } from "../content-rights";
 import { AUTO_REVIEW_SOURCES, AUTO_REVIEW_VERSION, createAutoReviewer, type AutoReviewResult, type ReviewArticle } from "./auto-review";
 import { mapPool, type Deadline } from "./ingest";
+import { DOCUMENT_SOURCE_IDS } from "./document-candidates";
 
 const REVIEW_LIMIT = 32;
 const REVIEW_CONCURRENCY = 4;
@@ -18,7 +19,7 @@ export type ReviewSummary = {
 /** Automatically drains new and existing unreviewed articles, with bounded work and retry rotation. */
 export async function reviewPendingArticles(db: SupabaseClient, rights: Map<string, SourceRights>, clock: Deadline): Promise<ReviewSummary> {
   const summary: ReviewSummary = { candidates: 0, reviewed: 0, approved: 0, deferred: 0, skipped: 0, stoppedBy: "done", reasons: {} };
-  const sources = AUTO_REVIEW_SOURCES.filter(source => sourceAllows(rights.get(source), "process"));
+  const sources = AUTO_REVIEW_SOURCES.filter(source => !DOCUMENT_SOURCE_IDS.has(source) && sourceAllows(rights.get(source), "process"));
   if (!sources.length) return summary;
   const retryBefore = new Date(Date.now() - RETRY_HOURS * 3600_000).toISOString();
   const { data, error, count } = await db.from("articles")

@@ -18,6 +18,7 @@ import type { SourceKind } from "./feeds";
  */
 
 export type ExtractFailure =
+  | "document-review-required"
   | "fetch-failed"
   | "timeout"
   | "http-error"

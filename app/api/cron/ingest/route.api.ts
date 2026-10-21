@@ -18,6 +18,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import type { DomainRow } from "@/lib/supabase/types";
 import { articleAllows, getSourceRights, sourceAllows, type ArticleRights } from "@/lib/content-rights";
 import { reviewPendingArticles } from "@/lib/news/review-queue";
+import { DOCUMENT_SOURCE_IDS, syncDocumentCandidates } from "@/lib/news/document-ingest";
 
 /**
  * 인제스트 1단계 — 수집과 분류 (소스분류.md §3).
@@ -25,8 +26,8 @@ import { reviewPendingArticles } from "@/lib/news/review-queue";
  *   수집 승인 피드/아카이브 ─▶ 중복 제거 ─▶ 미확인 메타데이터 저장
  *   가공 승인 소스 + 개별 승인 글 ─▶ 분류(LLM) ─▶ pending | rejected
  *
- * 본문 추출도 재작성도 여기서 하지 않는다. 그건 분류별 2단계(`ingest/<분류>`)가
- * 한다 — lib/news/ingest.ts 머리말에 왜 그렇게 쪼갰는지 적어 뒀다.
+ * 문서 목록은 여기서 선정 절·라이선스를 검토하고 본문을 저장한다.
+ * 재작성은 분류별 2단계(`ingest/<분류>`)가 한다.
  *
  * 분류를 통과한 후보는 `status = 'pending'` 행으로 남는다. 이게 2단계의 대기열이고,
  * 동시에 다음 런이 같은 글을 다시 분류하지 않게 하는 표시이기도 하다. 버린 후보를
@@ -42,6 +43,15 @@ const WIDE_ARCHIVE_SOURCES = new Set(["brooker", "julia-evans"]);
 // A stalled provider must leave time to persist completed batches and return diagnostics.
 const CLASSIFY_TIMEOUT_MS = 60_000;
 const CLASSIFY_FINISH_RESERVE_SECONDS = 15;
+
+/** Safe deployment smoke test: older deployments reject POST instead of running the full collector. */
+export async function POST(request: NextRequest) {
+  if (!authorizeCron(request)) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (request.nextUrl.searchParams.get("documentsOnly") !== "1") {
+    return NextResponse.json({ error: "documents_only_required" }, { status: 400 });
+  }
+  return GET(request);
+}
 
 type Candidate = { item: NewsItem; kind: SourceKind };
 
@@ -68,10 +78,11 @@ export async function GET(request: NextRequest) {
   const clock = startDeadline(startedAt);
   const admin = createAdminClient();
   const rights = await getSourceRights(admin);
-  const allowedSources = SOURCES.filter((source) => sourceAllows(rights.get(source.id), "collect"));
+  const allowedSources = SOURCES.filter((source) => !DOCUMENT_SOURCE_IDS.has(source.id) && sourceAllows(rights.get(source.id), "collect"));
+  const allowedDocumentSources = [...DOCUMENT_SOURCE_IDS].filter(source => sourceAllows(rights.get(source), "collect"));
   const processingSources = [...rights.values()].filter((source) => sourceAllows(source, "process"))
     .map((source) => ({ id: source.source, kind: SOURCES.find(s => s.id === source.source)?.kind ?? "blog" as const }));
-  if (allowedSources.length === 0 && processingSources.length === 0) {
+  if (allowedSources.length === 0 && processingSources.length === 0 && allowedDocumentSources.length === 0) {
     return NextResponse.json({ ok: true, stage: "collect", stoppedBy: "rights", queued: 0,
       classified: 0, allowedSources: 0, processingSources: 0, blockedSources: SOURCES.length },
     { headers: { "Cache-Control": "no-store" } });
@@ -82,6 +93,17 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
   const domainBySlug = new Map(((domains ?? []) as DomainRow[]).map((d) => [d.slug, d]));
+
+  // Authenticated deployment check: same document path, without RSS or paid classification.
+  if (request.nextUrl.searchParams.get("documentsOnly") === "1") {
+    try {
+      const documents = await syncDocumentCandidates(admin, rights, domainBySlug, clock);
+      return NextResponse.json({ ok: true, stage: "documents", documents }, { headers: { "Cache-Control": "no-store" } });
+    } catch (cause) {
+      console.error("[ingest:documents]", cause);
+      return NextResponse.json({ error: "document_sync_unavailable" }, { status: 503 });
+    }
+  }
 
   /* ── 1) 소스에서 후보 수집 — 동시에 여러 개를 연다 ───────────── */
 
@@ -149,8 +171,9 @@ export async function GET(request: NextRequest) {
     })), { onConflict: "source_url", ignoreDuplicates: true });
     if (discoverError) return NextResponse.json({ error: "discovery_failed" }, { status: 503 });
   }
-  let autoReview;
+  let autoReview, documents;
   try {
+    documents = await syncDocumentCandidates(admin, rights, domainBySlug, clock);
     autoReview = await reviewPendingArticles(admin, rights, clock);
   } catch (cause) {
     console.error("[ingest:auto-review]", cause);
@@ -271,11 +294,12 @@ export async function GET(request: NextRequest) {
 
   const cutoff = new Date(Date.now() - PENDING_TTL_DAYS * 86_400_000).toISOString();
   // A metadata-only run must not expire the stored processing/review queue.
-  const expiration = processingSources.length ? await admin
+  const newsExpirationSources = processingSources.filter(source => !DOCUMENT_SOURCE_IDS.has(source.id));
+  const expiration = newsExpirationSources.length ? await admin
     .from("articles")
     .update({ status: "expired" }, { count: "exact" })
     .eq("status", "pending").eq("rights_status", "permitted").not("domain_id", "is", null)
-    .in("source", processingSources.map((source) => source.id))
+    .in("source", newsExpirationSources.map((source) => source.id))
     .lt("fetched_at", cutoff).lt("rights_reviewed_at", cutoff) : { count: 0 };
   const expired = expiration.count;
   const awaitingReview = processingSources.length ? await admin.from("articles")
@@ -300,6 +324,8 @@ export async function GET(request: NextRequest) {
     discovered: fresh.length,
     awaitingRightsReview: awaitingReview.error ? null : awaitingReview.count,
     autoReview,
+    documents,
+    allowedDocumentSources: allowedDocumentSources.length,
     allowedSources: allowedSources.length,
     processingSources: processingSources.length,
     blockedSources: SOURCES.length - allowedSources.length,

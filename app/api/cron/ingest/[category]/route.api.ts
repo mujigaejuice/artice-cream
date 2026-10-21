@@ -10,6 +10,7 @@ import {
 import { CATEGORY_SLUGS, type CategorySlug } from "@/lib/ai/schemas";
 import { LLM_CONCURRENCY } from "@/lib/ai/request-limit";
 import { extractArticle } from "@/lib/news/extract";
+import { DOCUMENT_SOURCE_IDS, extractStoredDocument } from "@/lib/news/document-ingest";
 import { SOURCES } from "@/lib/news/feeds";
 import { authorizeCron, startDeadline } from "@/lib/news/ingest";
 import { ARTICLE_CONCURRENCY, ARTICLE_START_SECONDS, ARTICLE_TIMEOUT_SECONDS,
@@ -127,9 +128,10 @@ export async function GET(request: NextRequest, { params }: Params) {
     },
     process: async (row) => {
       const { data: current, error: rightsError } = await admin.from("articles")
-        .select(ARTICLE_RIGHTS_COLUMNS).eq("id", row.id).maybeSingle();
+        .select(`${ARTICLE_RIGHTS_COLUMNS},source_url,original_text,rights_review_note`).eq("id", row.id).maybeSingle();
       // Recheck the registry per article so a withdrawal during this run stops later jobs.
-      if (rightsError || !articleAllows(current as ArticleRights | null, await getSourceRights(admin), "process")) {
+      if (rightsError || !current || current.source !== row.source || current.source_url !== row.source_url ||
+        !articleAllows(current as ArticleRights | null, await getSourceRights(admin), "process")) {
         blockedRights++;
         return false;
       }
@@ -139,7 +141,7 @@ export async function GET(request: NextRequest, { params }: Params) {
       console.log("[ingest:article:start]", JSON.stringify(articleLog));
 
       const kind = KIND_BY_SOURCE.get(row.source ?? "") ?? "news";
-      const extracted = await extractArticle(
+      const extracted = DOCUMENT_SOURCE_IDS.has(row.source ?? "") ? extractStoredDocument(current) : await extractArticle(
         { url: row.source_url, title: row.title ?? "" },
         kind,
         articleSignal,
@@ -255,9 +257,12 @@ async function buildArticle(
   signal.throwIfAborted();
 
   const { data: permission, error: permissionError } = await admin.from("articles")
-    .select(ARTICLE_RIGHTS_COLUMNS).eq("id", articleId).maybeSingle();
+    .select(`${ARTICLE_RIGHTS_COLUMNS},source_url,original_text,rights_review_note`).eq("id", articleId).maybeSingle();
   if (permissionError || !articleAllows(permission as ArticleRights | null, await getSourceRights(admin), "process")) {
     throw new Error("article rights withdrawn during generation");
+  }
+  if (DOCUMENT_SOURCE_IDS.has(permission?.source ?? "") && (!permission || !extractStoredDocument(permission).ok)) {
+    throw new Error("document review changed during generation");
   }
 
   const { error: deleteError } = await admin.from("article_variants").delete()

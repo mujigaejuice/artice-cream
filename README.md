@@ -3,6 +3,23 @@
 출시 전 저작권·개인정보 준비 자료는 로컬 `docs/legal/`에서 관리하며 Git 저장소에는 포함하지 않는다.
 소스별 권리 검토와 개인정보처리방침은 초안 단계이며, 공개 서비스의 확정 방침이나 이용허락을 뜻하지 않는다.
 
+2026-10-22 외부 문서 확보: Google ML/Cloud·OWASP GenAI/Cheat Sheets·PostgreSQL·D2L의
+12개 URL을 확인해 운영 후보로 등록했다. 선정 본문 9개와 보류 3개이며 신규 문서 소스 후보는 3곳이다.
+원문·정책 해시, 절 범위, 버전·갱신일, 출처 초안을 기록했고 발행일은 임의로 만들지 않았다.
+확보 시에는 모두 `pending`·`restricted`로 등록했다. 이후 문서 cron 경로를 구현했다:
+수집 cron이 명시한 URL 목록의 중복·선정 절·현재 라이선스·검토 본문 해시를 확인하고,
+분야별 가공 cron은 승인된 본문 스냅샷으로 기존 3수준·퀴즈를 생성한다. 목록 밖 URL과 보류 3개는 제외한다.
+문서 소스는 RSS로 수집하지 않는다. 뉴스의 10일 pending 만료 대신 7일마다 재검토하고
+검토 권한은 30일 후 만료된다. 변경·검토 실패 시에는 가공·열람을 멈추고 재검토를 기다린다.
+수집/가공 권한과 공개 권한은 별도이며, 신규 OWASP/PostgreSQL 공개는 최종 검수 후 활성화한다.
+정확한 URL은 `lib/news/document-candidates.ts`, 상세 결과는 로컬
+`docs/legal/document-acquisition-20261022.md`, 증거는 `spike-out/document-sources/`에 있다.
+`node --import=tsx scripts/audit-document-sources.ts`는 공식 문서와 정책을 조회해 증거만 저장한다.
+`node --import=tsx scripts/prepare-document-candidates.ts <증거 폴더>`는 저장된 HTML에서 선정 본문을 재현한다.
+`node --import=tsx scripts/check-document-sources.ts`로 절 경계·언어·코드/표 보존·URL 중복 규칙을 검사한다.
+`npm run test:documents`는 수집부터 가공까지 모의 cron으로 검사한다. `node --import=tsx scripts/verify-document-cron.ts --live`는 공식 원문 9개를 읽기만 하며 현재 해시·라이선스를 확인한다.
+운영 연결 점검은 인증된 `POST /api/cron/ingest?documentsOnly=1`을 사용한다. 문서 검토만 수행하며 RSS·유료 LLM 호출은 없다. 이전 배포는 POST를 거부하므로 실수로 전체 수집을 실행하지 않는다.
+
 계정 삭제는 **나 → 계정 및 데이터 삭제**에서 진행한다. 앱 없이도 `/account/delete/`에서
 안내를 읽고 가입한 이메일로 본인 확인을 할 수 있다. 최근 인증과 최종 확인 후 계정·학습·이용 기록을 삭제한다.
 `npm run test:account-delete`로 권한·인증·실패 처리를 검사한다(외부 요청 없음).

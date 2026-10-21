@@ -29,6 +29,7 @@
     "test:rights": "tsx scripts/check-content-rights.ts && tsx scripts/check-collect-rights.ts",
     "test:ingest": "tsx scripts/check-ingest.ts",
     "test:auto-review": "tsx scripts/check-auto-review.ts",
+    "test:documents": "tsx scripts/check-document-sources.ts && tsx scripts/check-document-cron.ts",
     "build:app": "node scripts/build-app.mjs build",
     "app:dev": "node scripts/build-app.mjs dev",
     "app:run": "node scripts/build-app.mjs run"
