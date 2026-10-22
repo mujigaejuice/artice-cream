@@ -79,13 +79,21 @@ async function main() {
   };
   try {
     await mount();
-    assert.ok(players.every(p => p.calls === 0 && !p.src), "first visit neither plays nor loads the WAV");
+    assert.ok(players.every(p => p.calls === 0 && !p.src), "first visit neither plays nor loads the audio");
+    assert.equal(container.querySelectorAll("button").length, 1);
+    assert.ok(toggle().querySelector("svg"), "not playing shows the crossed-out note");
     await click();
     const player = current();
     assert.equal(player.loop, true);
     assert.equal(player.volume, .2);
     assert.equal(player.paused, false);
-    assert.match(container.textContent!, /아이스크림 산책/);
+    assert.match(container.textContent!, /배경음악 재생 중/);
+    assert.equal(toggle().textContent?.trim(), "♬");
+    assert.equal(toggle().querySelector("svg"), null, "playing shows the plain note");
+    assert.equal(toggle().getAttribute("aria-pressed"), "true");
+    await act(async () => player.dispatchEvent(new dom.window.Event("waiting")));
+    assert.ok(toggle().querySelector("svg"), "buffering is not shown as playing");
+    await act(async () => player.dispatchEvent(new dom.window.Event("playing")));
     assert.equal(JSON.parse(window.localStorage.getItem(key)!).enabled, true);
     if (native) assert.equal(JSON.parse(nativeStorage.get(key)!).enabled, true);
     player.currentTime = 12;
@@ -95,6 +103,7 @@ async function main() {
     assert.equal(player.currentTime, 12);
     await visible(false);
     assert.equal(player.paused, true);
+    assert.ok(toggle().querySelector("svg"), "paused state shows the crossed-out note");
     if (native) {
       await nativeEvent("pause");
       await visible(true);
@@ -120,9 +129,10 @@ async function main() {
     mode = "blocked";
     await click();
     assert.match(container.textContent!, /눌러서 음악을 시작해요/);
-    assert.equal(toggle().getAttribute("aria-pressed"), "true");
+    assert.equal(toggle().getAttribute("aria-pressed"), "false");
+    assert.ok(toggle().querySelector("svg"), "saved ON must not look like actual playback when blocked");
     mode = "success";
-    await click([...container.querySelectorAll("button")].find(b => b.textContent === "음악 재생")!);
+    await click();
     assert.equal(current().paused, false);
     await clear(); await mount();
     assert.equal(current().paused, false, "saved ON resumes when autoplay is allowed");
@@ -130,9 +140,10 @@ async function main() {
     current().error = {};
     await act(async () => current().dispatchEvent(new dom.window.Event("error")));
     assert.match(container.textContent!, /음악을 불러오지 못했어요/);
-    await click([...container.querySelectorAll("button")].find(b => b.textContent === "다시 시도")!);
+    assert.ok(toggle().querySelector("svg"));
+    await click();
     assert.equal(current().error, null);
-    assert.match(container.textContent!, /아이스크림 산책/);
+    assert.match(container.textContent!, /배경음악 재생 중/);
     await click();
     mode = "deferred";
     await click(); // ON with pending play

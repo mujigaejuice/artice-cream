@@ -7,7 +7,7 @@ import { readMusicPreference, writeMusicPreference } from "@/lib/music-preferenc
 
 type Playback = "idle" | "loading" | "playing" | "paused" | "blocked" | "error";
 type MusicState = { ready: boolean; enabled: boolean; playback: Playback };
-const SOURCE = "/audio/ice-cream-stroll-30s.wav";
+const SOURCE = "/audio/ice-cream-basic.mp3";
 
 /** One player in the root layout; route changes never recreate the audio element. */
 export function BackgroundMusic() {
@@ -42,7 +42,7 @@ export function BackgroundMusic() {
     function play() {
       if (!canPlay() || playback === "loading" || playback === "playing") return;
       const attempt = ++request;
-      // Leave src unset until music is enabled: no 5 MB download on a silent visit.
+      // Leave src unset until music is enabled to avoid downloading on a silent visit.
       if (!audio.getAttribute("src")) audio.src = SOURCE;
       if (audio.error) audio.load();
       update("loading");
@@ -64,6 +64,7 @@ export function BackgroundMusic() {
       else if (playback !== "error" && playback !== "blocked") play();
     }
     const playing = () => { if (canPlay()) update("playing"); else pause(); };
+    const waiting = () => { if (canPlay() && !audio.paused) update("loading"); };
     const paused = () => {
       if (audio.paused && playback === "playing") update(enabled ? "paused" : "idle");
     };
@@ -72,6 +73,7 @@ export function BackgroundMusic() {
     const show = () => { pageHidden = false; reconcile(); };
     const visibility = () => reconcile();
     audio.addEventListener("playing", playing);
+    audio.addEventListener("waiting", waiting);
     audio.addEventListener("pause", paused);
     audio.addEventListener("error", failed);
     document.addEventListener("visibilitychange", visibility);
@@ -133,6 +135,7 @@ export function BackgroundMusic() {
       request++;
       actions.current = null;
       audio.removeEventListener("playing", playing);
+      audio.removeEventListener("waiting", waiting);
       audio.removeEventListener("pause", paused);
       audio.removeEventListener("error", failed);
       document.removeEventListener("visibilitychange", visibility);
@@ -146,27 +149,32 @@ export function BackgroundMusic() {
   }, []);
 
   const retry = state.enabled && ["blocked", "error", "paused"].includes(state.playback);
+  const isPlaying = state.playback === "playing";
+  const label = isPlaying ? "배경음악 끄기"
+    : state.playback === "loading" ? "배경음악 재생 취소"
+    : retry ? "배경음악 다시 재생" : "배경음악 켜기";
   const message = state.playback === "blocked" ? "눌러서 음악을 시작해요"
     : state.playback === "error" ? "음악을 불러오지 못했어요"
     : state.playback === "loading" ? "음악 준비 중…"
-    : state.playback === "playing" ? "아이스크림 산책"
+    : isPlaying ? "배경음악 재생 중"
     : state.enabled ? "음악 일시정지" : "";
 
   return (
-    <div className="mb-3 flex min-h-11 flex-wrap items-center justify-end gap-x-3 gap-y-1" aria-label="배경음악">
-      <span role="status" className="text-xs text-stone-600">{message}</span>
-      {retry && (
-        <button type="button" onClick={() => actions.current?.retry()}
-          className="min-h-11 rounded-lg px-2 text-xs text-stone-700 underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-800">
-          {state.playback === "error" ? "다시 시도" : "음악 재생"}
-        </button>
-      )}
-      <button type="button" disabled={!state.ready} aria-pressed={state.enabled}
-        aria-label={state.enabled ? "배경음악 끄기" : "배경음악 켜기"}
-        onClick={() => actions.current?.toggle()}
-        className="inline-flex min-h-11 items-center gap-2 rounded-full border border-stone-300 bg-white/70 px-3 text-xs font-medium text-stone-700 transition hover:bg-white disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-800">
-        <span aria-hidden="true">{state.enabled ? "♫" : "♪"}</span>
-        {state.enabled ? "음악 끄기" : "음악 켜기"}
+    <div className="mb-3 flex min-h-11 justify-end" aria-label="배경음악">
+      <span role="status" className="sr-only">{message}</span>
+      <button type="button" disabled={!state.ready} aria-pressed={isPlaying}
+        aria-label={label} title={label}
+        onClick={() => retry ? actions.current?.retry() : actions.current?.toggle()}
+        className="inline-flex size-11 items-center justify-center rounded-full text-stone-700 transition hover:bg-stone-200/60 disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-800">
+        <span aria-hidden="true" className="relative flex size-6 items-center justify-center font-serif text-2xl leading-none">
+          ♬
+          {!isPlaying && (
+            <svg viewBox="0 0 24 24" className="absolute inset-0 size-6" fill="none" focusable="false">
+              <path d="M4 3 21 22" stroke="#faf7f2" strokeWidth="4" strokeLinecap="round" />
+              <path d="M4 3 21 22" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            </svg>
+          )}
+        </span>
       </button>
     </div>
   );

@@ -20,7 +20,6 @@ supabase/.temp/
 # 기획 문서와 시안
 *.md
 !/README.md
-!/ARTICLE_READER_PERFORMANCE.md
 /docs/
 /*.png
 /*.jpg
@@ -30,3 +29,6 @@ artice-cream-flow.jsx
 scoop-cone.jsx
 android/app/src/androidTest/java/com/getcapacitor/myapp/ExampleInstrumentedTest.java
 android/app/src/test/java/com/getcapacitor/myapp/ExampleUnitTest.java
+
+# 오디오
+scripts/generate-bgm.mjs
