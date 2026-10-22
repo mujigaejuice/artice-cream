@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { coreColor, formatDate } from "@/lib/color";
 import type { Scoop } from "@/lib/feed";
-import { readHref } from "@/lib/routes";
+import { readHref, quizHref } from "@/lib/routes";
 
 /**
  * 선택한 스쿱의 타이틀 패널. 콘 오른쪽 빈 슬롯 **안에만** 들어간다.
@@ -91,10 +91,10 @@ export function ScoopPanel({
         {scoop.variantId !== null && (
           <> ·{" "}
             <Link
-              href={readHref(scoop.variantId, base)}
+              href={scoop.isOriginal ? quizHref(scoop.variantId, base)+"&practice=1" : readHref(scoop.variantId, base)}
               className="ac-link font-medium text-stone-700 hover:text-stone-900"
             >
-              다시 읽기 →
+              {scoop.isOriginal ? "다시 풀기 →" : "다시 읽기 →"}
             </Link>
           </>
         )}

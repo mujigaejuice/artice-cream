@@ -13,9 +13,11 @@ type Props = {
   articleTitle: string;
   /** Answers are not in here — grading is server-side. */
   questions: PublicQuizQuestion[];
+  isOriginal?: boolean;
+  isPractice?: boolean;
 };
 
-export function Quiz({ variantId, articleTitle, questions }: Props) {
+export function Quiz({ variantId, articleTitle, questions, isOriginal, isPractice }: Props) {
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [result, setResult] = useState<GradeResult | null>(null);
@@ -23,7 +25,9 @@ export function Quiz({ variantId, articleTitle, questions }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   if (result) {
-    return <Result result={result} articleTitle={articleTitle} />;
+    return <Result result={result} articleTitle={articleTitle} onRetry={isOriginal ? () => {
+      setResult(null); setAnswers({}); setIndex(0); setBusy(false); setError(null);
+    } : undefined} />;
   }
 
   const question = questions[index];
@@ -50,6 +54,7 @@ export function Quiz({ variantId, articleTitle, questions }: Props) {
   return (
     <main>
       <header className="mb-6">
+        {isOriginal && <p className="mb-3 text-xs text-stone-500">{isPractice ? "다시 풀기 · 기존 점수와 스쿱은 그대로예요" : "기초 퀴즈 · 수준에 영향을 주지 않아요"}</p>}
         <Link
           href={readHref(variantId)}
           className="text-sm text-stone-500 hover:text-stone-700"

@@ -2,6 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import Link from "next/link";
+import { quizHref, readHref } from "@/lib/routes";
 
 import { apiJson } from "@/lib/client-api";
 import { PROMOTE_AT, levelLabel } from "@/lib/level";
@@ -23,7 +25,10 @@ export type GradeResult = {
   articleId: number;
   /** 재제출(복습)이면 true — 점수는 이미 기록에 반영되지 않는다(정책.md §7). */
   isReview: boolean;
-  sourceUrl: string;
+  sourceUrl: string | null;
+  isOriginal?: boolean;
+  variantId?: number;
+  canSave?: boolean;
 };
 
 /**
@@ -34,9 +39,11 @@ export type GradeResult = {
 export function Result({
   result,
   articleTitle,
+  onRetry,
 }: {
   result: GradeResult;
   articleTitle: string;
+  onRetry?: () => void;
 }) {
   const router = useRouter();
   const percent = Math.round(result.score * 100);
@@ -78,6 +85,7 @@ export function Result({
         <p className="mt-1 text-sm text-stone-600">
           {result.total}문제 중 {result.correct}개 정답
         </p>
+        {result.isOriginal && <p className="mt-3 text-xs text-stone-500">기초 학습 · 수준은 바뀌지 않아요. 복습해도 기존 점수와 스쿱은 그대로예요.</p>}
 
         {!result.isReview && (
           <LevelNote
@@ -144,31 +152,32 @@ export function Result({
       )}
 
       <div className="mt-8 space-y-2">
-        {result.isReview ? (
+        {(result.canSave ?? !result.isReview) ? (
+          <button type="button" onClick={save} disabled={saving || saved}
+            className="block w-full rounded-xl bg-stone-900 px-4 py-3 text-center font-medium text-white transition hover:bg-stone-800 disabled:opacity-60">
+            {saved ? "저장했어요 · 콘으로" : saving ? "저장 중…" : "콘에 올리기 🍦"}
+          </button>
+        ) : (
           <a
             href="/"
             className="block w-full rounded-xl bg-stone-900 px-4 py-3 text-center font-medium text-white"
           >
             홈으로
           </a>
-        ) : (
-          <button
-            type="button"
-            onClick={save}
-            disabled={saving || saved}
-            className="block w-full rounded-xl bg-stone-900 px-4 py-3 text-center font-medium text-white transition hover:bg-stone-800 disabled:opacity-60"
-          >
-            {saved ? "저장했어요 · 콘으로" : saving ? "저장 중…" : "콘에 올리기 🍦"}
-          </button>
         )}
-        <a
+        {result.isOriginal && result.variantId && <>
+          {onRetry ? <button type="button" onClick={onRetry} className="block w-full rounded-xl bg-stone-100 px-4 py-3 font-medium text-stone-700">퀴즈 다시 풀기</button> :
+            <Link href={quizHref(result.variantId)+"&practice=1"} className="block rounded-xl bg-stone-100 px-4 py-3 text-center font-medium text-stone-700">퀴즈 다시 풀기</Link>}
+          <Link href={readHref(result.variantId)} className="block py-3 text-center text-sm text-stone-600 underline">본문 다시 읽기</Link>
+        </>}
+        {result.sourceUrl && !result.isOriginal && <a
           href={result.sourceUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="block w-full rounded-xl bg-stone-100 px-4 py-3 text-center text-sm font-medium text-stone-700"
         >
           원문 보기 ↗
-        </a>
+        </a>}
       </div>
     </main>
   );

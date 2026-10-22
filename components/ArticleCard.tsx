@@ -34,7 +34,7 @@ export function ArticleCard({ pick, unlocked }: Props) {
         <span className="font-medium text-stone-600">{pick.domain.name_ko}</span>
         <span className="text-stone-400">·</span>
         <span className="rounded-full bg-stone-100 px-2 py-0.5 font-medium text-stone-600">
-          {levelShort(pick.level)}
+          {pick.isOriginal ? `Original · 기초 ${pick.foundationOrder ?? ""}` : levelShort(pick.level)}
         </span>
         {pick.readingMinutes != null && (
           <>
@@ -53,6 +53,7 @@ export function ArticleCard({ pick, unlocked }: Props) {
             퀴즈 완료 · 저장 안 함
           </span>
         )}
+        {pick.isOriginal && pick.progressStatus === "saved" && <span className="text-emerald-700">쌓은 기초 · 복습 가능</span>}
       </div>
 
       <h3 className="mt-2 text-base font-semibold leading-snug text-stone-900">
@@ -75,7 +76,7 @@ export function ArticleCard({ pick, unlocked }: Props) {
     ? quizHref(pick.variantId)
     : readHref(pick.variantId);
 
-  if (!unlocked && !pick.completedNotSaved) {
+  if (!unlocked && !pick.completedNotSaved && !(pick.isOriginal && pick.progressStatus)) {
     return (
       <div className="rounded-2xl border border-stone-200 bg-stone-50 p-4 opacity-70">
         {body}

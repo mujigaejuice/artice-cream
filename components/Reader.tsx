@@ -6,7 +6,7 @@ import { useEffect, useRef } from "react";
 import { coreColor } from "@/lib/color";
 import { levelShort } from "@/lib/level";
 import { quizHref } from "@/lib/routes";
-import type { Attribution } from "@/lib/content-rights";
+import type { Attribution, ReferenceLink } from "@/lib/content-rights";
 
 type GlossaryMap = Record<string, { term: string; definition: string }>;
 
@@ -22,7 +22,9 @@ export type ReaderProps = {
   domainSlug: string;
   domainLabel: string;
   sourceName: string | null;
-  sourceUrl: string;
+  sourceUrl: string | null;
+  isOriginal?: boolean;
+  referenceLinks?: ReferenceLink[];
   attribution?: Attribution | null;
   /** 이 아티클을 어디까지 진행했는지 — 하단 CTA 분기의 기준(화면구성.md §5). */
   progressStatus: "started" | "completed" | "saved";
@@ -101,14 +103,14 @@ export function Reader(props: ReaderProps) {
             ← 홈
           </Link>
           {/* 정책.md §8 — 원문으로 가는 문은 리더 어디서든 보여야 한다(헤더 + 하단). */}
-          <a
+          {props.sourceUrl && !props.isOriginal && <a
             href={props.sourceUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="shrink-0 text-sm font-medium text-stone-600 underline-offset-2 hover:text-stone-900 hover:underline"
           >
             원문 읽기 ↗
-          </a>
+          </a>}
         </div>
 
         <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
@@ -120,7 +122,7 @@ export function Reader(props: ReaderProps) {
           <span className="font-medium text-stone-600">{props.domainLabel}</span>
           <span className="text-stone-400">·</span>
           <span className="rounded-full bg-stone-100 px-2 py-0.5 font-medium text-stone-600">
-            {levelShort(props.level)}
+            {props.isOriginal ? "Original · 기초" : levelShort(props.level)}
           </span>
           {props.readingMinutes != null && (
             <>
@@ -143,6 +145,17 @@ export function Reader(props: ReaderProps) {
 
       {/* 출처 표기는 선택이 아니다 — spec §11.1 저작권 완화책 (a). */}
       <footer className="mt-10 border-t border-stone-200 pt-4 text-xs text-stone-500">
+        {props.isOriginal ? <div className="space-y-3 leading-relaxed">
+          <p className="font-medium text-stone-700">artice cream Original</p>
+          <p>AI의 도움으로 구성·집필하고 사실 근거와 문항을 점검한 기초 콘텐츠예요. 모든 읽기 수준에서 같은 본문으로 학습해요.</p>
+          <p>기초 퀴즈는 수준에 영향을 주지 않아요. 콘에 올린 뒤에도 횟수 제한 없이 복습할 수 있어요.</p>
+          <div><p className="font-medium text-stone-700">사실 확인에 참고한 자료</p>
+            <ul className="mt-2 space-y-2">{props.referenceLinks?.map(ref => <li key={ref.url}>
+              <a href={ref.url} target="_blank" rel="noopener noreferrer" className="underline">{ref.title} ↗</a>
+              <span className="ml-2">확인 {ref.checkedAt.slice(0,10)}</span>
+            </li>)}</ul>
+          </div>
+        </div> : <>
         {props.attribution && <div className="mb-3 space-y-1 leading-relaxed">
           <p>원제: {props.attribution.originalTitle}</p>
           <p>저자: {props.attribution.author}</p>
@@ -157,14 +170,15 @@ export function Reader(props: ReaderProps) {
           의 글을 한국어 읽기 수준에 맞게 재구성하고 용어 설명·퀴즈를 덧붙였습니다.
           원 발행처의 승인이나 보증을 의미하지 않습니다.
         </p>
-        <a
+        {props.sourceUrl && <a
           href={props.sourceUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="mt-1 inline-block font-medium text-stone-700 underline"
         >
           원문 보기 ↗
-        </a>
+        </a>}
+        </>}
       </footer>
 
       <div className="fixed inset-x-0 bottom-0 border-t border-stone-200 bg-[#faf7f2]/95 backdrop-blur">
@@ -179,10 +193,10 @@ export function Reader(props: ReaderProps) {
           {props.progressStatus === "saved" ? (
             <div className="flex gap-2">
               <Link
-                href={quizHref(props.variantId)}
+                href={quizHref(props.variantId) + (props.isOriginal ? "&practice=1" : "")}
                 className="flex-1 rounded-xl bg-stone-100 px-4 py-3 text-center text-sm font-medium text-stone-700 transition hover:bg-stone-200"
               >
-                퀴즈 {props.quizScore != null ? `${Math.round(props.quizScore * 100)}점` : ""} · 문항 다시 보기
+                {props.isOriginal ? "퀴즈 다시 풀기" : `퀴즈 ${props.quizScore != null ? `${Math.round(props.quizScore * 100)}점` : ""} · 문항 다시 보기`}
               </Link>
             </div>
           ) : props.progressStatus === "completed" ? (

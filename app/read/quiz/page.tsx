@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Quiz } from "@/components/Quiz";
 import { Result, type GradeResult } from "@/components/Result";
@@ -25,6 +25,8 @@ type QuizData =
       articleTitle: string;
       variantId: number;
       questions: PublicQuizQuestion[];
+      isOriginal?: boolean;
+      isPractice?: boolean;
     }
   | { mode: "result"; articleTitle: string; result: GradeResult };
 
@@ -33,19 +35,22 @@ export default function QuizPage() {
   const query = useQueryParams();
   const [data, setData] = useState<QuizData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const requestId = useRef(0);
 
   const variantId = query?.get("v") ?? null;
+  const practice = query?.get("practice") === "1";
 
   const load = useCallback(() => {
     if (!variantId) return;
+    const current = ++requestId.current;
     setError(null);
     setData(null);
-    apiJson<QuizData>(`/api/quiz?v=${encodeURIComponent(variantId)}`)
-      .then(setData)
-      .catch((e: Error) => setError(e.message));
-  }, [variantId]);
+    apiJson<QuizData>(`/api/quiz?v=${encodeURIComponent(variantId)}${practice ? "&practice=1" : ""}`)
+      .then(next => { if (current === requestId.current) setData(next); })
+      .catch((e: Error) => { if (current === requestId.current) setError(e.message); });
+  }, [variantId, practice]);
 
-  useEffect(load, [load]);
+  useEffect(() => { load(); return () => { requestId.current++; }; }, [load]);
   useRefreshOnResume(load);
 
   useEffect(() => {
@@ -66,6 +71,8 @@ export default function QuizPage() {
       variantId={data.variantId}
       articleTitle={data.articleTitle}
       questions={data.questions}
+      isOriginal={data.isOriginal}
+      isPractice={data.isPractice}
     />
   );
 }

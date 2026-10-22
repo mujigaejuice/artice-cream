@@ -6,6 +6,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { AdUnlockButton } from "@/components/AdUnlockButton";
 import { ArticleCard } from "@/components/ArticleCard";
+import { FoundationCatalog } from "@/components/FoundationCatalog";
+import type { DomainRow } from "@/lib/supabase/types";
 import { PageError, PageLoading } from "@/components/ScreenState";
 import { apiJson } from "@/lib/client-api";
 import type { TodayPick } from "@/lib/feed";
@@ -25,6 +27,9 @@ type Feed =
   | {
       status: "ok";
       picks: TodayPick[];
+      originals?: TodayPick[];
+      domains?: DomainRow[];
+      selectedDomainIds?: number[];
       quota: { remaining: number; canRead: boolean; canUnlockWithAd: boolean };
     };
 
@@ -33,6 +38,7 @@ export default function TodayPage() {
   const [feed, setFeed] = useState<Feed | null>(null);
   const [error, setError] = useState<string | null>(null);
   const request = useRef(0);
+  const [filter, setFilter] = useState<"all" | "foundation" | "articles">("all");
 
   const load = useCallback(() => {
     const current = ++request.current;
@@ -84,6 +90,8 @@ export default function TodayPage() {
   }
 
   const { picks, quota } = feed;
+  const originals = feed.originals ?? [];
+  const recommended = originals.find(p => feed.selectedDomainIds?.includes(p.domain.id) && p.progressStatus !== "saved" && p.progressStatus !== "completed");
 
   return (
     <main>
@@ -96,7 +104,19 @@ export default function TodayPage() {
         </p>
       </header>
 
-      {picks.length === 0 ? (
+      <nav aria-label="콘텐츠 종류" className="mb-5 flex gap-2">
+        {([["all", "전체"], ["foundation", "기초"], ["articles", "아티클"]] as const).map(([key,label]) =>
+          <button key={key} type="button" aria-pressed={filter===key} onClick={()=>setFilter(key)}
+            className={`rounded-full px-4 py-2 text-sm font-medium ${filter===key ? "bg-stone-900 text-white" : "bg-white text-stone-600 hover:bg-stone-100"}`}>{label}</button>)}
+      </nav>
+      {filter === "foundation" ? <FoundationCatalog picks={originals} domains={feed.domains ?? []} selectedDomainIds={feed.selectedDomainIds ?? []} unlocked={quota.canRead}/> : <>
+      {filter === "all" && recommended && <section className="mb-6" aria-label="추천 기초">
+        <div className="mb-2 flex items-center justify-between"><h2 className="text-sm font-semibold text-stone-700">처음이라면 여기부터</h2>
+          <button type="button" onClick={()=>setFilter("foundation")} className="text-xs text-stone-600 underline">기초 {originals.length}편 모두 보기</button></div>
+        <ArticleCard pick={recommended} unlocked={quota.canRead}/>
+      </section>}
+
+      {picks.length === 0 && !(filter === "all" && recommended) ? (
         <div className="rounded-2xl border border-dashed border-stone-300 p-6 text-center">
           <p className="text-sm text-stone-600">
             읽을 아티클이 아직 준비되지 않았어요.
@@ -114,6 +134,7 @@ export default function TodayPage() {
           ))}
         </ul>
       )}
+      </>}
 
       {!quota.canRead && (
         <div className="mt-4 space-y-3">
