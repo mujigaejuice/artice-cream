@@ -63,6 +63,18 @@ async function main() {
     }
     if (url.pathname === "/auth/v1/user") return Response.json({ id: userId, is_anonymous: false });
     const table = url.pathname.split("/").pop();
+    if (table === "open_article_reader") {
+      assert.deepEqual(JSON.parse(String(init?.body)), { p_user_id: userId, p_variant_id: 2 });
+      // The real SQL checks (including rollback/concurrency) run in test:quota-db.
+      if (articleReadFails || registryMode !== "valid" || !articleAllows(current, sources, "publish")) {
+        return Response.json({ error: "not found" });
+      }
+      if (openFails || progressReadFails) return Response.json({ message: "storage error" }, { status: 500 });
+      writes.push(table);
+      return Response.json((openResult as { opened?: boolean } | null)?.opened === true
+        ? { opened: true, variant: variant(), progress: { status: "saved", quiz_score: 1 } }
+        : openResult);
+    }
     if (init?.method && init.method !== "GET") {
       writes.push(table!);
       if (table === "open_article_with_quota") return openFails
@@ -135,7 +147,7 @@ async function main() {
     assert.equal(opened.status, 200);
     assert.deepEqual((await opened.json()).reader.attribution, article.rights_attribution);
     assert.equal((await save(request("/api/progress/save", { articleId: 1 }))).status, 200);
-    assert.ok(writes.includes("open_article_with_quota"), "approved reads must use the atomic progress/quota gate");
+    assert.ok(writes.includes("open_article_reader"), "approved reads must use the combined atomic reader RPC");
     for (const failure of ["database", "missing", "malformed", "progress"] as const) {
       openFails = failure === "database";
       progressReadFails = failure === "progress";

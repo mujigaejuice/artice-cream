@@ -1,7 +1,6 @@
-import { apiError, getRequestContext, json, preflight } from "@/lib/api";
+import { getRequestContext, json, preflight } from "@/lib/api";
 import { hostLabel } from "@/lib/feed";
-import { canPublishArticle, type Attribution, type ReferenceLink } from "@/lib/content-rights";
-import { getProgress, openArticle } from "@/lib/quota";
+import type { Attribution, ReferenceLink } from "@/lib/content-rights";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
@@ -18,36 +17,13 @@ import { createAdminClient } from "@/lib/supabase/admin";
 export const dynamic = "force-dynamic";
 export const OPTIONS = preflight;
 
-export async function POST(request: Request) {
-  const { user, supabase } = await getRequestContext(request);
-  if (!user) return apiError(request, "unauthenticated", 401);
-
-  let variantId: number;
-  try {
-    variantId = Number((await request.json())?.variantId);
-  } catch {
-    return apiError(request, "invalid body", 400);
-  }
-  if (!Number.isInteger(variantId)) {
-    return apiError(request, "invalid body", 400);
-  }
-
-  const { data } = await supabase
-    .from("article_variants")
-    .select(
-      "id, level, title, content_html, glossary, reading_minutes, articles(id, source_url, content_kind, reference_links, published_at, rights_attribution, domains(slug, name_ko))",
-    )
-    .eq("id", variantId)
-    .maybeSingle();
-
-  if (!data) return apiError(request, "not found", 404);
-
-  const variant = data as unknown as {
+type ReaderResult = {
+  opened: true;
+  variant: {
     id: number;
     level: number;
     title: string;
     content_html: string;
-    /** { "w3": { term, definition } } — content_html의 <mark data-w>와 짝을 이룬다. */
     glossary: Record<string, { term: string; definition: string }>;
     reading_minutes: number | null;
     articles: {
@@ -55,35 +31,70 @@ export async function POST(request: Request) {
       source_url: string | null;
       content_kind: "external" | "original";
       reference_links: ReferenceLink[];
-      published_at: string | null;
       rights_attribution: Attribution | null;
       domains: { slug: string; name_ko: string } | null;
-    } | null;
+    };
   };
+  progress: { status: "started" | "completed" | "saved"; quiz_score: number | null };
+};
 
-  const article = variant.articles;
-  if (!article) return apiError(request, "not found", 404);
+export async function POST(request: Request) {
+  const started = performance.now();
+  const timings: string[] = [];
+  const measure = async <T,>(name: string, work: () => PromiseLike<T>): Promise<T> => {
+    const before = performance.now();
+    try { return await work(); }
+    finally { timings.push(`${name};dur=${(performance.now() - before).toFixed(1)}`); }
+  };
+  const respond = (body: unknown, status = 200) => {
+    const response = json(request, body, { status });
+    response.headers.set("Server-Timing", [...timings, `total;dur=${(performance.now() - started).toFixed(1)}`].join(", "));
+    return response;
+  };
+  const fail = (message: string, status: number) => respond({ error: message }, status);
+  const { user } = await measure("auth", () => getRequestContext(request));
+  if (!user) return fail("unauthenticated", 401);
 
-  const admin = createAdminClient();
-  if (!await canPublishArticle(admin, article.id)) return apiError(request, "not found", 404);
-  let gate;
-  let progress;
+  let variantId: number;
   try {
-    gate = await openArticle(admin, user.id, article.id, variant.id);
-    if (gate.opened) progress = await getProgress(admin, user.id, article.id);
+    variantId = Number((await request.json())?.variantId);
   } catch {
-    return apiError(request, "reading temporarily unavailable", 503);
+    return fail("invalid body", 400);
+  }
+  if (!Number.isSafeInteger(variantId) || variantId <= 0) {
+    return fail("invalid body", 400);
   }
 
+  // One transaction performs current rights checks, atomic quota accounting and
+  // content/progress reads. Do not fall back to an unchecked read on RPC failure.
+  let data;
+  try {
+    const result = await measure("reader", () => createAdminClient().rpc("open_article_reader", {
+      p_user_id: user.id, p_variant_id: variantId,
+    }));
+    if (result.error) throw result.error;
+    data = result.data;
+  } catch {
+    return fail("reading temporarily unavailable", 503);
+  }
+  if (data?.error === "not found") return fail("not found", 404);
   // 잠겼으면 본문을 응답에 넣지 않는다. 화면만 가리는 것과 다르다.
-  if (!gate.opened) {
-    return json(request, {
+  if (data?.opened === false && typeof data.quota?.canUnlockWithAd === "boolean") {
+    return respond({
       opened: false,
-      quota: { canUnlockWithAd: gate.quota.canUnlockWithAd },
+      quota: { canUnlockWithAd: data.quota.canUnlockWithAd },
     });
   }
 
-  return json(request, {
+  if (data?.opened !== true || data.variant?.id !== variantId || !data.variant?.articles ||
+      typeof data.variant.content_html !== "string" ||
+      !["started", "completed", "saved"].includes(data.progress?.status)) {
+    return fail("reading temporarily unavailable", 503);
+  }
+  const { variant, progress } = data as ReaderResult;
+  const article = variant.articles;
+
+  return respond({
     opened: true,
     reader: {
       variantId: variant.id,
@@ -101,7 +112,7 @@ export async function POST(request: Request) {
       sourceUrl: article.source_url,
       attribution: article.rights_attribution,
       progressStatus: progress?.status ?? "started",
-      quizScore: progress?.quizScore ?? null,
+      quizScore: progress?.quiz_score ?? null,
     },
   });
 }

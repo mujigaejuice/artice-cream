@@ -265,6 +265,21 @@ DB 잠금으로 순서대로 처리하며, 열람 기록·횟수 차감과 광�
 node --env-file=.env.local --import=tsx scripts/verify-quota-rpc.ts --production
 ```
 
+기사 리더 최적화는 `20261022180420_article_reader_rpc.sql`을 **API 배포보다 먼저** 적용한다.
+이 마이그레이션은 기존 쿼터 함수를 유지하면서 `open_article_reader`를 추가한다. 서버의 사용자
+인증 뒤, 한 DB 트랜잭션에서 공개 권한 확인·횟수 처리·본문과 진행 상태 반환을 수행한다.
+새 함수는 `service_role`만 호출할 수 있고, 실패 시 본문을 반환하지 않는다. API를 이전 버전으로
+되돌려도 기존 함수는 그대로 사용할 수 있다. 2026-10-23(KST) 운영 DB에서 새 함수의 존재와
+`service_role` 실행 허용, `anon`·`authenticated` 실행 차단을 확인했다. 코드 배포는 별도다.
+수정 원리와 함께 커밋할 파일 목록은 [기사 로딩 개선 설명](ARTICLE_READER_PERFORMANCE.md)에 정리했다.
+
+`vercel.json`의 함수 리전은 DB와 같은 서울(`icn1`)로 지정한다. 배포 후
+`/api/read/open` 응답의 `Server-Timing`에서 `auth`, `reader`, `total` 시간을 확인한다.
+이 시간은 핸들러 내부 기준이며 브라우저 네트워크·화면 렌더링 시간이나 실행 전 콜드 스타트는
+포함하지 않는다. 첫 열람·재열람의 클릭부터 본문 표시까지 시간도 함께 비교한다.
+`npm run test:reader`는 요청 수·응답 보호·중복 요청과 늦은 응답 처리를,
+`npm run test:quota-db`는 격리된 PostgreSQL에서 동시 차감·게시 중단·롤백·실행 권한을 검증한다.
+
 Vercel에 올리면 `vercel.json`의 cron 10개가 매일 돈다. 한국 시간 오전 3시에 수집하고,
 오전 5시부터 8시 반까지 30분 간격으로 분류 하나씩 가공한다. 프로덕션에서는
 `CRON_SECRET`이 있어야 cron 호출이 통과한다.

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Reader, type ReaderProps } from "@/components/Reader";
 import { PageError, PageLoading } from "@/components/ScreenState";
@@ -31,22 +31,37 @@ export default function ReadPage() {
   const query = useQueryParams();
   const [result, setResult] = useState<OpenResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const pending = useRef<{ variantId: string; controller: AbortController } | null>(null);
 
   const variantId = query?.get("v") ?? null;
 
   const load = useCallback(() => {
     if (!variantId) return;
+    // pageshow and visibilitychange can both fire on resume. Share the ongoing
+    // request, but never cache a completed authorization/quota response.
+    if (pending.current?.variantId === variantId) return;
+    pending.current?.controller.abort();
+    const current = { variantId, controller: new AbortController() };
+    pending.current = current;
     setError(null);
     setResult(null);
     apiJson<OpenResult>("/api/read/open", {
       method: "POST",
       body: JSON.stringify({ variantId: Number(variantId) }),
+      signal: current.controller.signal,
     })
-      .then(setResult)
-      .catch((e: Error) => setError(e.message));
+      .then((value) => { if (pending.current === current) setResult(value); })
+      .catch((e: Error) => { if (pending.current === current) setError(e.message); })
+      .finally(() => { if (pending.current === current) pending.current = null; });
   }, [variantId]);
 
-  useEffect(load, [load]);
+  useEffect(() => {
+    load();
+    return () => {
+      pending.current?.controller.abort();
+      pending.current = null;
+    };
+  }, [load]);
   useRefreshOnResume(load);
 
   // 세션이 없으면 온보딩으로. API가 401로 답한다.

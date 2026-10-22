@@ -47,11 +47,14 @@ try {
     alter default privileges in schema public grant all on tables to service_role, authenticated;
     alter default privileges in schema public grant all on sequences to service_role, authenticated;
   `);
-  for (const file of ["supabase/migrations/0001_init.sql", "supabase/policies.sql", "supabase/migrations/0006_atomic_quota.sql"]) {
+  for (const file of ["supabase/migrations/0001_init.sql", "supabase/policies.sql",
+    "supabase/migrations/0002_content_rights.sql", "supabase/migrations/0006_atomic_quota.sql",
+    "supabase/migrations/20261022095402_original_foundations.sql",
+    "supabase/migrations/20261022180420_article_reader_rpc.sql"]) {
     await sql(await readFile(new URL(`../${file}`, import.meta.url), "utf8"));
   }
   await sql(`
-    insert into auth.users(id) values ${Array.from({ length: 12 }, (_, i) => `('${uid(i + 1)}')`).join(",")};
+    insert into auth.users(id) values ${Array.from({ length: 24 }, (_, i) => `('${uid(i + 1)}')`).join(",")};
     insert into articles(id, source_url) select n, 'https://fixture.invalid/' || n from generate_series(1, 30) n;
     insert into article_variants(id, article_id, level, title, content_html, glossary)
       select n, n, 2, 'Fixture', '<p>Fixture</p>', '{}'::jsonb from generate_series(1, 30) n;
@@ -148,10 +151,76 @@ try {
   assert.equal((await rpc(`public.quota_state('${uid(10)}', '2026-10-16')`)).adUnlocksGrantedToday, 1);
   console.log("PASS KST day boundary, daily reset and cross-day reward replay");
 
+  const reader = (n, variant = 20) => rpc(`public.open_article_reader('${uid(n)}', ${variant})`);
+  await sql(`
+    insert into content_source_rights(source, rights_status, evidence_url, reviewed_at, allow_publish)
+      values ('reader-test', 'permitted', 'https://fixture.invalid/license', now() - interval '1 day', true),
+        ('artice-original', 'permitted', 'https://fixture.invalid/original', now() - interval '1 day', true);
+    update articles set source = 'reader-test', rights_status = 'permitted',
+      rights_evidence_url = 'https://fixture.invalid/license', rights_reviewed_at = now() - interval '1 day',
+      original_text = 'PRIVATE ORIGINAL', rights_review_note = 'PRIVATE NOTE',
+      rights_attribution = '{"author":"Author","originalTitle":"Title","licenseLabel":"CC BY","licenseUrl":"https://fixture.invalid/license","changes":"Adapted","notices":""}'
+      where id between 20 and 30;
+  `);
+  const readerBurst = await burst(12, () => reader(13));
+  assert.ok(readerBurst.every(r => r.opened && r.progress.status === "started"));
+  assert.equal(await count("user_article_progress", 13), 1);
+  assert.equal((await quota(13)).remaining, 0);
+  assert.doesNotMatch(JSON.stringify(readerBurst), /PRIVATE|original_text|rights_review_note|quiz_answers|correct_index/);
+  const locked = await reader(13, 21);
+  assert.equal(locked.opened, false);
+  assert.equal(locked.variant, undefined, "quota denial contains no body");
+  await sql(`update user_article_progress set status = 'saved', quiz_score = 0.75 where user_id = '${uid(13)}';`);
+  assert.deepEqual((await reader(13)).progress, { status: "saved", quiz_score: 0.75 });
+  assert.deepEqual(await reader(14, 999999), { error: "not found" });
+  for (const change of ["rights_status = 'blocked'", "rights_expires_at = now() - interval '1 second'",
+    "rights_attribution = null", "status = 'pending'"]) {
+    await sql(`update articles set ${change} where id = 21;`);
+    assert.deepEqual(await reader(14, 21), { error: "not found" });
+    assert.equal(await count("daily_quota", 14), 0, "denied rights cannot debit quota");
+    assert.equal(await count("user_article_progress", 14), 0);
+    await sql(`update articles set rights_status = 'permitted', rights_expires_at = null, status = 'ready',
+      rights_attribution = (select rights_attribution from articles where id = 20) where id = 21;`);
+  }
+  await sql("update content_source_rights set allow_publish = false where source = 'reader-test';");
+  assert.deepEqual(await reader(13), { error: "not found" }, "withdrawal also blocks saved rereads");
+  assert.deepEqual(await reader(14, 21), { error: "not found" });
+  await sql("update content_source_rights set allow_publish = true where source = 'reader-test';");
+  const differentReaders = await burst(10, i => reader(15, 20 + i));
+  assert.equal(differentReaders.filter(r => r.opened).length, 1);
+  assert.equal(await count("user_article_progress", 15), 1);
+  await sql(`
+    insert into domains(id, slug, name_ko) values (190, 'reader-test', '테스트');
+    insert into articles(id, domain_id, source, source_url, content_kind, original_key, foundation_order,
+      editorial_status, reference_links, rights_status, rights_evidence_url, rights_reviewed_at)
+      values (200, 190, 'artice-original', null, 'original', 'reader-01', 1, 'approved',
+        '[{"title":"Reference","url":"https://fixture.invalid/ref","checkedAt":"2026-01-01"}]',
+        'permitted', 'https://fixture.invalid/original', now() - interval '1 day');
+    insert into article_variants(id, article_id, level, title, content_html, glossary)
+      values (200, 200, 1, 'Original', '<p>Original</p>', '{}');
+  `);
+  const original = await reader(16, 200);
+  assert.equal(original.opened, true);
+  assert.equal(original.variant.articles.content_kind, "original");
+  assert.equal(original.variant.articles.reference_links.length, 1);
+  assert.equal(original.variant.articles.domains.slug, "reader-test");
+  await sql("update articles set editorial_status = 'withdrawn' where id = 200;");
+  assert.deepEqual(await reader(16, 200), { error: "not found" });
+  await sql(`create trigger reader_test_progress before insert on user_article_progress
+    for each row when (new.user_id = '${uid(18)}') execute function quota_test_fail();`);
+  await assert.rejects(reader(18), /injected storage failure/);
+  assert.equal(await count("daily_quota", 18), 0);
+  assert.equal(await count("user_article_progress", 18), 0);
+  await sql("drop trigger reader_test_progress on user_article_progress;");
+  assert.equal((await reader(18)).opened, true);
+  await assert.rejects(reader(99), /profile not found/);
+  console.log("PASS reader RPC: concurrent opens, locked/withdrawn content, originals, projection and rollback");
+
   for (const role of ["anon", "authenticated"]) {
     for (const expression of [
       `public.quota_state('${uid(1)}', current_date)`, `public.get_daily_quota('${uid(1)}')`,
       `public.open_article_with_quota('${uid(1)}', 1, 1)`, `public.grant_ad_unlock('${uid(1)}', 'unauthorized')`,
+      `public.open_article_reader('${uid(1)}', 20)`,
     ]) await assert.rejects(sql(`set role ${role}; select ${expression};`), /permission denied/);
   }
   console.log("PASS RPC permissions: only service_role can read or mutate quota via RPC");

@@ -17,6 +17,7 @@
     "test:logic": "tsx scripts/check-logic.ts",
     "test:quota": "tsx scripts/check-quota.ts",
     "test:quota-db": "node scripts/check-quota-db.mjs",
+    "test:reader": "tsx scripts/check-reader.ts && tsx scripts/check-reader-ui.tsx",
     "test:feed": "tsx scripts/check-feed-pagination.ts",
     "test:auth": "tsx scripts/check-auth-session.ts && tsx scripts/check-auth-session.ts --native",
     "test:account-delete": "tsx scripts/check-account-deletion.ts",
