@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 
 import { NativeAuthBridge } from "@/components/NativeAuthBridge";
+import { BackgroundMusic } from "@/components/BackgroundMusic";
 
 import "./globals.css";
 
@@ -26,7 +27,10 @@ export default function RootLayout({
       <body className="min-h-dvh antialiased">
         {/* 딥링크는 어느 화면에서든 도착하므로 셸에 한 번만 단다. 웹에서는 아무것도 하지 않는다. */}
         <NativeAuthBridge />
-        <div className="mx-auto w-full max-w-lg px-4 pb-16 pt-6">{children}</div>
+        <div className="mx-auto w-full max-w-lg px-4 pb-16 pt-6">
+          <BackgroundMusic />
+          {children}
+        </div>
       </body>
     </html>
   );
