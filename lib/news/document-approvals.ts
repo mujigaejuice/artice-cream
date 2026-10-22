@@ -30,8 +30,8 @@ export const DOCUMENT_APPROVALS: Readonly<Record<string, { textSha256: string; a
     }
   },
   "google-cloud-storage-objects": {
-    "textSha256": "f07febf692f550822d6b22949929a9ba83efc3b8f7365ad002d59adbe4e19665",
-    "acquiredAt": "2026-10-21T08:56:20.210Z",
+    "textSha256": "e3494dd0ba6cfe530030df3d93e218f96cc461745d9ec71e338b983ea176c465",
+    "acquiredAt": "2026-10-22T07:36:04.000Z",
     "attribution": {
       "author": "Google",
       "originalTitle": "About Cloud Storage objects",
