@@ -1,6 +1,6 @@
 import { apiError, getRequestContext, json, preflight } from "@/lib/api";
 import { hostLabel } from "@/lib/feed";
-import { canPublishArticle, type Attribution } from "@/lib/content-rights";
+import { canPublishArticle, type Attribution, type ReferenceLink } from "@/lib/content-rights";
 import { getProgress, openArticle } from "@/lib/quota";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
   const { data } = await supabase
     .from("article_variants")
     .select(
-      "id, level, title, content_html, glossary, reading_minutes, articles(id, source_url, published_at, rights_attribution, domains(slug, name_ko))",
+      "id, level, title, content_html, glossary, reading_minutes, articles(id, source_url, content_kind, reference_links, published_at, rights_attribution, domains(slug, name_ko))",
     )
     .eq("id", variantId)
     .maybeSingle();
@@ -52,7 +52,9 @@ export async function POST(request: Request) {
     reading_minutes: number | null;
     articles: {
       id: number;
-      source_url: string;
+      source_url: string | null;
+      content_kind: "external" | "original";
+      reference_links: ReferenceLink[];
       published_at: string | null;
       rights_attribution: Attribution | null;
       domains: { slug: string; name_ko: string } | null;
@@ -93,7 +95,9 @@ export async function POST(request: Request) {
       readingMinutes: variant.reading_minutes,
       domainSlug: article.domains?.slug ?? "",
       domainLabel: article.domains?.name_ko ?? "",
-      sourceName: hostLabel(article.source_url),
+      isOriginal: article.content_kind === "original",
+      referenceLinks: article.content_kind === "original" ? article.reference_links : [],
+      sourceName: article.content_kind === "original" ? "artice cream Original" : hostLabel(article.source_url),
       sourceUrl: article.source_url,
       attribution: article.rights_attribution,
       progressStatus: progress?.status ?? "started",

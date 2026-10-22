@@ -1,5 +1,5 @@
 import { getRequestContext, json, preflight } from "@/lib/api";
-import { getDomains, getLevels, getTodayPicks, selectedDomains } from "@/lib/feed";
+import { getDomains, getLevels, getTodayPicks, getOriginalPicks, selectedDomains } from "@/lib/feed";
 import { getQuota } from "@/lib/quota";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -28,14 +28,18 @@ export async function GET(request: Request) {
   // 소스분류.md §3 / 정책.md §9 — 도메인이 4개를 넘으면 온보딩에서 고른 것만.
   const domains = selectedDomains(allDomains, levels);
 
-  const [picks, quota] = await Promise.all([
+  const [picks, quota, originals] = await Promise.all([
     getTodayPicks(supabase, user.id, domains, levels),
     getQuota(createAdminClient(), user.id),
+    getOriginalPicks(supabase, user.id, allDomains),
   ]);
 
   return json(request, {
     status: "ok",
     picks,
+    originals,
+    domains: allDomains,
+    selectedDomainIds: domains.map(d => d.id),
     quota: {
       remaining: quota.remaining,
       canRead: quota.canRead,

@@ -130,7 +130,7 @@ export async function GET(request: NextRequest, { params }: Params) {
       const { data: current, error: rightsError } = await admin.from("articles")
         .select(`${ARTICLE_RIGHTS_COLUMNS},source_url,original_text,rights_review_note`).eq("id", row.id).maybeSingle();
       // Recheck the registry per article so a withdrawal during this run stops later jobs.
-      if (rightsError || !current || current.source !== row.source || current.source_url !== row.source_url ||
+      if (rightsError || !current || !row.source_url || current.source !== row.source || current.source_url !== row.source_url ||
         !articleAllows(current as ArticleRights | null, await getSourceRights(admin), "process")) {
         blockedRights++;
         return false;

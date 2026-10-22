@@ -45,7 +45,7 @@ export async function POST(request: Request) {
   }
 
   const variantId = Number(body?.variantId);
-  if (!Number.isInteger(variantId) || typeof body.answers !== "object") {
+  if (!Number.isInteger(variantId) || !body.answers || typeof body.answers !== "object" || Array.isArray(body.answers)) {
     return apiError(request, "invalid body", 400);
   }
 
@@ -53,7 +53,7 @@ export async function POST(request: Request) {
 
   const { data: variantRow } = await admin
     .from("article_variants")
-    .select("id, level, articles(id, domain_id, source_url, domains(slug, name_ko))")
+    .select("id, level, articles(id, domain_id, source_url, content_kind, domains(slug, name_ko))")
     .eq("id", variantId)
     .maybeSingle();
 
@@ -67,7 +67,8 @@ export async function POST(request: Request) {
     articles: {
       id: number;
       domain_id: number;
-      source_url: string;
+      source_url: string | null;
+      content_kind: "external" | "original";
       domains: { slug: string; name_ko: string };
     };
   };
@@ -100,7 +101,7 @@ export async function POST(request: Request) {
   // 정책.md §6 — 클라이언트는 이미 미응답을 막고 있지만, API를 직접 부르면
   // 빠진 키가 조용히 오답(0점)으로 채점돼 수준을 끌어내릴 수 있다. 서버도 막는다.
   const unanswered = questions.some(
-    (q) => !Number.isInteger(body.answers[String(q.id)]),
+    (q) => !Number.isInteger(body.answers[String(q.id)]) || body.answers[String(q.id)] < 0 || body.answers[String(q.id)] >= q.options.length,
   );
   if (unanswered) {
     return apiError(request, "incomplete", 400);
@@ -127,6 +128,32 @@ export async function POST(request: Request) {
   // 점수·수준·저장 상태 어느 것도 건드리지 않는다.
   const isReview =
     existingProgress?.status === "completed" || existingProgress?.status === "saved";
+
+  // Foundation practice never changes proficiency. First completion is a CAS:
+  // concurrent submissions or a racing save cannot reset saved status/score/date.
+  if (variant.articles.content_kind === "original") {
+    let firstCompletion = false;
+    let status = existingProgress.status;
+    if (!isReview) {
+      if (!await canPublishArticle(admin, variant.articles.id)) return apiError(request, "not found", 404);
+      const saved = await admin.from("user_article_progress").update({ status: "completed", quiz_score: score,
+        quiz_answers: Object.fromEntries(questions.map(q => [String(q.id), body.answers[String(q.id)]])),
+        completed_at: new Date().toISOString() })
+        .eq("id", existingProgress.id).eq("user_id", user.id).eq("status", "started").select("id");
+      if (saved.error) return apiError(request, "grading temporarily unavailable", 503);
+      firstCompletion = Boolean(saved.data?.length);
+      if (firstCompletion) status = "completed";
+      else {
+        const latest = await admin.from("user_article_progress").select("status").eq("id", existingProgress.id).eq("user_id", user.id).maybeSingle();
+        if (latest.error || !latest.data) return apiError(request, "grading temporarily unavailable", 503);
+        status = latest.data.status;
+      }
+    }
+    return json(request, { score, correct, total, review, prevLevel: null, newLevel: null, dir: "유지",
+      rollingAccuracy: null, domain: variant.articles.domains.slug, domainLabel: variant.articles.domains.name_ko,
+      articleId: variant.articles.id, variantId, isOriginal: true, isReview: !firstCompletion,
+      canSave: status === "completed", sourceUrl: null });
+  }
 
   if (isReview) {
     return json(request, {

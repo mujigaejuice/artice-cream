@@ -12,6 +12,7 @@ import { ARTICLE_RIGHTS_COLUMNS, articleAllows, getSourceRights, type ArticleRig
 
 /** 콘에 올라가는 스쿱 한 개. scoop-cone.jsx의 scoops 항목과 같은 모양. */
 export type Scoop = {
+  isOriginal?: boolean;
   id: number;
   /** 비공개 기사도 학습 기록은 남지만 리더 링크는 제공하지 않는다. */
   variantId: number | null;
@@ -28,6 +29,9 @@ export type Scoop = {
 };
 
 export type TodayPick = {
+  isOriginal?: boolean;
+  foundationOrder?: number;
+  progressStatus?: "started" | "completed" | "saved" | null;
   variantId: number;
   articleId: number;
   domain: DomainRow;
@@ -119,6 +123,7 @@ export async function getScoops(
       {
         id: r.id,
         variantId: readable ? r.variant_id : null,
+        ...(readable && r.article_variants?.articles?.content_kind === "original" ? { isOriginal: true } : {}),
         articleId: r.article_id,
         domain: domain?.slug ?? "unknown",
         domainLabel: domain?.name_ko ?? "학습 기록",
@@ -224,7 +229,7 @@ export async function getTodayPicks(
     interacted.add(row.article_id);
     const variant = row.article_variants;
     const article = variant?.articles;
-    if (!variant || !article || row.status !== "completed" || !articleAllows(article, sources, "publish")) continue;
+    if (!variant || !article || article.content_kind === "original" || row.status !== "completed" || !articleAllows(article, sources, "publish")) continue;
 
     const domain = domains.find((d) => d.id === article.domain_id);
     if (!domain || unsavedByDomain.has(domain.id)) continue;
@@ -276,6 +281,7 @@ export async function getTodayPicks(
         .eq("level", level)
         .eq("articles.domain_id", domain.id)
         .eq("articles.status", "ready")
+        .eq("articles.content_kind", "external")
         .eq("articles.rights_status", "permitted")
         .order("articles(published_at)", { ascending: false, nullsFirst: false })
         .order("id", { ascending: false })
@@ -307,10 +313,33 @@ export async function getTodayPicks(
   return picks;
 }
 
-export function hostLabel(url: string): string | null {
+export function hostLabel(url: string | null): string | null {
+  if (!url) return null;
   try {
     return new URL(url).hostname.replace(/^www\./, "");
   } catch {
     return null;
   }
+}
+
+/** One beginner text at every user level; saved originals remain available for practice. */
+export async function getOriginalPicks(supabase: SupabaseClient, userId: string, domains: DomainRow[]): Promise<TodayPick[]> {
+  const [sources, variants, progress] = await Promise.all([
+    getSourceRights(supabase),
+    supabase.from("article_variants").select(`id, article_id, title, summary, reading_minutes, articles!inner(id, domain_id, foundation_order, ${ARTICLE_RIGHTS_COLUMNS})`)
+      .eq("level", 1).eq("articles.content_kind", "original").eq("articles.status", "ready").order("id").limit(200),
+    supabase.from("user_article_progress").select("article_id, status").eq("user_id", userId),
+  ]);
+  if (variants.error || progress.error) throw new Error("기초 콘텐츠를 불러오지 못했어요.");
+  const statuses = new Map((progress.data ?? []).map(r => [r.article_id, r.status]));
+  return (variants.data ?? []).flatMap(raw => {
+    const row = raw as unknown as { id: number; article_id: number; title: string; summary: string | null; reading_minutes: number | null;
+      articles: ArticleRights & {domain_id: number; foundation_order: number} };
+    const domain = domains.find(d => d.id === row.articles.domain_id);
+    if (!domain || !articleAllows(row.articles, sources, "publish")) return [];
+    const status = statuses.get(row.article_id) as TodayPick["progressStatus"] ?? null;
+    return [{ variantId: row.id, articleId: row.article_id, domain, level: 1, title: row.title, summary: row.summary,
+      readingMinutes: row.reading_minutes, sourceName: "artice cream Original", imageUrl: null, publishedAt: null,
+      isOriginal: true, foundationOrder: row.articles.foundation_order, progressStatus: status, completedNotSaved: status === "completed" }];
+  }).sort((a,b) => a.domain.id-b.domain.id || a.foundationOrder-b.foundationOrder);
 }

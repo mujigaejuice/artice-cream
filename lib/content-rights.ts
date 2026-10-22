@@ -21,6 +21,10 @@ export type Attribution = {
   notices: string;
 };
 export type ArticleRights = {
+  content_kind?: "external" | "original";
+  original_key?: string | null;
+  editorial_status?: "draft" | "approved" | "withdrawn";
+  reference_links?: ReferenceLink[];
   source: string | null;
   status: string;
   rights_status: RightsStatus;
@@ -30,7 +34,8 @@ export type ArticleRights = {
   rights_attribution: Attribution | null;
 };
 
-export const ARTICLE_RIGHTS_COLUMNS = "source, status, rights_status, rights_evidence_url, rights_reviewed_at, rights_expires_at, rights_attribution";
+export type ReferenceLink = { title: string; url: string; checkedAt: string };
+export const ARTICLE_RIGHTS_COLUMNS = "source, status, rights_status, rights_evidence_url, rights_reviewed_at, rights_expires_at, rights_attribution, content_kind, original_key, editorial_status, reference_links";
 
 function httpUrl(value: unknown): boolean {
   return typeof value === "string" && /^https?:\/\//.test(value);
@@ -62,6 +67,11 @@ export function articleAllows(article: ArticleRights | null | undefined, sources
   if (!article || !sourceAllows(sources.get(article.source ?? ""), action, now)) return false;
   if (!reviewed({ rights_status: article.rights_status, evidence_url: article.rights_evidence_url,
     reviewed_at: article.rights_reviewed_at, expires_at: article.rights_expires_at }, now)) return false;
+  if (article.content_kind === "original") {
+    return action === "publish" && article.status === "ready" && article.source === "artice-original" &&
+      article.editorial_status === "approved" && Boolean(article.original_key) &&
+      Array.isArray(article.reference_links) && article.reference_links.length > 0;
+  }
   const attribution = article.rights_attribution;
   if (!attribution || !["author", "originalTitle", "licenseLabel", "licenseUrl", "changes"].every(
     (key) => typeof attribution[key as keyof Attribution] === "string" && attribution[key as keyof Attribution].trim().length > 0,

@@ -33,7 +33,7 @@ export async function GET(request: Request) {
 
   const { data: variantRow } = await supabase
     .from("article_variants")
-    .select("id, title, articles(id, source_url, domains(slug, name_ko))")
+    .select("id, title, articles(id, source_url, content_kind, domains(slug, name_ko))")
     .eq("id", variantId)
     .maybeSingle();
 
@@ -44,7 +44,8 @@ export async function GET(request: Request) {
     title: string;
     articles: {
       id: number;
-      source_url: string;
+      source_url: string | null;
+      content_kind: "external" | "original";
       domains: { slug: string; name_ko: string } | null;
     } | null;
   };
@@ -64,14 +65,19 @@ export async function GET(request: Request) {
   const questionRows = (rows ?? []) as QuizQuestionRow[];
   if (questionRows.length === 0) return apiError(request, "no questions", 404);
 
-  const { data: progress } = await admin
+  const { data: progress, error: progressError } = await admin
     .from("user_article_progress")
     .select("status, quiz_score, quiz_answers")
     .eq("user_id", user.id)
     .eq("article_id", article.id)
     .maybeSingle();
 
-  if (progress && (progress.status === "completed" || progress.status === "saved")) {
+  if (progressError) return apiError(request, "reading temporarily unavailable", 503);
+  if (!progress) return apiError(request, "article not opened", 403);
+  const isOriginal = article.content_kind === "original";
+  const practice = isOriginal && new URL(request.url).searchParams.get("practice") === "1";
+
+  if (!practice && (progress.status === "completed" || progress.status === "saved")) {
     const answers = (progress.quiz_answers ?? {}) as Record<string, number>;
     const review: QuizReviewItem[] = questionRows.map((q) => {
       const picked = answers[String(q.id)] ?? null;
@@ -103,6 +109,9 @@ export async function GET(request: Request) {
         articleId: article.id,
         isReview: progress.status === "saved",
         sourceUrl: article.source_url,
+        isOriginal,
+        variantId,
+        canSave: progress.status === "completed",
       },
     });
   }
@@ -115,6 +124,8 @@ export async function GET(request: Request) {
     mode: "quiz",
     articleTitle: variant.title,
     variantId,
+    isOriginal,
+    isPractice: practice && progress.status !== "started",
     questions,
   });
 }

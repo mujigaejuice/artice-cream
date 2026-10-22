@@ -17,7 +17,8 @@ export type ArticleRow = ArticleRights & {
   /** 분류에서 버린(rejected) 후보는 도메인이 없다. */
   domain_id: number | null;
   source: string | null;
-  source_url: string;
+  source_url: string | null;
+  foundation_order?: number | null;
   title: string | null;
   author: string | null;
   image_url: string | null;
