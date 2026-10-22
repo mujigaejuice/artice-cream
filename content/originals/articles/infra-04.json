@@ -1,0 +1,119 @@
+{
+  "key": "infra-04",
+  "domain": "infra",
+  "order": 4,
+  "title": "이름은 그대로, 파드는 바뀌어도",
+  "facts": "파드는 교체되며 IP가 바뀔 수 있다. Service는 선택된 파드 집합에 안정적인 접근점을 제공한다. 셀렉터와 라벨이 대상을 결정하며 잘못된 라벨은 연결 문제를 만든다.",
+  "url": "https://kubernetes.io/docs/concepts/services-networking/service/",
+  "summary": "파드는 교체되면서 이름이나 IP 주소가 달라질 수 있어요. Service는 셀렉터와 라벨로 고른 파드 집합에 안정적인 접근점을 제공해요.",
+  "paragraphs": [
+    "작은 주문 처리 앱을 운영한다고 해요. 요청을 받던 파드가 오류로 종료되면 새 파드가 만들어질 수 있어요. 새 파드는 이전 파드와 이름이나 IP 주소가 달라질 수 있으므로, 이용자가 매번 파드의 주소를 찾아 바꾸게 하면 연결이 불편해져요.",
+    "Service는 선택된 파드 집합에 안정적인 접근점을 제공해요. 파드가 교체되어 집합의 구성이나 개별 IP 주소가 달라져도, 클라이언트는 파드마다 직접 접속 정보를 관리하지 않고 같은 Service를 통해 대상에 접근할 수 있어요. 여기서 Service가 파드 자체를 고정하는 것은 아니에요.",
+    "예를 들어 민서가 주문 앱 파드 두 개에 app=order 라벨을 붙이고, Service의 셀렉터도 app=order로 정해요. 그러면 Service는 이 라벨과 맞는 파드를 대상으로 삼아요. 한 파드가 교체되어 새 파드에 같은 라벨이 붙으면, 대상 파드가 바뀌어도 민서는 Service라는 같은 접근점을 사용해요.",
+    "반대로 새 파드에 app=orders처럼 다른 라벨을 붙이면 셀렉터와 일치하지 않아요. Service는 그 파드를 선택된 대상으로 보지 않으므로, 기대한 연결이 되지 않을 수 있어요. 파드가 실행 중이라는 사실만으로 Service가 자동으로 그 파드에 연결되는 것은 아니에요.",
+    "따라서 파드 이름이나 IP 주소가 유지된다고 기대하기보다, Service와 대상 파드의 라벨이 맞는지 확인해야 해요. 다만 Service가 앱의 동작 오류를 고치거나 모든 종류의 외부 접근을 보장하는 것은 아니에요. 여기서 다루는 핵심은 라벨로 고른 파드 집합에 접근점을 제공하는 역할이에요."
+  ],
+  "terms": [
+    {
+      "surface": "파드",
+      "definition": "앱을 실행하는 단위로, 교체될 수 있고 이름이나 IP 주소가 바뀔 수 있어요."
+    },
+    {
+      "surface": "IP 주소",
+      "definition": "네트워크에서 대상에 접근할 때 쓰는 주소예요."
+    },
+    {
+      "surface": "Service",
+      "definition": "선택된 파드 집합에 안정적인 접근점을 제공하는 객체예요."
+    },
+    {
+      "surface": "셀렉터",
+      "definition": "Service가 대상으로 삼을 파드를 고르는 기준이에요."
+    },
+    {
+      "surface": "라벨",
+      "definition": "파드에 붙이는 표식으로, 셀렉터와 맞는지 판단할 때 쓰여요."
+    }
+  ],
+  "questions": [
+    {
+      "prompt": "본문에서 Service의 역할로 설명한 것은 무엇인가요?",
+      "options": [
+        "선택된 파드의 이름과 주소를 계속 고정해요.",
+        "선택된 파드 집합에 안정적인 접근점을 제공해요.",
+        "앱의 오류를 찾아내고 파드 안에서 고쳐요.",
+        "모든 파드에 같은 IP 주소를 자동으로 지정해요."
+      ],
+      "correct_index": 1,
+      "explanation": "Service는 파드를 고정하는 대신, 선택된 파드 집합에 접근할 수 있는 안정적인 접근점을 제공해요.",
+      "evidence": "Service는 선택된 파드 집합에 안정적인 접근점을 제공해요."
+    },
+    {
+      "prompt": "민서의 주문 앱에서 Service가 대상으로 삼는 파드는 무엇인가요?",
+      "options": [
+        "이름이 민서와 같은 파드만 대상으로 삼아요.",
+        "IP 주소가 먼저 만들어진 파드만 대상으로 삼아요.",
+        "app=order 라벨이 붙은 파드를 대상으로 삼아요.",
+        "교체 전부터 실행 중인 파드만 대상으로 삼아요."
+      ],
+      "correct_index": 2,
+      "explanation": "Service의 셀렉터가 app=order이므로, 그 라벨과 맞는 파드가 대상이에요.",
+      "evidence": "Service의 셀렉터도 app=order로 정해요."
+    },
+    {
+      "prompt": "새 파드에 app=orders 라벨을 붙이면 어떤 일이 생길 수 있나요?",
+      "options": [
+        "셀렉터와 맞지 않아 기대한 연결이 되지 않을 수 있어요.",
+        "Service가 라벨을 app=order로 자동 변경할 수 있어요.",
+        "파드의 IP 주소가 이전 파드와 같아질 수 있어요.",
+        "Service가 앱의 동작 오류를 자동으로 고칠 수 있어요."
+      ],
+      "correct_index": 0,
+      "explanation": "app=orders는 셀렉터의 app=order와 다르므로 대상에 포함되지 않을 수 있어요.",
+      "evidence": "Service는 그 파드를 선택된 대상으로 보지 않으므로, 기대한 연결이 되지 않을 수 있어요."
+    },
+    {
+      "prompt": "본문의 설명과 맞는 것은 무엇인가요?",
+      "options": [
+        "파드는 한 번 만들어지면 이름과 IP 주소가 유지돼요.",
+        "Service는 선택한 파드의 앱 오류를 해결해 줘요.",
+        "라벨이 달라도 실행 중인 파드는 자동으로 연결돼요.",
+        "Service가 모든 종류의 외부 접근을 보장하지는 않아요."
+      ],
+      "correct_index": 3,
+      "explanation": "본문은 Service의 역할을 설명하면서 모든 종류의 외부 접근을 보장하지는 않는다고 밝혀요.",
+      "evidence": "다만 Service가 앱의 동작 오류를 고치거나 모든 종류의 외부 접근을 보장하는 것은 아니에요."
+    }
+  ],
+  "referenceLinks": [
+    {
+      "title": "Service | Kubernetes",
+      "url": "https://kubernetes.io/docs/concepts/services-networking/service/",
+      "checkedAt": "2026-10-22T09:41:16.363Z"
+    }
+  ],
+  "revision": 1,
+  "author": "artice cream",
+  "disclosure": "AI의 도움으로 구성·집필하고 사실 근거와 문항을 점검한 기초 콘텐츠입니다.",
+  "generatedAt": "2026-10-22T09:54:05.866Z",
+  "model": "pickle-general",
+  "usage": {
+    "input": 11549,
+    "output": 2646,
+    "cacheWrite": 0,
+    "cacheRead": 0,
+    "calls": 2,
+    "retries": 2
+  },
+  "review": {
+    "status": "automated_checks_passed",
+    "issues": [],
+    "answers": [
+      1,
+      2,
+      0,
+      3
+    ],
+    "sourceSha256": "94b5ad58a0ea38ea040a0fa27728fe8297d929777d23c4116fb5b7255419b9e9"
+  }
+}

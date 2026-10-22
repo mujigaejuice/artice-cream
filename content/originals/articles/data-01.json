@@ -1,0 +1,114 @@
+{
+  "key": "data-01",
+  "domain": "data",
+  "order": 1,
+  "title": "테이블에서 필요한 행과 열 찾기",
+  "facts": "SELECT는 열을 고르고 WHERE는 조건에 맞는 행을 고른다. ORDER BY 없이는 결과 순서를 보장하지 않는다. 조회는 원본 행을 삭제하지 않는다. 자체 작은 메뉴 테이블 예제로 설명한다.",
+  "url": "https://www.postgresql.org/docs/18/tutorial-select.html",
+  "summary": "SELECT는 결과에 보여 줄 열을 고르고, WHERE는 조건에 맞는 행을 골라요. ORDER BY가 없으면 결과 순서는 보장되지 않으며, 조회는 원본 행을 삭제하지 않아요.",
+  "paragraphs": [
+    "점심 메뉴를 고르는 민지는 7천 원 이하인 메뉴만 보고 싶고, 메뉴 이름과 가격만 확인하면 돼요. 메뉴 정보가 테이블에 정리되어 있다면 필요한 항목만 조회할 수 있어요. 테이블에서 열은 이름이나 가격처럼 항목을 나타내고, 행은 한 메뉴의 정보를 담은 한 줄이에요.",
+    "SELECT 뒤에는 결과에 포함할 열을 적어요. 이름과 가격만 필요하다면 그 두 열을 지정해요. WHERE 뒤에는 남길 행의 조건을 적어요. 가격이 7천 원 이하라는 조건을 주면 그 조건에 맞는 메뉴 행만 결과에 나타나요. 따라서 SELECT는 열을, WHERE는 행을 고르는 역할을 해요.",
+    "작은 메뉴 테이블 menu에 name, price, kind 열이 있고, 비빔밥은 8,000원, 샌드위치는 6,500원, 김밥은 4,500원이라고 해볼게요. 민지가 이름과 가격만 확인하려면 SELECT name, price FROM menu WHERE price <= 7000;이라고 조회해요. SELECT 뒤에서 이름과 가격 열을 골랐고, WHERE 뒤에서 가격 조건을 정했어요. 결과에는 샌드위치와 김밥의 이름과 가격이 포함돼요. 비빔밥 행은 가격 조건에 맞지 않아 결과에 나오지 않아요.",
+    "조회 결과가 보이는 순서는 원본 테이블의 행 순서와 같다고 단정할 수 없어요. 원하는 기준으로 정렬하려면 ORDER BY를 지정해야 하고, ORDER BY가 없으면 결과 순서는 보장되지 않아요. 또 조회는 조건에 맞는 행을 결과로 보여 줄 뿐 원본 행을 삭제하지 않아요. WHERE를 썼다고 테이블 자체가 줄어드는 것은 아니니 결과와 원본 데이터를 구분해요."
+  ],
+  "terms": [
+    {
+      "surface": "SELECT",
+      "definition": "결과에 포함할 열을 지정하는 SQL 구문이에요."
+    },
+    {
+      "surface": "WHERE",
+      "definition": "결과에 포함할 행의 조건을 지정하는 SQL 구문이에요."
+    },
+    {
+      "surface": "ORDER BY",
+      "definition": "조회 결과를 지정한 기준으로 정렬하는 SQL 구문이에요."
+    },
+    {
+      "surface": "행",
+      "definition": "테이블에서 한 메뉴의 정보를 담은 한 줄이에요."
+    }
+  ],
+  "questions": [
+    {
+      "prompt": "SELECT와 WHERE의 역할을 바르게 설명한 것은 무엇인가요?",
+      "options": [
+        "SELECT는 조건에 맞는 행을 고르고, WHERE는 결과의 열을 골라요.",
+        "SELECT는 결과의 열을 고르고, WHERE는 조건에 맞는 행을 골라요.",
+        "SELECT는 결과의 순서를 정하고, WHERE는 원본 행을 삭제해요.",
+        "SELECT는 테이블을 정렬하고, WHERE는 열의 이름을 바꿔요."
+      ],
+      "correct_index": 1,
+      "explanation": "SELECT는 결과에 포함할 열을 지정하고, WHERE는 조건에 맞는 행을 골라요.",
+      "evidence": "따라서 SELECT는 열을, WHERE는 행을 고르는 역할을 해요."
+    },
+    {
+      "prompt": "민지가 메뉴 이름과 가격만 보려 할 때 SELECT 뒤에 지정할 것은 무엇인가요?",
+      "options": [
+        "종류 열과 가격 조건을 지정해요.",
+        "이름 열과 종류 열을 지정해요.",
+        "가격 열과 행의 순서를 지정해요.",
+        "이름 열과 가격 열을 지정해요."
+      ],
+      "correct_index": 3,
+      "explanation": "민지가 확인하려는 항목은 메뉴 이름과 가격이므로 두 열을 지정해요.",
+      "evidence": "SELECT 뒤에서 이름과 가격 열을 골랐고"
+    },
+    {
+      "prompt": "메뉴 예제에서 가격이 7천 원 이하인 행은 무엇인가요?",
+      "options": [
+        "샌드위치와 김밥의 행이에요.",
+        "비빔밥과 샌드위치의 행이에요.",
+        "비빔밥과 김밥의 행이에요.",
+        "세 메뉴 모두의 행이에요."
+      ],
+      "correct_index": 0,
+      "explanation": "샌드위치와 김밥은 각각 6,500원과 4,500원이라 조건에 맞고, 비빔밥은 8,000원이라 맞지 않아요.",
+      "evidence": "결과에는 샌드위치와 김밥의 이름과 가격이 포함돼요."
+    },
+    {
+      "prompt": "조회에 관한 설명으로 바른 것은 무엇인가요?",
+      "options": [
+        "WHERE를 쓰면 조건에 맞지 않는 원본 행이 삭제돼요.",
+        "SELECT를 쓰면 원본 테이블의 열이 사라져요.",
+        "ORDER BY가 없으면 결과 순서는 보장되지 않아요.",
+        "조회 결과는 언제나 원본 행 순서로 보여요."
+      ],
+      "correct_index": 2,
+      "explanation": "정렬 기준을 지정하는 ORDER BY가 없으면 조회 결과의 순서는 보장되지 않아요.",
+      "evidence": "ORDER BY가 없으면 결과 순서는 보장되지 않아요."
+    }
+  ],
+  "referenceLinks": [
+    {
+      "title": "PostgreSQL: Documentation: 18: 2.5. Querying a Table",
+      "url": "https://www.postgresql.org/docs/18/tutorial-select.html",
+      "checkedAt": "2026-10-22T09:41:18.637Z"
+    }
+  ],
+  "revision": 1,
+  "author": "artice cream",
+  "disclosure": "AI의 도움으로 구성·집필하고 사실 근거와 문항을 점검한 기초 콘텐츠입니다.",
+  "generatedAt": "2026-10-22T09:58:13.962Z",
+  "model": "pickle-general",
+  "usage": {
+    "input": 10728,
+    "output": 4822,
+    "cacheWrite": 0,
+    "cacheRead": 0,
+    "calls": 5,
+    "retries": 1
+  },
+  "review": {
+    "status": "automated_checks_passed",
+    "issues": [],
+    "answers": [
+      1,
+      3,
+      0,
+      2
+    ],
+    "sourceSha256": "41c3ea72942e688f30019548dcbd99ac857c4f75fe3520630cc539a368e12020"
+  }
+}

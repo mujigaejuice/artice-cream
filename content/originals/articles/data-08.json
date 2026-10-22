@@ -1,0 +1,115 @@
+{
+  "key": "data-08",
+  "domain": "data",
+  "order": 8,
+  "title": "뷰는 저장된 질문이다",
+  "facts": "일반 뷰는 쿼리에 이름을 붙인 것으로 조회 때 기반 데이터를 읽는다. 뷰를 만들었다고 별도 데이터 사본이 생기지는 않는다. materialized view는 결과를 저장해 갱신이 필요하다. 일반 뷰에 초점을 맞춘다.",
+  "url": "https://www.postgresql.org/docs/18/tutorial-views.html",
+  "summary": "일반 뷰는 쿼리에 이름을 붙여 두고, 조회할 때 기반 데이터를 읽어요. 뷰 자체에 결과 사본이 저장되는 것은 아니며, 결과를 저장하는 materialized view는 갱신이 필요해요.",
+  "paragraphs": [
+    "팀에서 민서가 맡은 미완료 작업을 자주 확인한다고 해요. 매번 같은 조건으로 작업 목록을 찾으려면 쿼리를 되풀이해야 해서 번거로울 수 있어요. 이때 자주 쓸 조회에 이름을 붙여 두면 작업 내용을 간단히 확인할 수 있어요.",
+    "일반 뷰는 쿼리에 이름을 붙인 것이에요. 이름을 가진 뷰를 조회하면 그 쿼리가 실행되어 기반 데이터를 읽어요. 뷰를 만든다는 것은 조회 방법을 마련하는 일이지, 조회 결과를 별도 데이터 사본으로 저장하는 일이 아니에요.",
+    "예를 들어 tasks 표에 민서의 작업이 세 건 있고 그중 두 건이 미완료라고 해요. 미완료 작업을 찾는 쿼리에 unfinished_tasks라는 이름을 붙여 뷰를 만들 수 있어요. 개념을 보여 주는 SQL은 CREATE VIEW unfinished_tasks AS SELECT task FROM tasks WHERE owner = '민서' AND done = false; 와 같아요. 여기서 뷰 이름은 반복할 조회를 가리켜요.",
+    "이후 SELECT * FROM unfinished_tasks;처럼 조회하면 쿼리가 tasks 표를 읽고 조건에 맞는 작업을 보여 줘요. 민서가 작업 하나를 완료로 바꾼 뒤 다시 조회하면, 새 조회는 바뀐 기반 데이터를 읽어 결과를 내요. 이전 결과를 뷰 안에 보관해 두었다가 꺼내는 방식은 아니에요.",
+    "따라서 뷰를 만들었다고 표의 복사본이 생겼다고 생각하면 안 돼요. 뷰는 복잡하거나 반복되는 조회에 이름을 붙여 다시 쓰기 편하게 해 줘요. 결과 자체를 저장하는 materialized view는 일반 뷰와 달리 저장된 결과를 갱신해야 해요. 여기서는 조회 때 기반 데이터를 읽는 일반 뷰에 초점을 두었어요."
+  ],
+  "terms": [
+    {
+      "surface": "일반 뷰",
+      "definition": "쿼리에 이름을 붙여 두고, 조회할 때 그 쿼리로 기반 데이터를 읽는 객체예요."
+    },
+    {
+      "surface": "기반 데이터",
+      "definition": "뷰의 쿼리가 조회하는 원래 표의 데이터예요."
+    },
+    {
+      "surface": "materialized view",
+      "definition": "쿼리 결과 자체를 저장하는 뷰이며, 저장된 결과를 갱신해야 해요."
+    },
+    {
+      "surface": "갱신",
+      "definition": "저장된 결과를 최신 기반 데이터에 맞게 다시 반영하는 일이에요."
+    }
+  ],
+  "questions": [
+    {
+      "prompt": "일반 뷰를 조회하면 어떤 일이 일어나나요?",
+      "options": [
+        "이름에 연결된 쿼리가 실행되어 기반 데이터를 읽어요.",
+        "이름에 연결된 결과 사본이 그대로 반환돼요.",
+        "기반 데이터의 모든 행이 새 표로 복사돼요.",
+        "쿼리 조건과 상관없이 원래 표가 전부 반환돼요."
+      ],
+      "correct_index": 0,
+      "explanation": "일반 뷰는 쿼리에 이름을 붙인 것이며, 조회할 때 쿼리가 기반 데이터를 읽어요.",
+      "evidence": "이름을 가진 뷰를 조회하면 그 쿼리가 실행되어 기반 데이터를 읽어요."
+    },
+    {
+      "prompt": "tasks 표에서 민서의 미완료 작업을 찾는 뷰의 이름은 무엇인가요?",
+      "options": [
+        "tasks",
+        "unfinished_tasks",
+        "done",
+        "owner"
+      ],
+      "correct_index": 1,
+      "explanation": "예제에서 미완료 작업을 찾는 쿼리에 붙인 뷰 이름은 unfinished_tasks예요.",
+      "evidence": "미완료 작업을 찾는 쿼리에 unfinished_tasks라는 이름을 붙여 뷰를 만들 수 있어요."
+    },
+    {
+      "prompt": "민서가 작업 하나를 완료로 바꾼 뒤 뷰를 다시 조회하면 어떻게 되나요?",
+      "options": [
+        "뷰에 남아 있던 결과 사본이 바뀌지 않고 반환돼요.",
+        "완료한 작업이 자동으로 새 표에 복사돼요.",
+        "새 조회가 바뀐 기반 데이터를 읽어 결과를 내요.",
+        "뷰를 삭제하고 같은 쿼리를 다시 만들어야 해요."
+      ],
+      "correct_index": 2,
+      "explanation": "일반 뷰는 조회할 때 기반 데이터를 읽으므로, 다시 조회하면 변경된 데이터를 반영해 결과를 내요.",
+      "evidence": "민서가 작업 하나를 완료로 바꾼 뒤 다시 조회하면, 새 조회는 바뀐 기반 데이터를 읽어 결과를 내요."
+    },
+    {
+      "prompt": "일반 뷰와 materialized view에 대한 설명으로 맞는 것은 무엇인가요?",
+      "options": [
+        "둘 다 조회 결과를 저장하며 갱신이 필요해요.",
+        "일반 뷰는 결과를 복사하고 materialized view는 쿼리만 저장해요.",
+        "일반 뷰는 조회 때 읽고 materialized view는 결과를 저장해요.",
+        "둘 다 기반 데이터를 읽지 않고 이름만 보관해요."
+      ],
+      "correct_index": 2,
+      "explanation": "일반 뷰는 조회 때 기반 데이터를 읽지만, materialized view는 결과를 저장하며 그 결과를 갱신해야 해요.",
+      "evidence": "결과 자체를 저장하는 materialized view는 일반 뷰와 달리 저장된 결과를 갱신해야 해요."
+    }
+  ],
+  "referenceLinks": [
+    {
+      "title": "PostgreSQL: Documentation: 18: 3.2. Views",
+      "url": "https://www.postgresql.org/docs/18/tutorial-views.html",
+      "checkedAt": "2026-10-22T09:41:19.697Z"
+    }
+  ],
+  "revision": 1,
+  "author": "artice cream",
+  "disclosure": "AI의 도움으로 구성·집필하고 사실 근거와 문항을 점검한 기초 콘텐츠입니다.",
+  "generatedAt": "2026-10-22T10:00:41.999Z",
+  "model": "pickle-general",
+  "usage": {
+    "input": 2422,
+    "output": 2526,
+    "cacheWrite": 0,
+    "cacheRead": 0,
+    "calls": 2,
+    "retries": 1
+  },
+  "review": {
+    "status": "automated_checks_passed",
+    "issues": [],
+    "answers": [
+      0,
+      1,
+      2,
+      2
+    ],
+    "sourceSha256": "c43627850f1f443bb0b3d9edc22002fcafbac7d74ee85d25e42e0246cced4cb6"
+  }
+}

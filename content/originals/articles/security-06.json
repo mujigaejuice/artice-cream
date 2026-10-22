@@ -1,0 +1,118 @@
+{
+  "key": "security-06",
+  "domain": "security",
+  "order": 6,
+  "title": "브라우저에 문자열을 안전하게 보여주기",
+  "facts": "XSS는 신뢰할 수 없는 데이터가 브라우저에서 코드로 실행되는 위험이다. 출력 맥락별 인코딩과 안전한 DOM API를 쓴다. textContent와 HTML 삽입은 다르다. HTML을 허용해야 하면 적절한 정화가 필요하다.",
+  "url": "https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html",
+  "summary": "신뢰할 수 없는 문자열은 브라우저가 코드로 해석하지 않도록 알맞은 방식으로 보여줘야 해요. 일반 텍스트에는 안전한 DOM API를 쓰고, HTML을 허용할 때는 정화가 필요해요.",
+  "paragraphs": [
+    "게시판에 방문자가 남긴 글을 보여준다고 해요. 글에 꺾쇠괄호처럼 HTML에서 쓰이는 문자가 들어 있어도 브라우저가 글자로 보여줄지, 코드로 해석할지는 넣는 방식에 달려 있어요. 신뢰할 수 없는 데이터가 브라우저에서 코드로 실행되는 위험을 XSS라고 해요. 방문자 글을 화면에 표시할 때도 이 위험을 고려해야 해요.",
+    "데이터가 들어가는 위치에 따라 브라우저가 적용하는 해석 규칙이 달라져요. 이런 위치와 규칙을 출력 맥락이라고 해요. HTML 문서에 문자열을 직접 출력할 때는 그 맥락에 맞는 인코딩을 사용해야 해요. 모든 위치에 같은 인코딩을 적용하면 안전하지 않거나 화면이 의도와 달라질 수 있어요.",
+    "예를 들어 게시물 세 개를 일반적인 div 요소에 보여준다고 해요. 각 글을 해당 요소의 textContent에 원문 그대로 지정하면 브라우저는 값을 HTML로 해석하지 않고 텍스트로 보여줘요. 반대로 HTML 삽입에 쓰이는 innerHTML에 원문을 넣으면 브라우저가 이를 HTML로 해석할 수 있어요. 이 설명은 script나 style 요소에는 적용하지 않아요. 특히 script 요소의 textContent는 실행될 코드가 될 수 있어요.",
+    "글쓴이가 서식 있는 HTML을 작성하도록 허용해야 한다면, 글자만 보여주는 방식 대신 적절한 정화 도구로 위험한 내용을 걸러낸 뒤 허용된 HTML만 넣어요. 정화한 내용을 다시 수정하면 안전성이 달라질 수 있어 주의해야 해요. textContent가 모든 위치에서 안전하다고 생각하거나, 어떤 문자열이든 HTML 삽입에 넣어도 된다고 여기는 것은 오해예요. 값의 위치와 목적에 맞는 처리를 선택해야 해요."
+  ],
+  "terms": [
+    {
+      "surface": "XSS",
+      "definition": "신뢰할 수 없는 데이터가 브라우저에서 코드로 실행되는 위험이에요."
+    },
+    {
+      "surface": "출력 맥락",
+      "definition": "데이터가 들어가는 위치와 그 위치에서 브라우저가 적용하는 해석 규칙이에요."
+    },
+    {
+      "surface": "textContent",
+      "definition": "일반 요소의 내용을 HTML로 해석하지 않고 텍스트로 다루는 DOM 속성이에요."
+    },
+    {
+      "surface": "HTML 삽입",
+      "definition": "문자열을 HTML로 해석하도록 요소에 넣는 방식이에요."
+    },
+    {
+      "surface": "정화",
+      "definition": "허용할 HTML에서 위험한 내용을 걸러내는 처리예요."
+    }
+  ],
+  "questions": [
+    {
+      "prompt": "본문에서 설명한 XSS는 무엇인가요?",
+      "options": [
+        "브라우저가 긴 문자열을 화면에 표시하지 못하는 현상이에요.",
+        "신뢰할 수 없는 데이터가 브라우저에서 코드로 실행되는 위험이에요.",
+        "서식 있는 글이 텍스트로만 보이도록 변환되는 현상이에요.",
+        "서로 다른 출력 맥락에서 글꼴 모양이 달라지는 현상이에요."
+      ],
+      "correct_index": 1,
+      "explanation": "본문은 XSS를 신뢰할 수 없는 데이터가 브라우저에서 코드로 실행되는 위험이라고 설명해요.",
+      "evidence": "신뢰할 수 없는 데이터가 브라우저에서 코드로 실행되는 위험을 XSS라고 해요."
+    },
+    {
+      "prompt": "게시물 세 개를 일반적인 div 요소에 글자로 보여주려면 어떻게 해야 하나요?",
+      "options": [
+        "각 글을 해당 요소의 textContent에 원문 그대로 지정해요.",
+        "각 글을 해당 요소의 innerHTML에 원문 그대로 지정해요.",
+        "각 글을 해당 요소의 script 내용으로 지정해요.",
+        "각 글을 해당 요소의 style 내용으로 지정해요."
+      ],
+      "correct_index": 0,
+      "explanation": "일반 요소의 textContent는 값을 HTML로 해석하지 않고 텍스트로 보여줘요.",
+      "evidence": "각 글을 해당 요소의 textContent에 원문 그대로 지정하면 브라우저는 값을 HTML로 해석하지 않고 텍스트로 보여줘요."
+    },
+    {
+      "prompt": "방문자 글을 innerHTML에 원문 그대로 넣으면 어떤 일이 생길 수 있나요?",
+      "options": [
+        "브라우저가 내용을 항상 일반 텍스트로만 보여줄 수 있어요.",
+        "브라우저가 내용을 자동으로 정화해 허용된 HTML만 남길 수 있어요.",
+        "브라우저가 내용을 HTML로 해석할 수 있어요.",
+        "브라우저가 내용을 게시물 개수로 바꾸어 보여줄 수 있어요."
+      ],
+      "correct_index": 2,
+      "explanation": "innerHTML은 HTML 삽입에 쓰이므로 원문을 넣으면 브라우저가 이를 HTML로 해석할 수 있어요.",
+      "evidence": "반대로 HTML 삽입에 쓰이는 innerHTML에 원문을 넣으면 브라우저가 이를 HTML로 해석할 수 있어요."
+    },
+    {
+      "prompt": "textContent에 관한 설명 중 본문과 맞는 것은 무엇인가요?",
+      "options": [
+        "모든 요소에서 내용을 텍스트로만 처리하므로 예외가 없어요.",
+        "HTML을 허용할 때 위험한 내용을 걸러주는 정화 도구예요.",
+        "어떤 위치에서나 출력 맥락에 맞는 인코딩을 대신해요.",
+        "일반 요소에는 쓸 수 있지만 script 요소의 내용은 실행될 수 있어요."
+      ],
+      "correct_index": 3,
+      "explanation": "일반 요소의 textContent는 텍스트로 다루지만, script 요소에서는 실행될 코드가 될 수 있어요.",
+      "evidence": "특히 script 요소의 textContent는 실행될 코드가 될 수 있어요."
+    }
+  ],
+  "referenceLinks": [
+    {
+      "title": "Cross Site Scripting Prevention - OWASP Cheat Sheet Series",
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html",
+      "checkedAt": "2026-10-22T09:41:32.103Z"
+    }
+  ],
+  "revision": 1,
+  "author": "artice cream",
+  "disclosure": "AI의 도움으로 구성·집필하고 사실 근거와 문항을 점검한 기초 콘텐츠입니다.",
+  "generatedAt": "2026-10-22T16:33:40.318Z",
+  "model": "pickle-general",
+  "usage": {
+    "input": 23493,
+    "output": 6076,
+    "cacheWrite": 0,
+    "cacheRead": 0,
+    "calls": 4,
+    "retries": 0
+  },
+  "review": {
+    "status": "automated_checks_passed",
+    "issues": [],
+    "answers": [
+      1,
+      0,
+      2,
+      3
+    ],
+    "sourceSha256": "cd44319ce21cf19bfb9823e52076f2705589deedee20818f6d1d576886ec6695"
+  }
+}

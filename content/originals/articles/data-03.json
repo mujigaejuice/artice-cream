@@ -1,0 +1,117 @@
+{
+  "key": "data-03",
+  "domain": "data",
+  "order": 3,
+  "title": "묶어서 계산하는 GROUP BY",
+  "facts": "GROUP BY는 같은 그룹 값의 행을 묶어 집계한다. WHERE는 집계 전 행, HAVING은 집계 뒤 그룹을 제한한다. COUNT(*)는 행 수, COUNT(column)은 해당 열이 NULL이 아닌 행 수다.",
+  "url": "https://www.postgresql.org/docs/18/tutorial-agg.html",
+  "summary": "GROUP BY는 같은 값의 행을 묶어 그룹별 집계를 계산해요. WHERE는 집계 전 행을, HAVING은 집계 뒤 그룹을 제한하며 COUNT(*)와 COUNT(column)은 세는 행의 기준이 달라요.",
+  "paragraphs": [
+    "작업 기록이 쌓이면 전체 건수만으로는 어느 종류의 작업이 많은지 알기 어려워요. 예를 들어 설치와 문의 작업을 종류별로 나눠 건수를 비교하고 싶을 수 있어요. 이때 행 하나씩 살펴보는 대신, 같은 종류의 작업을 모아 계산하면 각 종류의 특징을 읽기 쉬워져요.",
+    "GROUP BY는 지정한 열의 값이 같은 행을 그룹으로 묶고, 각 그룹에 집계 함수를 적용해요. 결과에는 그룹마다 한 행이 나오며, 그 행에는 그룹 값과 집계 결과가 담겨요. 따라서 GROUP BY kind를 쓰면 kind 값이 같은 작업끼리 모여요. 집계는 그룹에 속한 행들을 대상으로 해요.",
+    "작업 기록 네 건의 kind와 minutes가 각각 설치 12, 설치 NULL, 문의 5, 문의 8이라고 해볼게요. SELECT kind, COUNT(*), COUNT(minutes) FROM jobs GROUP BY kind;를 실행하면 설치 그룹은 COUNT(*)가 2, COUNT(minutes)가 1이에요. 문의 그룹은 두 값 모두 2예요. COUNT(*)는 그룹의 행 수를 세고, COUNT(column)은 그 열이 NULL이 아닌 행만 세기 때문이에요.",
+    "집계 전 행을 골라내려면 WHERE를 써요. 예를 들어 WHERE kind = '설치'를 GROUP BY 앞에 두면 설치 행만 모아 집계해요. 집계한 뒤 그룹을 제한하려면 HAVING을 써요. HAVING COUNT(*) >= 2는 행이 두 건 이상인 그룹만 남겨요. 둘을 함께 쓰면 먼저 설치 행만 고른 다음, 그중 두 건 이상인 그룹을 남겨요.",
+    "WHERE와 HAVING은 서로 바꿔 쓰는 조건이 아니에요. WHERE는 집계에 들어갈 개별 행을 제한하고, HAVING은 계산이 끝난 그룹을 제한해요. 또 COUNT(minutes)는 minutes가 NULL인 행을 세지 않으므로 전체 행 수와 다를 수 있어요. 집계 결과를 확인할 때는 그룹 기준과 세려는 대상이 무엇인지 함께 살펴보세요."
+  ],
+  "terms": [
+    {
+      "surface": "GROUP BY",
+      "definition": "같은 지정 값의 행을 그룹으로 묶어 그룹별 집계를 계산하는 절이에요."
+    },
+    {
+      "surface": "WHERE",
+      "definition": "집계 전에 집계에 들어갈 개별 행을 제한하는 절이에요."
+    },
+    {
+      "surface": "HAVING",
+      "definition": "집계가 끝난 뒤 조건에 맞는 그룹을 제한하는 절이에요."
+    },
+    {
+      "surface": "COUNT(column)",
+      "definition": "지정한 열이 NULL이 아닌 행의 수를 세는 집계 표현이에요."
+    }
+  ],
+  "questions": [
+    {
+      "prompt": "WHERE와 HAVING의 역할을 올바르게 설명한 것은 무엇인가요?",
+      "options": [
+        "WHERE는 집계 뒤 그룹을 고르고, HAVING은 집계 전 행을 골라요.",
+        "WHERE는 집계 전 행을 고르고, HAVING은 집계 뒤 그룹을 골라요.",
+        "WHERE와 HAVING은 모두 집계 전 행만 골라요.",
+        "WHERE와 HAVING은 모두 집계 뒤 그룹만 골라요."
+      ],
+      "correct_index": 1,
+      "explanation": "WHERE는 집계에 들어갈 행을 먼저 제한하고, HAVING은 계산된 그룹을 나중에 제한해요.",
+      "evidence": "WHERE는 집계에 들어갈 개별 행을 제한하고, HAVING은 계산이 끝난 그룹을 제한해요."
+    },
+    {
+      "prompt": "설치 기록의 minutes가 12와 NULL일 때 COUNT(minutes)는 몇 건인가요?",
+      "options": [
+        "NULL도 한 건으로 세어 두 건이에요.",
+        "그룹마다 결과가 달라져 한 건 또는 두 건이에요.",
+        "NULL이 아닌 값만 세어 한 건이에요.",
+        "집계할 수 없어서 결과가 없어요."
+      ],
+      "correct_index": 2,
+      "explanation": "COUNT(minutes)는 minutes가 NULL이 아닌 행만 세므로 값이 12인 한 행을 세어요.",
+      "evidence": "COUNT(column)은 그 열이 NULL이 아닌 행만 세기 때문이에요."
+    },
+    {
+      "prompt": "제시된 기록에서 GROUP BY kind로 묶었을 때 문의 그룹의 COUNT(*)는 얼마인가요?",
+      "options": [
+        "한 건이에요.",
+        "두 건이에요.",
+        "세 건이에요.",
+        "네 건이에요."
+      ],
+      "correct_index": 1,
+      "explanation": "문의 기록은 minutes 값이 5인 행과 8인 행, 모두 두 행이에요. COUNT(*)는 그룹의 행 수를 세요.",
+      "evidence": "문의 그룹은 두 값 모두 2예요."
+    },
+    {
+      "prompt": "COUNT(minutes)가 작업 전체 건수와 항상 같다는 설명은 어떻게 판단해야 하나요?",
+      "options": [
+        "NULL인 minutes도 반드시 하나로 세므로 맞아요.",
+        "GROUP BY가 NULL 행을 모두 삭제하므로 맞아요.",
+        "집계 함수는 언제나 같은 행 수를 반환하므로 맞아요.",
+        "minutes가 NULL인 행은 제외하므로 서로 다를 수 있어요."
+      ],
+      "correct_index": 3,
+      "explanation": "COUNT(*)는 모든 행을 세지만 COUNT(minutes)는 minutes가 NULL이 아닌 행만 세기 때문에 차이가 날 수 있어요.",
+      "evidence": "또 COUNT(minutes)는 minutes가 NULL인 행을 세지 않으므로 전체 행 수와 다를 수 있어요."
+    }
+  ],
+  "referenceLinks": [
+    {
+      "title": "PostgreSQL: Documentation: 18: 2.7. Aggregate Functions",
+      "url": "https://www.postgresql.org/docs/18/tutorial-agg.html",
+      "checkedAt": "2026-10-22T09:41:19.635Z"
+    }
+  ],
+  "revision": 1,
+  "author": "artice cream",
+  "disclosure": "AI의 도움으로 구성·집필하고 사실 근거와 문항을 점검한 기초 콘텐츠입니다.",
+  "generatedAt": "2026-10-22T09:58:41.116Z",
+  "model": "pickle-general",
+  "usage": {
+    "input": 7350,
+    "output": 4667,
+    "cacheWrite": 0,
+    "cacheRead": 1457,
+    "calls": 4,
+    "retries": 1
+  },
+  "review": {
+    "status": "editorial_checked",
+    "issues": [],
+    "answers": [
+      1,
+      2,
+      1,
+      3
+    ],
+    "sourceSha256": "6927314b5f18552602f176410438d2f28208930831a20386788c279c70ae47b7",
+    "editorialNote": "중복된 WHERE/HAVING 문항을 COUNT(*)와 COUNT(column)의 흔한 오해로 교체. 예제 집계값 2/1 및 2/2 확인.",
+    "checkedAt": "2026-10-22T16:45:39.231Z"
+  }
+}

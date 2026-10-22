@@ -3,6 +3,38 @@
 출시 전 저작권·개인정보 준비 자료는 로컬 `docs/legal/`에서 관리하며 Git 저장소에는 포함하지 않는다.
 소스별 권리 검토와 개인정보처리방침은 초안 단계이며, 공개 서비스의 확정 방침이나 이용허락을 뜻하지 않는다.
 
+## Original 기초와 반복 퀴즈
+
+2026-10-23: 8개 분야 각 8편, 총 **64편·256문항**을 제작·검증하고 운영 DB에 비공개로 등록했다.
+화면/API 구현은 완료했으며 커밋·배포·공개는 대기 상태다. 브리프는 `content/originals/briefs.ts`,
+본문·용어·퀴즈·공식 참고자료·검토 기록은 `content/originals/articles/*.json`에 있다.
+AI 보조 집필과 근거 검토를 표시하며 사람 전문가 검수를 주장하지 않는다.
+
+주문서는 `전체 · 기초 · 아티클` 필터를 제공하고, 전체 상단에는 선택 분야의 미완료 기초를 추천한다.
+모든 수준에서 같은 쉬운 본문을 읽는다. Original은 원문 보기 대신 참고자료와 확인일을 표시한다.
+콘에 쌓은 뒤에도 **다시 풀기**로 같은 4문항을 반복 연습할 수 있다. 최초 점수·답안·완료일·저장일·스쿱 수를
+보존하고 분야 수준은 바꾸지 않는다. 처음 연 기사만 기존 열람 횟수를 쓰며, 재열람·재풀이에는 추가 차감이나 LLM 호출이 없다.
+
+```sh
+# 콘텐츠 전체 검증만 수행
+node --import=tsx scripts/publish-originals.ts
+# 검증 후 비공개 등록; 같은 키의 본문이나 학습 기록을 덮어쓰지 않음
+node --env-file=.env.local --import=tsx scripts/publish-originals.ts --stage
+# 웹/API 배포 성공 후 공개; 운영 Original 페이지가 없으면 중단
+node --env-file=.env.local --import=tsx scripts/publish-originals.ts --publish
+npm run test:originals
+```
+
+DB 마이그레이션 `20261022095402_original_foundations.sql`은 이 프로젝트 운영 DB에 적용했다.
+새 환경에는 코드 배포 전 해당 마이그레이션을 적용한다. 공개 명령은 64편과 저장된 본문·문항을 다시 검증하고
+편집 승인 후 소스 공개를 활성화한다. 철회된 글이나 소스를 자동 복구하지 않는다.
+Original은 정기 ingest에서 재생성하지 않는다. 별도 수동 생성은
+`node --env-file=.env.local --import=tsx scripts/generate-originals.ts --generate`이며,
+완료 파일을 건너뛰고 최대 64편·동시 2편으로 제한한다.
+상세 상태와 후속 운영 확인은 로컬 `docs/legal/originals-20261023.md`에 기록한다.
+
+## 외부 문서 수집
+
 2026-10-22 외부 문서 확보: Google ML/Cloud·OWASP GenAI/Cheat Sheets·PostgreSQL·D2L의
 12개 URL을 확인해 운영 후보로 등록했다. 선정 본문 9개와 보류 3개이며 신규 문서 소스 후보는 3곳이다.
 원문·정책 해시, 절 범위, 버전·갱신일, 출처 초안을 기록했고 발행일은 임의로 만들지 않았다.

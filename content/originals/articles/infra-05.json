@@ -1,0 +1,115 @@
+{
+  "key": "infra-05",
+  "domain": "infra",
+  "order": 5,
+  "title": "설정과 비밀값을 따로 관리하기",
+  "facts": "ConfigMap은 비밀이 아닌 설정, Secret은 민감한 값을 관리하는 용도다. base64는 암호화가 아니며 Secret이라는 이름만으로 저장 암호화와 권한 보호가 보장되지 않는다. 로그에 비밀값을 쓰지 않는다.",
+  "url": "https://kubernetes.io/docs/concepts/configuration/secret/",
+  "summary": "일반 설정은 ConfigMap에, 비밀번호처럼 민감한 값은 Secret에 두는 이유를 살펴봐요. Secret을 사용해도 값이 자동으로 안전해지는 것은 아니며, 비밀값을 로그에 남기지 않아야 해요.",
+  "paragraphs": [
+    "민서가 작은 도서관의 대출 안내 앱을 만든다고 해요. 운영 중 안내 문구나 화면 색을 바꾸고 싶고, 데이터베이스에 접속할 비밀번호도 앱에 전달해야 해요. 이 값들을 모두 코드에 적으면 수정과 관리가 불편하고, 비밀번호가 코드나 기록에 노출될 수도 있어요.",
+    "Kubernetes에서는 비밀이 아닌 일반 설정을 ConfigMap으로 관리하고, 비밀번호나 토큰처럼 민감한 값은 Secret으로 관리해요. 앱은 필요한 설정을 따로 전달받을 수 있어요. 이렇게 구분하면 일반 설정을 바꿀 때 비밀값을 함께 다룰 필요가 줄어요.",
+    "예를 들어 안내 앱의 첫 화면 문구를 ‘대출은 4시까지’로 정했다면 이 문구는 ConfigMap에 둘 수 있어요. 데이터베이스 비밀번호는 Secret에 두고, 앱이 실행될 때 필요한 값으로 전달해요. 문구가 ‘대출은 5시까지’로 바뀌어도 비밀번호는 그대로 둘 수 있어요. 반대로 비밀번호가 바뀌면 일반 안내 문구를 수정하지 않아도 돼요.",
+    "앱이나 운영 도구가 값을 출력하는 로그도 살펴야 해요. 오류를 확인하려고 비밀번호 전체를 로그에 쓰면, 로그를 볼 수 있는 사람에게 비밀이 노출될 수 있어요. 로그에는 민감한 값을 남기지 않고, 문제가 생긴 상황만 확인할 수 있게 기록해요.",
+    "Secret이라는 이름만으로 값이 암호화되어 저장되거나 접근 권한이 제한되는 것은 아니에요. Secret의 값에 쓰이는 base64는 암호화가 아니라 표현 방식이에요. 그러므로 Secret을 쓴다는 사실만으로 안전하다고 여기지 말고, 저장 방식과 접근 권한도 별도로 확인해야 해요."
+  ],
+  "terms": [
+    {
+      "surface": "ConfigMap",
+      "definition": "비밀이 아닌 일반 설정을 관리하는 Kubernetes 객체예요."
+    },
+    {
+      "surface": "Secret",
+      "definition": "비밀번호나 토큰처럼 민감한 값을 관리하는 Kubernetes 객체예요."
+    },
+    {
+      "surface": "base64",
+      "definition": "Secret 값에 쓰일 수 있는 표현 방식이며, 암호화는 아니에요."
+    },
+    {
+      "surface": "로그",
+      "definition": "앱이나 도구가 상황을 기록하는 출력이에요. 민감한 값은 남기지 않아야 해요."
+    }
+  ],
+  "questions": [
+    {
+      "prompt": "비밀이 아닌 일반 설정을 관리할 때 알맞은 것은 무엇인가요?",
+      "options": [
+        "ConfigMap으로 일반 설정을 관리해요.",
+        "Secret으로 일반 설정을 관리해요.",
+        "로그에 일반 설정을 기록해요.",
+        "base64로 일반 설정을 암호화해요."
+      ],
+      "correct_index": 0,
+      "explanation": "비밀이 아닌 일반 설정은 ConfigMap으로 관리해요.",
+      "evidence": "비밀이 아닌 일반 설정을 ConfigMap으로 관리하고, 비밀번호나 토큰처럼 민감한 값은 Secret으로 관리해요."
+    },
+    {
+      "prompt": "민서의 앱에서 첫 화면 안내 문구는 어디에 두는 것이 알맞나요?",
+      "options": [
+        "비밀번호와 함께 Secret에 둬요.",
+        "일반 설정이므로 ConfigMap에 둬요.",
+        "앱의 로그에 문구를 기록해 둬요.",
+        "base64로 바꿔 비밀번호처럼 관리해요."
+      ],
+      "correct_index": 1,
+      "explanation": "안내 문구는 민감한 값이 아닌 일반 설정이므로 ConfigMap에 둘 수 있어요.",
+      "evidence": "이 문구는 ConfigMap에 둘 수 있어요."
+    },
+    {
+      "prompt": "민서의 앱이 데이터베이스 비밀번호를 전달받아야 할 때 알맞은 것은 무엇인가요?",
+      "options": [
+        "첫 화면 문구와 함께 ConfigMap에 둬요.",
+        "오류 상황을 설명하는 로그에 남겨요.",
+        "민감한 값이므로 Secret에 둬요.",
+        "base64를 암호화로 여겨 로그에 남겨요."
+      ],
+      "correct_index": 2,
+      "explanation": "데이터베이스 비밀번호는 민감한 값이므로 Secret에 둘 수 있어요.",
+      "evidence": "데이터베이스 비밀번호는 Secret에 두고, 앱이 실행될 때 필요한 값으로 전달해요."
+    },
+    {
+      "prompt": "Secret과 base64에 관한 설명으로 맞는 것은 무엇인가요?",
+      "options": [
+        "Secret이라는 이름만으로 접근 권한이 제한돼요.",
+        "base64를 쓰면 값이 암호화되어 안전해져요.",
+        "Secret에 넣으면 로그에 출력해도 괜찮아요.",
+        "Secret만으로 저장 암호화와 권한 제한이 보장되지 않아요."
+      ],
+      "correct_index": 3,
+      "explanation": "base64는 암호화가 아니고, Secret이라는 이름만으로 저장 암호화나 접근 권한 제한이 보장되지 않아요.",
+      "evidence": "Secret이라는 이름만으로 값이 암호화되어 저장되거나 접근 권한이 제한되는 것은 아니에요."
+    }
+  ],
+  "referenceLinks": [
+    {
+      "title": "Secrets | Kubernetes",
+      "url": "https://kubernetes.io/docs/concepts/configuration/secret/",
+      "checkedAt": "2026-10-22T09:41:14.825Z"
+    }
+  ],
+  "revision": 1,
+  "author": "artice cream",
+  "disclosure": "AI의 도움으로 구성·집필하고 사실 근거와 문항을 점검한 기초 콘텐츠입니다.",
+  "generatedAt": "2026-10-22T09:54:53.746Z",
+  "model": "pickle-general",
+  "usage": {
+    "input": 6165,
+    "output": 2378,
+    "cacheWrite": 0,
+    "cacheRead": 5364,
+    "calls": 2,
+    "retries": 2
+  },
+  "review": {
+    "status": "automated_checks_passed",
+    "issues": [],
+    "answers": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "sourceSha256": "595d1ee06d05430db8f7f83983d99813ad6bb1e59bb22a2a00f4fe69e340c08f"
+  }
+}

@@ -1,0 +1,119 @@
+{
+  "key": "infra-07",
+  "domain": "infra",
+  "order": 7,
+  "title": "CPU와 메모리의 요청량·상한",
+  "facts": "requests는 스케줄링에 사용할 자원 요청량이고 limits는 사용 제한이다. CPU 제한은 throttling, 메모리 제한 초과는 OOM 종료로 이어질 수 있다. 메모리 제한이 자동으로 메모리 누수를 고치지는 않는다.",
+  "url": "https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/",
+  "summary": "requests는 스케줄링에 사용할 자원 요청량이고, limits는 사용 상한이에요. CPU 상한은 사용을 제한하고 메모리 상한 초과는 OOM 종료로 이어질 수 있지만, 메모리 누수를 고치지는 않아요.",
+  "paragraphs": [
+    "작은 이미지 변환 작업을 맡은 컨테이너가 있어요. 작업량이 늘면 CPU와 메모리 사용량도 달라져요. 값을 설정할 때는 어디에 배치할지 판단하는 기준과 실행 중 사용을 제한하는 기준을 구분해야 해요.",
+    "requests는 스케줄러가 배치할 곳을 고를 때 참고하는 자원 요청량이에요. limits는 컨테이너가 사용할 수 있는 자원의 상한이에요. 그러므로 요청량은 곧 사용 상한이라는 뜻이 아니며, 실제 사용량이 요청량을 넘을 수도 있어요.",
+    "예를 들어 CPU requests를 0.2, limits를 0.5로 정하면 0.2는 배치 판단에 쓰이는 요청량이고, 0.5는 사용 상한이에요. 사용량이 CPU 상한에 닿으면 실행이 제한되는 throttling이 생길 수 있어요. 이는 컨테이너를 종료하는 것과는 달라요.",
+    "같은 작업의 메모리 requests를 128Mi, limits를 256Mi로 정할 수도 있어요. 128Mi는 배치 판단을 위한 요청량이고 256Mi는 메모리 상한이에요. 사용량이 상한을 넘으면 OOM 종료로 이어질 수 있어요. 초과 즉시 반드시 종료된다고 단정할 수는 없어요.",
+    "상한을 높이면 사용할 수 있는 범위는 바뀌지만, 프로그램이 메모리를 계속 쌓는 메모리 누수 자체가 고쳐지지는 않아요. 요청량과 상한은 작업의 실제 사용량을 살펴 조정해야 해요. 요청량만 높이면 상한도 자동으로 높아진다고 생각하는 것도 오해예요."
+  ],
+  "terms": [
+    {
+      "surface": "requests",
+      "definition": "스케줄러가 배치할 곳을 고를 때 참고하는 자원 요청량이에요."
+    },
+    {
+      "surface": "limits",
+      "definition": "컨테이너가 사용할 수 있는 자원의 상한이에요."
+    },
+    {
+      "surface": "throttling",
+      "definition": "CPU 사용이 상한에 닿을 때 실행이 제한되는 현상이에요."
+    },
+    {
+      "surface": "OOM 종료",
+      "definition": "메모리 상한 초과가 원인이 되어 컨테이너가 종료되는 일이에요."
+    },
+    {
+      "surface": "메모리 누수",
+      "definition": "프로그램이 메모리를 계속 쌓는 문제로, 상한 설정만으로 고쳐지지는 않아요."
+    }
+  ],
+  "questions": [
+    {
+      "prompt": "requests의 역할을 가장 잘 설명한 것은 무엇인가요?",
+      "options": [
+        "컨테이너가 넘을 수 없는 사용 상한이에요.",
+        "스케줄러가 배치할 곳을 고를 때 참고하는 요청량이에요.",
+        "CPU 사용이 제한될 때 컨테이너를 끝내는 기준이에요.",
+        "메모리 누수가 자동으로 멈추게 하는 설정이에요."
+      ],
+      "correct_index": 1,
+      "explanation": "requests는 배치 판단에 쓰이는 요청량이지, 사용 상한이나 자동 복구 설정이 아니에요.",
+      "evidence": "requests는 스케줄러가 배치할 곳을 고를 때 참고하는 자원 요청량이에요."
+    },
+    {
+      "prompt": "CPU requests가 0.2이고 limits가 0.5일 때, 본문에 맞는 설명은 무엇인가요?",
+      "options": [
+        "0.2는 사용 상한이고, 0.5는 배치 요청량이에요.",
+        "0.2와 0.5는 모두 컨테이너 종료 기준이에요.",
+        "0.5는 메모리 요청량이고, 0.2는 CPU 상한이에요.",
+        "0.2는 배치 요청량이고, 0.5는 사용 상한이에요."
+      ],
+      "correct_index": 3,
+      "explanation": "예시에서 0.2는 requests 값, 0.5는 limits 값으로 제시됐어요.",
+      "evidence": "0.2는 배치 판단에 쓰이는 요청량이고, 0.5는 사용 상한이에요."
+    },
+    {
+      "prompt": "메모리 사용량이 256Mi 상한을 넘었을 때 가능한 결과는 무엇인가요?",
+      "options": [
+        "OOM 종료로 이어질 수 있어요.",
+        "CPU 요청량이 자동으로 높아질 수 있어요.",
+        "메모리 누수가 자동으로 고쳐질 수 있어요.",
+        "컨테이너가 반드시 계속 실행될 수 있어요."
+      ],
+      "correct_index": 0,
+      "explanation": "본문은 상한 초과가 OOM 종료로 이어질 수 있다고 설명하며, 반드시 즉시 종료된다고 단정하지 않아요.",
+      "evidence": "사용량이 상한을 넘으면 OOM 종료로 이어질 수 있어요."
+    },
+    {
+      "prompt": "limits를 설정하면 메모리 누수가 고쳐진다는 말은 어떻게 판단해야 하나요?",
+      "options": [
+        "맞아요. limits가 메모리 사용을 자동으로 정리해요.",
+        "맞아요. limits가 requests를 대신해 누수를 막아요.",
+        "아니에요. 상한 설정만으로 메모리 누수가 고쳐지지는 않아요.",
+        "아니에요. 메모리 limits는 배치 판단에만 쓰여요."
+      ],
+      "correct_index": 2,
+      "explanation": "limits는 사용 범위를 정하지만, 프로그램의 메모리 누수 자체를 고치는 기능은 아니에요.",
+      "evidence": "메모리 누수 자체가 고쳐지지는 않아요."
+    }
+  ],
+  "referenceLinks": [
+    {
+      "title": "Resource Management for Pods and Containers | Kubernetes",
+      "url": "https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/",
+      "checkedAt": "2026-10-22T09:41:15.755Z"
+    }
+  ],
+  "revision": 1,
+  "author": "artice cream",
+  "disclosure": "AI의 도움으로 구성·집필하고 사실 근거와 문항을 점검한 기초 콘텐츠입니다.",
+  "generatedAt": "2026-10-22T09:55:54.479Z",
+  "model": "pickle-general",
+  "usage": {
+    "input": 6140,
+    "output": 2864,
+    "cacheWrite": 0,
+    "cacheRead": 5247,
+    "calls": 2,
+    "retries": 1
+  },
+  "review": {
+    "status": "automated_checks_passed",
+    "issues": [],
+    "answers": [
+      1,
+      3,
+      0,
+      2
+    ],
+    "sourceSha256": "8eee4a66c18acfd2ad9798686ad1bec7831deaae5f71691e33217bc06e2c870e"
+  }
+}

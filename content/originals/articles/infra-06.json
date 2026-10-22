@@ -1,0 +1,113 @@
+{
+  "key": "infra-06",
+  "domain": "infra",
+  "order": 6,
+  "title": "준비됨과 살아 있음은 다르다",
+  "facts": "readiness 실패는 서비스 트래픽 대상에서 제외하는 데 사용하고 liveness 반복 실패는 컨테이너 재시작으로 이어질 수 있다. startup probe는 느린 시작을 보호한다. 외부 의존 장애를 잘못 liveness에 연결하면 재시작 폭주가 생길 수 있다.",
+  "url": "https://kubernetes.io/docs/concepts/configuration/liveness-readiness-startup-probes/",
+  "summary": "readiness probe는 Pod가 서비스 트래픽을 받을 준비가 되었는지, liveness probe는 컨테이너가 계속 실행되어도 되는지를 살펴봐요. 느린 시작에는 startup probe가 도움이 되지만, 외부 의존성 장애를 liveness probe에 연결하면 재시작 폭주가 생길 수 있어요.",
+  "paragraphs": [
+    "하나가 운영하는 보고서 서비스가 실행 중인데 저장소 연결이 잠시 끊겼다고 해볼게요. 서비스 프로세스는 살아 있어도 보고서를 저장하지 못할 수 있어요. 이때 준비 상태와 생존 상태를 같은 뜻으로 보면, 처리할 수 없는 요청이 들어오거나 회복 중인 프로세스가 불필요하게 재시작될 수 있어요.",
+    "readiness probe는 Pod가 서비스 트래픽을 받을 준비가 되었는지 확인해요. 실패하면 해당 Pod의 IP가 서비스 엔드포인트에서 빠져 Pod가 서비스 트래픽 대상에서 제외돼요. 컨테이너는 계속 실행될 수 있어요. liveness probe는 컨테이너가 계속 실행되어도 되는지 확인하고, 반복 실패는 컨테이너 재시작으로 이어질 수 있어요.",
+    "시작에 시간이 걸리는 앱에는 startup probe를 사용할 수 있어요. 초기화가 끝날 때까지 기다려 시작이 느린 앱을 너무 일찍 실패로 판단하지 않도록 보호해요. startup probe가 성공한 뒤 readiness와 liveness 확인이 시작되므로, 초기화 중인 상태와 실행 중 문제가 생긴 상태를 구분하는 데 도움이 돼요. 다만 무한히 기다리는 것은 아니며, 설정한 실패 횟수에 도달하면 startup probe도 컨테이너 재시작으로 이어질 수 있어요.",
+    "예를 들어 하나의 보고서 서비스가 시작에 10초 걸리고, 보고서 6건을 처리하던 중 저장소 연결이 끊겼다고 해요. 저장소 없이는 보고서를 완료할 수 없다면 readiness probe 실패로 Pod를 트래픽 대상에서 빼고, 앱 자체의 상태는 liveness probe로 따로 확인할 수 있어요. 시작 중에는 startup probe가 초기화를 기다려요.",
+    "readiness 실패가 곧 컨테이너 재시작을 뜻하거나, liveness 실패가 트래픽만 막는다고 생각하기 쉬워요. 하지만 두 probe의 결과는 달라요. 또 외부 저장소 장애를 liveness probe에 연결하면 앱 자체가 회복할 수 있는 상황에서도 컨테이너가 반복 재시작될 수 있어요. 무엇을 확인하려는지에 맞춰 probe를 나누고, 외부 의존성 장애를 곧 앱 자체의 생명 문제로 보지 않는 것이 중요해요."
+  ],
+  "terms": [
+    {
+      "surface": "readiness probe",
+      "definition": "Pod가 서비스 트래픽을 받을 준비가 되었는지 확인하며, 실패하면 Pod가 서비스 트래픽 대상에서 제외돼요."
+    },
+    {
+      "surface": "liveness probe",
+      "definition": "컨테이너가 계속 실행되어도 되는지 확인하며, 반복 실패는 재시작으로 이어질 수 있어요."
+    },
+    {
+      "surface": "startup probe",
+      "definition": "초기화가 끝날 때까지 기다려 느린 시작을 보호해요."
+    }
+  ],
+  "questions": [
+    {
+      "prompt": "readiness probe가 실패했을 때의 설명으로 알맞은 것은 무엇인가요?",
+      "options": [
+        "해당 컨테이너가 바로 재시작되고 서비스에 다시 등록돼요.",
+        "해당 Pod가 서비스 트래픽 대상에서 빠지고 컨테이너는 계속 실행될 수 있어요.",
+        "해당 컨테이너가 중지되고 앱의 초기화를 처음부터 진행해요.",
+        "해당 Pod가 트래픽을 계속 받고 liveness 확인을 멈춰요."
+      ],
+      "correct_index": 1,
+      "explanation": "readiness 실패는 Pod를 서비스 트래픽 대상에서 제외하지만, 컨테이너를 반드시 재시작하지는 않아요.",
+      "evidence": "실패하면 해당 Pod의 IP가 서비스 엔드포인트에서 빠져 Pod가 서비스 트래픽 대상에서 제외돼요. 컨테이너는 계속 실행될 수 있어요."
+    },
+    {
+      "prompt": "시작에 10초 걸리는 하나의 서비스에서 초기화를 기다리는 데 알맞은 방법은 무엇인가요?",
+      "options": [
+        "liveness probe를 사용해 초기화가 끝나기 전에 컨테이너를 재시작해요.",
+        "readiness probe를 사용해 초기화 중인 컨테이너를 서비스에 계속 연결해요.",
+        "startup probe를 사용해 초기화가 끝날 때까지 기다려요.",
+        "readiness probe를 사용해 초기화가 끝날 때 컨테이너를 재시작해요."
+      ],
+      "correct_index": 2,
+      "explanation": "startup probe는 초기화가 끝날 때까지 기다려 느린 시작을 보호해요.",
+      "evidence": "초기화가 끝날 때까지 기다려 시작이 느린 앱을 너무 일찍 실패로 판단하지 않도록 보호해요."
+    },
+    {
+      "prompt": "보고서 서비스에서 저장소 연결이 끊겨 보고서를 완료할 수 없을 때 알맞은 설명은 무엇인가요?",
+      "options": [
+        "liveness probe 실패로 Pod를 트래픽 대상에서 빼고 저장소를 복구해요.",
+        "startup probe 실패로 컨테이너를 재시작하고 요청을 계속 받아요.",
+        "liveness probe 실패로 저장소 연결이 복구될 때까지 트래픽만 막아요.",
+        "readiness probe 실패로 Pod를 트래픽 대상에서 빼고 앱 자체는 따로 확인해요."
+      ],
+      "correct_index": 3,
+      "explanation": "저장소 없이는 작업을 완료할 수 없으므로 readiness로 트래픽을 막고, 앱 자체 상태는 따로 확인할 수 있어요.",
+      "evidence": "저장소 없이는 보고서를 완료할 수 없다면 readiness probe 실패로 Pod를 트래픽 대상에서 빼고, 앱 자체의 상태는 liveness probe로 따로 확인할 수 있어요."
+    },
+    {
+      "prompt": "외부 저장소 장애와 liveness probe에 관한 설명 중 오해인 것은 무엇인가요?",
+      "options": [
+        "외부 저장소 장애를 readiness probe에 반영해 트래픽을 막을 수 있어요.",
+        "외부 저장소 장애를 liveness probe에 연결해도 반복 재시작 걱정은 없어요.",
+        "liveness probe가 반복 실패하면 컨테이너 재시작으로 이어질 수 있어요.",
+        "외부 의존성 장애를 앱 자체의 생명 문제로 단정하지 않는 편이 좋아요."
+      ],
+      "correct_index": 1,
+      "explanation": "외부 의존성 장애를 liveness probe에 연결하면 컨테이너가 반복 재시작될 수 있어요.",
+      "evidence": "또 외부 저장소 장애를 liveness probe에 연결하면 앱 자체가 회복할 수 있는 상황에서도 컨테이너가 반복 재시작될 수 있어요."
+    }
+  ],
+  "referenceLinks": [
+    {
+      "title": "Liveness, Readiness, and Startup Probes | Kubernetes",
+      "url": "https://kubernetes.io/docs/concepts/workloads/pods/probes/",
+      "checkedAt": "2026-10-22T09:41:16.939Z"
+    }
+  ],
+  "revision": 1,
+  "author": "artice cream",
+  "disclosure": "AI의 도움으로 구성·집필하고 사실 근거와 문항을 점검한 기초 콘텐츠입니다.",
+  "generatedAt": "2026-10-22T16:26:49.419Z",
+  "model": "pickle-general",
+  "usage": {
+    "input": 23499,
+    "output": 5568,
+    "cacheWrite": 0,
+    "cacheRead": 0,
+    "calls": 4,
+    "retries": 0
+  },
+  "review": {
+    "status": "editorial_checked",
+    "issues": [],
+    "answers": [
+      1,
+      2,
+      3,
+      1
+    ],
+    "sourceSha256": "e73fcec5a6fe631d4f04ab6cc5f73029360344ebc139b88c2959c750fd126db1",
+    "editorialNote": "본문에 없는 강조 용어를 제외하고 시작 검사 실패 한계를 명시. 저장소 예제 해설의 부정 표현 누락 수정.",
+    "checkedAt": "2026-10-22T16:45:39.234Z"
+  }
+}

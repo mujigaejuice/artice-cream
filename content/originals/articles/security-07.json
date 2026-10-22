@@ -1,0 +1,121 @@
+{
+  "key": "security-07",
+  "domain": "security",
+  "order": 7,
+  "title": "CSRF는 로그인 상태를 악용한다",
+  "facts": "브라우저가 자동 첨부하는 인증정보를 이용해 원치 않는 상태 변경을 유도할 수 있다. CSRF 토큰·Origin 검사·SameSite 등 상황에 맞는 방어를 결합한다. GET으로 상태를 바꾸지 않는다. CORS만으로 모든 CSRF를 막지 못한다.",
+  "url": "https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html",
+  "summary": "로그인된 브라우저는 인증정보를 자동으로 보내므로, 이를 악용해 원치 않는 상태 변경을 유도할 수 있어요. CSRF 방어를 상황에 맞게 결합하고 XSS도 별도로 예방해야 해요.",
+  "paragraphs": [
+    "민서가 사진 정리 사이트에 로그인한 채 다른 페이지를 열었어요. 그 페이지가 민서 모르게 사진 하나를 삭제하는 요청을 보내면, 브라우저는 로그인 쿠키 같은 인증정보를 요청에 자동으로 붙일 수 있어요. 사이트가 요청을 제대로 확인하지 않으면 삭제가 실행될 수 있어요.",
+    "이처럼 로그인 상태를 이용해 사용자가 원하지 않은 상태 변경을 일으키는 공격을 CSRF라고 해요. 서버는 쿠키가 붙었다는 사실만으로 요청이 민서의 뜻에서 나왔다고 볼 수 없어요. 공격자가 할 수 있는 일은 해당 계정에 허용된 작업의 범위에 제한돼요.",
+    "민서 계정에 저장된 사진 앨범이 3개 있다고 해요. 삭제 요청에 CSRF 토큰을 요구하고, 서버가 요청 값과 로그인 세션에 연결된 값을 대조할 수 있어요. 값이 없거나 일치하지 않으면 삭제를 거부해요. 이 검사는 로그인 쿠키와 별도로 요청이 정당한지 확인하는 데 도움을 줘요.",
+    "상태 변경은 POST 같은 요청으로 처리하고 GET은 조회에만 써요. Origin 검사로 요청의 출처를 확인하고, 세션 쿠키에 SameSite 설정을 적용하는 방어도 요청 흐름에 맞게 결합할 수 있어요. 한 가지 방법만 모든 상황에 통한다고 여기기보다 서버가 상태 변경 요청을 확인해야 해요.",
+    "CORS는 다른 출처가 응답을 읽는 규칙을 다루므로 설정만으로 모든 CSRF를 막지는 못해요. 또한 XSS 취약점은 CSRF 방어를 우회할 수 있으므로 토큰이나 출처 확인이 XSS 예방을 대신하지 않아요. 사이트는 CSRF 방어를 조합하는 동시에 XSS도 별도로 예방해야 해요."
+  ],
+  "terms": [
+    {
+      "surface": "CSRF",
+      "definition": "로그인 상태를 악용해 사용자가 원하지 않은 상태 변경을 일으키는 공격이에요."
+    },
+    {
+      "surface": "CSRF 토큰",
+      "definition": "상태 변경 요청에 담긴 값을 로그인 세션에 연결된 값과 대조해 요청을 확인하는 값이에요."
+    },
+    {
+      "surface": "Origin 검사",
+      "definition": "요청의 출처를 확인해 상태 변경 요청을 판단하는 방법이에요."
+    },
+    {
+      "surface": "SameSite",
+      "definition": "세션 쿠키의 다른 사이트 요청 전송을 제한하는 설정이에요."
+    },
+    {
+      "surface": "CORS",
+      "definition": "다른 출처의 웹페이지가 응답을 읽는 규칙을 다루는 설정이에요."
+    }
+  ],
+  "questions": [
+    {
+      "prompt": "CSRF가 악용하는 핵심 상황은 무엇인가요?",
+      "options": [
+        "로그인된 브라우저가 인증정보를 요청에 자동으로 붙이는 상황",
+        "로그아웃된 브라우저가 저장된 비밀번호를 요청에 자동으로 붙이는 상황",
+        "다른 출처의 페이지가 모든 응답을 자동으로 읽을 수 있는 상황",
+        "서버가 조회 요청을 상태 변경 요청으로 자동으로 바꾸는 상황"
+      ],
+      "correct_index": 0,
+      "explanation": "브라우저가 인증정보를 자동으로 보내면, 사이트는 요청이 사용자의 뜻에서 시작됐는지 확인해야 해요.",
+      "evidence": "브라우저는 로그인 쿠키 같은 인증정보를 요청에 자동으로 붙일 수 있어요."
+    },
+    {
+      "prompt": "민서의 사진 삭제 요청에서 서버가 삭제를 거부해야 하는 경우는 무엇인가요?",
+      "options": [
+        "요청에 사진 앨범이 3개라고 적힌 경우",
+        "요청 값이 없거나 세션에 연결된 값과 일치하지 않는 경우",
+        "민서가 로그인한 상태에서 삭제 요청을 보낸 경우",
+        "요청이 POST 같은 방식으로 전달된 경우"
+      ],
+      "correct_index": 1,
+      "explanation": "요청 값이 없거나 로그인 세션에 연결된 값과 일치하지 않으면 삭제를 거부해요.",
+      "evidence": "값이 없거나 일치하지 않으면 삭제를 거부해요."
+    },
+    {
+      "prompt": "상태 변경 요청을 만드는 방법으로 본문에 맞는 것은 무엇인가요?",
+      "options": [
+        "GET으로 변경하고 쿠키 설정만 적용해요.",
+        "조회 요청과 상태 변경 요청을 모두 GET으로 처리해요.",
+        "POST 같은 요청을 쓰고 GET은 조회에만 사용해요.",
+        "GET으로 변경하고 토큰 검사는 생략해요."
+      ],
+      "correct_index": 2,
+      "explanation": "본문은 상태 변경은 POST 같은 요청으로 처리하고 GET은 조회에만 쓰라고 설명해요.",
+      "evidence": "상태 변경은 POST 같은 요청으로 처리하고 GET은 조회에만 써요."
+    },
+    {
+      "prompt": "CSRF 방어에 관한 올바른 설명은 무엇인가요?",
+      "options": [
+        "CORS 설정만 적용하면 모든 CSRF 요청을 막을 수 있어요.",
+        "SameSite 설정 하나면 모든 상황에서 추가 검사가 필요 없어요.",
+        "CSRF 토큰을 쓰면 XSS 취약점은 예방할 필요가 없어요.",
+        "CSRF 방어를 조합하면서 XSS 취약점도 별도로 예방해야 해요."
+      ],
+      "correct_index": 3,
+      "explanation": "CORS나 쿠키 설정 하나로 모든 CSRF가 막히지는 않으며, XSS는 CSRF 방어를 우회할 수 있어 별도로 예방해야 해요.",
+      "evidence": "사이트는 CSRF 방어를 조합하는 동시에 XSS도 별도로 예방해야 해요."
+    }
+  ],
+  "referenceLinks": [
+    {
+      "title": "Cross-Site Request Forgery Prevention - OWASP Cheat Sheet Series",
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html",
+      "checkedAt": "2026-10-22T09:41:32.298Z"
+    }
+  ],
+  "revision": 1,
+  "author": "artice cream",
+  "disclosure": "AI의 도움으로 구성·집필하고 사실 근거와 문항을 점검한 기초 콘텐츠입니다.",
+  "generatedAt": "2026-10-22T16:34:54.752Z",
+  "model": "pickle-general",
+  "usage": {
+    "input": 29559,
+    "output": 7964,
+    "cacheWrite": 0,
+    "cacheRead": 0,
+    "calls": 5,
+    "retries": 0
+  },
+  "review": {
+    "status": "editorial_checked",
+    "issues": [],
+    "answers": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "sourceSha256": "f12805c19f327704d021d4dcbcd7bfb5783cda4833afe7854d891836cbaa1b1d",
+    "editorialNote": "오해를 고르라는 복수 정답 문항을 올바른 설명 하나를 고르는 문항으로 교체. 모든 보기와 본문 근거 확인.",
+    "checkedAt": "2026-10-22T16:45:39.238Z"
+  }
+}
