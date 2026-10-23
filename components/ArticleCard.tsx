@@ -7,7 +7,7 @@ import { quizHref, readHref } from "@/lib/routes";
 
 type Props = {
   pick: TodayPick;
-  /** false면 카드는 보이되 열리지 않는다 — 오늘 분량을 다 썼다는 뜻. */
+  /** 새 글을 열 수 있는지. 이미 연 글은 남은 횟수와 관계없이 이어 읽는다. */
   unlocked: boolean;
 };
 
@@ -54,6 +54,7 @@ export function ArticleCard({ pick, unlocked }: Props) {
           </span>
         )}
         {pick.isOriginal && pick.progressStatus === "saved" && <span className="text-emerald-700">쌓은 기초 · 복습 가능</span>}
+        {pick.progressStatus === "started" && <span className="rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-900">읽는 중 · 이어 읽기</span>}
       </div>
 
       <h3 className="mt-2 text-base font-semibold leading-snug text-stone-900">
@@ -76,7 +77,7 @@ export function ArticleCard({ pick, unlocked }: Props) {
     ? quizHref(pick.variantId)
     : readHref(pick.variantId);
 
-  if (!unlocked && !pick.completedNotSaved && !(pick.isOriginal && pick.progressStatus)) {
+  if (!unlocked && !pick.completedNotSaved && !pick.progressStatus) {
     return (
       <div className="rounded-2xl border border-stone-200 bg-stone-50 p-4 opacity-70">
         {body}

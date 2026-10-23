@@ -9,6 +9,7 @@ import { apiJson } from "@/lib/client-api";
 import { PROMOTE_AT, levelLabel } from "@/lib/level";
 import { prepareScoopSound } from "@/lib/scoop-sound";
 import type { QuizReviewItem } from "@/lib/supabase/types";
+import { useReadingProgress } from "@/components/ReadingExitNotice";
 
 /** /api/quiz/grade의 응답 그대로. Quiz가 파싱 없이 넘기므로 모양이 일치해야 한다. */
 export type GradeResult = {
@@ -50,6 +51,7 @@ export function Result({
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  useReadingProgress(false);
 
   async function save() {
     prepareScoopSound();

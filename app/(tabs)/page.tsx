@@ -100,7 +100,7 @@ export default function TodayPage() {
           <span className="ac-mark">오늘의 아티클</span>
         </h1>
         <p className="text-xs text-stone-500">
-          {quota.canRead ? `오늘 ${quota.remaining}편 남음` : "오늘 분량을 다 읽었어요"}
+          {quota.canRead ? `오늘 ${quota.remaining}편 남음` : "새 글 열람 횟수를 다 썼어요"}
         </p>
       </header>
 
@@ -141,7 +141,7 @@ export default function TodayPage() {
           {quota.canUnlockWithAd && <AdUnlockButton onUnlocked={load} />}
           <p className="text-center">
             <Link href="/cone" className="text-sm font-medium text-stone-600 underline">
-              오늘 읽은 걸 콘에서 볼 수 있어요 →
+              쌓은 스쿱을 콘에서 볼 수 있어요 →
             </Link>
           </p>
         </div>

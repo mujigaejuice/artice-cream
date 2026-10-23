@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 
 import { NativeAuthBridge } from "@/components/NativeAuthBridge";
 import { BackgroundMusic } from "@/components/BackgroundMusic";
+import { ReadingExitNotice } from "@/components/ReadingExitNotice";
 
 import "./globals.css";
 
@@ -29,7 +30,7 @@ export default function RootLayout({
         <NativeAuthBridge />
         <div className="mx-auto w-full max-w-lg px-4 pb-16 pt-6">
           <BackgroundMusic />
-          {children}
+          <ReadingExitNotice>{children}</ReadingExitNotice>
         </div>
       </body>
     </html>

@@ -7,6 +7,7 @@ import { Result, type GradeResult } from "@/components/Result";
 import { apiJson } from "@/lib/client-api";
 import { readHref } from "@/lib/routes";
 import type { PublicQuizQuestion } from "@/lib/supabase/types";
+import { useReadingProgress } from "@/components/ReadingExitNotice";
 
 type Props = {
   variantId: number;
@@ -23,6 +24,7 @@ export function Quiz({ variantId, articleTitle, questions, isOriginal, isPractic
   const [result, setResult] = useState<GradeResult | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  useReadingProgress(!isPractice && result === null);
 
   if (result) {
     return <Result result={result} articleTitle={articleTitle} onRetry={isOriginal ? () => {

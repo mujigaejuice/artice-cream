@@ -181,8 +181,7 @@ export function selectedDomains(
  *
  * 퀴즈까지 풀었지만 저장하지 않은 글이 있으면 그 글이 그 도메인의 카드다
  * (`completedNotSaved: true`) — 쿼터를 다시 안 쓰고 결과 화면으로 바로 간다.
- * 없으면 아직 손대지 않은(completed·saved 어느 쪽도 아닌) 아티클 중 현재 수준의
- * 것을 하나 고른다.
+ * 다음으로 읽는 중인 글을 이어 보여준다. 둘 다 없으면 현재 수준의 새 글을 고른다.
  *
  * "안 읽음"을 SQL에서 거르지 않고 메모리에서 판정한다. 집합이 작고(하루 ~1편),
  * 계속 커지는 id 목록에 대한 NOT IN은 조용히 썩는 종류의 쿼리라서.
@@ -195,18 +194,20 @@ export async function getTodayPicks(
 ): Promise<TodayPick[]> {
   const sources = await getSourceRights(supabase);
   if (sources.size === 0) return [];
-  const { data: progressRows } = await supabase
+  const { data: progressRows, error: progressError } = await supabase
     .from("user_article_progress")
     .select(
       `article_id, variant_id, status, article_variants(title, summary, level, reading_minutes, articles(id, domain_id, source_url, image_url, published_at, ${ARTICLE_RIGHTS_COLUMNS}))`,
     )
     .eq("user_id", userId)
-    .in("status", ["completed", "saved"]);
+    .in("status", ["started", "completed", "saved"])
+    .order("started_at", { ascending: false });
+  if (progressError) throw new Error("읽던 아티클을 불러오지 못했어요.");
 
   type ProgressJoin = {
     article_id: number;
     variant_id: number;
-    status: "completed" | "saved";
+    status: "started" | "completed" | "saved";
     article_variants: {
       title: string;
       summary: string | null;
@@ -224,17 +225,19 @@ export async function getTodayPicks(
 
   const interacted = new Set<number>(); // completed든 saved든 — 새 카드로 다시 고르지 않는다
   const unsavedByDomain = new Map<number, TodayPick>(); // completed인데 저장 안 한 것만
+  const startedByDomain = new Map<number, TodayPick>();
 
   for (const row of (progressRows ?? []) as unknown as ProgressJoin[]) {
-    interacted.add(row.article_id);
+    if (row.status !== "started") interacted.add(row.article_id);
     const variant = row.article_variants;
     const article = variant?.articles;
-    if (!variant || !article || article.content_kind === "original" || row.status !== "completed" || !articleAllows(article, sources, "publish")) continue;
+    if (!variant || !article || article.content_kind === "original" || row.status === "saved" || !articleAllows(article, sources, "publish")) continue;
 
     const domain = domains.find((d) => d.id === article.domain_id);
-    if (!domain || unsavedByDomain.has(domain.id)) continue;
+    const resumable = row.status === "completed" ? unsavedByDomain : startedByDomain;
+    if (!domain || resumable.has(domain.id)) continue;
 
-    unsavedByDomain.set(domain.id, {
+    resumable.set(domain.id, {
       variantId: row.variant_id,
       articleId: row.article_id,
       domain,
@@ -245,14 +248,15 @@ export async function getTodayPicks(
       sourceName: hostLabel(article.source_url),
       imageUrl: null,
       publishedAt: article.published_at,
-      completedNotSaved: true,
+      progressStatus: row.status,
+      completedNotSaved: row.status === "completed",
     });
   }
 
   const picks: TodayPick[] = [];
 
   for (const domain of domains) {
-    const unsaved = unsavedByDomain.get(domain.id);
+    const unsaved = unsavedByDomain.get(domain.id) ?? startedByDomain.get(domain.id);
     if (unsaved) {
       picks.push(unsaved);
       continue;

@@ -21,6 +21,7 @@ async function main() {
   let progress: { article_id: number; variant_id: number; status: string; article_variants: ReturnType<typeof variant> }[] = [];
   let offsets: number[] = [];
   let failedOffset = -1;
+  let progressFailed = false;
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async (input, init) => {
     const url = new URL(input instanceof Request ? input.url : String(input));
@@ -30,6 +31,9 @@ async function main() {
     if (table === "content_source_rights") return Response.json([source]);
     if (table === "user_article_progress") {
       assert.equal(url.searchParams.get("user_id"), `eq.${userId}`);
+      assert.equal(url.searchParams.get("status"), "in.(started,completed,saved)");
+      assert.equal(url.searchParams.get("order"), "started_at.desc");
+      if (progressFailed) return Response.json({ message: "progress unavailable" }, { status: 400 });
       return Response.json(progress);
     }
     assert.equal(table, "article_variants");
@@ -70,9 +74,25 @@ async function main() {
     const completed = (await picks())[0];
     assert.equal(completed.articleId, 25); assert.equal(completed.completedNotSaved, true);
     assert.deepEqual(offsets, [], "completed unsaved article keeps priority without scanning");
+    offsets = [];
+    progress = [{ article_id: 25, variant_id: 125, status: "started", article_variants: { ...variant(25), level: 1 } }];
+    const started = (await picks())[0];
+    assert.equal(started.articleId, 25, "resume the opened article even when newer ones are available");
+    assert.equal(started.variantId, 125);
+    assert.equal(started.level, 1, "resume the actual opened variant rather than today's level");
+    assert.equal(started.progressStatus, "started");
+    assert.equal(started.completedNotSaved, false);
+    assert.deepEqual(offsets, []);
+    progress.push({ article_id: 24, variant_id: 124, status: "completed", article_variants: variant(24) });
+    assert.equal((await picks())[0].articleId, 24, "completed unsaved work keeps existing priority");
+    progress = [{ article_id: 25, variant_id: 125, status: "started", article_variants: variant(25, false) }];
+    assert.equal((await picks())[0].articleId, 13, "withdrawn started work cannot be resumed");
+    progressFailed = true;
+    await assert.rejects(picks(), /읽던 아티클/);
+    progressFailed = false;
     offsets = []; progress = []; articles = [variant(1)];
     assert.equal((await picks())[0].articleId, 1); assert.deepEqual(offsets, [0]);
-    console.log("Feed pagination: older unread articles, exhausted queue, withdrawn content, read failures, level/domain scope, stable ordering and completed priority passed.");
+    console.log("Feed pagination: older unread articles, started-article resume, actual variant, rights checks, progress failures and completed priority passed.");
   } finally { globalThis.fetch = originalFetch; }
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });

@@ -7,6 +7,7 @@ import { coreColor } from "@/lib/color";
 import { levelShort } from "@/lib/level";
 import { quizHref } from "@/lib/routes";
 import type { Attribution, ReferenceLink } from "@/lib/content-rights";
+import { useReadingProgress } from "@/components/ReadingExitNotice";
 
 type GlossaryMap = Record<string, { term: string; definition: string }>;
 
@@ -55,6 +56,7 @@ function toggleInlineDefinition(mark: HTMLElement, term: string, definition: str
 
 export function Reader(props: ReaderProps) {
   const bodyRef = useRef<HTMLDivElement>(null);
+  useReadingProgress(props.progressStatus === "started");
 
   // 본문은 서버 HTML이라 붙일 React 노드가 없다. 위임 리스너 하나로 처리한다.
   useEffect(() => {
