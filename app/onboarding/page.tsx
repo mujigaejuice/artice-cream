@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { OnboardingFlow } from "@/components/OnboardingFlow";
 import { PageError, PageLoading } from "@/components/ScreenState";
@@ -26,11 +27,14 @@ type Data = {
 };
 
 export default function OnboardingPage() {
+  const router = useRouter();
   const query = useQueryParams();
   const [data, setData] = useState<Data | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const request = useRef(0);
 
   const load = useCallback(() => {
+    const current = ++request.current;
     setError(null);
     setData(null);
     createClient().auth.getSession()
@@ -41,14 +45,25 @@ export default function OnboardingPage() {
         }
         return apiJson<Data>("/api/onboarding");
       })
-      .then(setData)
-      .catch((e: Error) => setError(e.message));
+      .then((value) => { if (current === request.current) setData(value); })
+      .catch((e: Error) => { if (current === request.current) setError(e.message); });
   }, []);
 
-  useEffect(load, [load]);
+  useEffect(() => {
+    load();
+    return () => { request.current++; };
+  }, [load]);
+
+  // Login and intentional settings edits share this page. Returning readers
+  // should not have to submit their existing preferences after every email OTP.
+  const goHome = query !== null && query.get("mode") !== "edit" &&
+    data?.isSignedIn === true && Object.keys(data.levels).length > 0;
+  useEffect(() => {
+    if (goHome) router.replace("/");
+  }, [goHome, router]);
 
   if (error) return <PageError message={error} onRetry={load} />;
-  if (!data || !query) return <PageLoading label="준비하고 있어요" />;
+  if (!data || !query || goHome) return <PageLoading label="준비하고 있어요" />;
 
   return (
     <OnboardingFlow

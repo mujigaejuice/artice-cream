@@ -127,7 +127,7 @@ export default function AccountPage() {
       </section>
       <footer className="mt-8 flex flex-wrap gap-x-5 border-t border-stone-200 pt-4 text-stone-600">
         <Link href="/privacy/" className="ac-intro-link">개인정보처리방침</Link>
-        <Link href="/onboarding/" className="ac-intro-link">관심 분야·수준 설정</Link>
+        <Link href="/onboarding/?mode=edit" className="ac-intro-link">관심 분야·수준 설정</Link>
       </footer>
     </main>
   );

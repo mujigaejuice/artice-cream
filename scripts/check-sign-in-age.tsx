@@ -18,6 +18,9 @@ async function main() {
   let verifies = 0;
   let onboardingLoads = 0;
   let navigations = 0;
+  const redirects: string[] = [];
+  let existingLevels: Record<string, number> = {};
+  let onboardingStatus = 200;
   let expectedCode = "012345";
   const receivedEmails: string[] = [];
   globalThis.fetch = async (input, init) => {
@@ -25,7 +28,8 @@ async function main() {
     if (url.origin === "https://app.invalid" && url.pathname === "/api/onboarding") {
       onboardingLoads++;
       assert.equal(new Headers(init?.headers).get("authorization"), "Bearer test-access-token");
-      return Response.json({ domains: [{ id: 1, slug: "cloud", name_ko: "클라우드" }], levels: {}, domainTerms: {}, isSignedIn: true });
+      return onboardingStatus !== 200 ? Response.json({ error: "설정을 불러오지 못했어요" }, { status: onboardingStatus }) :
+        Response.json({ domains: [{ id: 1, slug: "cloud", name_ko: "클라우드" }], levels: existingLevels, domainTerms: {}, isSignedIn: true });
     }
     assert.equal(url.origin, "https://age-test.invalid");
     if (url.pathname === "/auth/v1/verify") {
@@ -52,7 +56,7 @@ async function main() {
   const { AppRouterContext } = await import("next/dist/shared/lib/app-router-context.shared-runtime");
   const { OnboardingFlow } = await import("../components/OnboardingFlow");
   const { createClient } = await import("../lib/supabase/client");
-  const router = { back() {}, forward() {}, refresh() { navigations++; }, hmrRefresh() {}, push() { navigations++; }, replace() { navigations++; }, prefetch() {}, bfcacheId: "test" };
+  const router = { back() {}, forward() {}, refresh() { navigations++; }, hmrRefresh() {}, push() { navigations++; }, replace(href: string) { navigations++; redirects.push(href); }, prefetch() {}, bfcacheId: "test" };
   const container = dom.window.document.getElementById("root")!;
   const root = createRoot(container);
   try {
@@ -261,7 +265,38 @@ async function main() {
     assert.ok((await auth.getSession()).data.session);
     assert.equal(container.querySelector<HTMLInputElement>('input[type="checkbox"]')?.checked, true, "new domains initialize after login");
     assert.equal(navigations, 0, "no callback navigation or page refresh required");
+    // Existing users take the same real OTP path, but skip completed onboarding.
+    existingLevels = { "1": 3 };
+    dom.window.localStorage.removeItem("artice-auth");
+    dom.window.history.replaceState({}, "", "/onboarding/?step=login");
+    const renderPage = async (key: string) => {
+      await act(async () => { root.render(createElement(AppRouterContext.Provider, { value: router }, createElement(OnboardingPage, { key }))); });
+    };
+    await renderPage("returning-login");
+    await act(async () => { container.querySelector<HTMLInputElement>('input[type="checkbox"]')!.click(); });
+    await fill('input[type="email"]', expectedEmail);
+    await act(async () => { button("인증번호 받기").click(); });
+    await finishLogin();
+    await fill(codeSelector, expectedCode);
+    await act(async () => { button("인증번호 확인하고 로그인").click(); });
+    for (let attempt = 0; attempt < 100 && redirects.length === 0; attempt++) {
+      await act(async () => { await new Promise((resolve) => setTimeout(resolve, 5)); });
+    }
+    assert.deepEqual(redirects, ["/"], "existing user goes home after OTP without saving preferences again");
+    assert.doesNotMatch(container.textContent!, /어떤 뉴스를/);
+    await renderPage("signed-in-return");
+    assert.deepEqual(redirects, ["/", "/"], "already signed-in users also skip onboarding");
+    dom.window.history.replaceState({}, "", "/onboarding/?mode=edit");
+    await renderPage("edit-settings");
+    assert.match(title(), /어떤 뉴스를/, "account settings remain explicitly editable");
+    assert.equal(redirects.length, 2);
+    dom.window.history.replaceState({}, "", "/onboarding/");
+    onboardingStatus = 503;
+    await renderPage("failed-settings");
+    assert.match(container.textContent!, /불러오지 못했어요/);
+    assert.equal(redirects.length, 2, "failed settings lookup never claims onboarding is complete");
     console.log("Tutorial + email OTP: age gate, resend, rate limits, invalid/expired codes, duplicate clicks, recovery and same-page login passed.");
+    console.log("Returning login: existing OTP and signed-in entry skip onboarding; new users, explicit settings edits and lookup failures remain correct.");
   } finally {
     await act(async () => { root.unmount(); });
     await createClient().auth.stopAutoRefresh();
