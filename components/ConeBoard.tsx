@@ -220,7 +220,7 @@ export function ConeBoard({
           ))}
         </ul>
         <p className="mt-2 text-xs text-stone-500">
-          같은 분야도 완료한 날짜에 따라 색이 조금씩 달라져요.
+          같은 분야도 기사마다 밝기와 선명도가 조금씩 달라져요.
         </p>
       </section>
     </div>

@@ -53,7 +53,7 @@ import { useScoopArrival } from "@/lib/use-scoop-arrival";
  * 초록, 체리는 진한 빨강으로 그려져 있다. 하이라이트(highlightColor)와 물결
  * 자국(markColor)도 같은 방식으로 채움색에서 파생한다.
  *
- * 색은 scoopShade(도메인 슬러그, 완료 날짜)로 렌더 시점에 계산한다. 순수 함수라
+ * 색은 scoopShade(도메인 슬러그, 완료 날짜, 기사 ID)로 렌더 시점에 계산한다. 순수 함수라
  * DB에 색을 저장할 필요가 없고, 서버가 같은 값을 계산해도 결과가 일치한다.
  *
  * 스쿱은 circle의 cy가 아니라 바깥 g의 transform으로 배치한다. 속성은 CSS
@@ -156,7 +156,7 @@ export function ScoopCone({ scoops, selectedId, justAddedId, onSelect, onArrival
         const x = isSel ? DETACH_CX : CX;
         const scale = isSel ? DETACH_SCALE : 1;
 
-        const base = scoopShade(s.domain, s.date);
+        const base = scoopShade(s.domain, s.date, s.articleId);
         const fill = hslStr(base);
         const ink = hslStr(outlineColor(base));
         const glow = hslStr(highlightColor(base));

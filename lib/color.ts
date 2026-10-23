@@ -2,7 +2,7 @@
  * 스쿱 플레이버 색. scoop-cone.jsx 프로토타입에서 그대로 추출했다.
  *
  * 서버와 클라이언트가 같은 색을 계산해야 하므로 순수 함수로 둔다(plan §1).
- * 입력이 (도메인 슬러그, 날짜)뿐이라 DB에 색을 저장할 필요가 없다 —
+ * 입력이 (도메인 슬러그, 완료 날짜, 기사 ID)라 DB에 색을 저장할 필요가 없다 —
  * user_article_progress에 색 컬럼이 없는 이유.
  *
  * 날짜 문자열('YYYY-MM-DD')에서 직접 계산한다(정책.md §10) — 로컬 `new Date()`
@@ -111,13 +111,23 @@ export function coreColor(domainKey: string): string {
   return hslc(c.h, c.s, c.l);
 }
 
-/** 도메인 코어 컬러에 '완료한 날짜'로 결정되는 소폭 오프셋을 더한다(결정론적). */
-export function scoopShade(domainKey: string, dateStr: string): Hsl {
+/** 날짜로 색상 계열을 살짝 조정하고, 기사 ID로 채도·명도를 정한다. */
+export function scoopShade(domainKey: string, dateStr: string, articleId: number): Hsl {
   const c = DOMAIN_FLAVORS[domainKey] ?? FALLBACK;
   const k = dayIndex(dateStr);
   const h = c.h + ((k % 9) - 4) * 1.7; // ≈ ±7°
-  const s = clamp(c.s + (((k * 5) % 9) - 4) * 1.6, 30, 92); // ≈ ±6
-  const l = clamp(c.l + (((k * 3) % 11) - 5) * 1.5, 44, 90); // ≈ ±8
+  // Three lightness bands separate consecutive articles. A stable fraction
+  // varies tones within each band without depending on stack order or user ID.
+  const fraction = (articleId * 0.618033988749895) % 1;
+  const tone = ((articleId % 3) + 0.15 + fraction * 0.7) / 3;
+  // Interpolate inside the limits instead of clipping the final color: pale
+  // flavors such as vanilla must retain variation instead of all hitting 90%.
+  const sMin = clamp(c.s - 14, 30, 92);
+  const sMax = clamp(c.s + 14, 30, 92);
+  const lMin = clamp(c.l - 12, 44, 90);
+  const lMax = clamp(c.l + 10, 44, 90);
+  const s = round1(sMin + (sMax - sMin) * fraction);
+  const l = round1(lMin + (lMax - lMin) * tone);
   return { h, s, l };
 }
 

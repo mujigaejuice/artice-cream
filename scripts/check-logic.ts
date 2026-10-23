@@ -23,7 +23,7 @@ import {
   slotRange,
 } from "../lib/cone";
 import { CATEGORY_SLUGS } from "../lib/ai/schemas";
-import { coreColor, hslStr, scoopShade } from "../lib/color";
+import { coreColor, DOMAIN_FLAVORS, hslStr, scoopShade } from "../lib/color";
 import { CATEGORY_COUNT } from "../lib/policy";
 import { applyQuiz } from "../lib/level";
 import type { User } from "@supabase/supabase-js";
@@ -39,13 +39,29 @@ import {
 } from "../lib/native";
 import { quizHref, readHref, safeNext } from "../lib/routes";
 
-// color: 같은 (슬러그, 날짜)는 같은 색, 날짜가 바뀌면 색도 바뀐다.
+// color: 같은 (슬러그, 날짜, 기사)는 같은 색. 같은 날의 기사도 톤이 다르다.
 // 모르는 슬러그는 FALLBACK 한 곳으로 모인다 (lib/color.ts).
-const a = scoopShade("cloud", "2026-09-15");
-const b = scoopShade("cloud", "2026-09-15");
-const c = scoopShade("cloud", "2026-09-16");
-assert.deepEqual(a, b, "same day must give same color");
+const a = scoopShade("cloud", "2026-09-15", 1842);
+const b = scoopShade("cloud", "2026-09-15", 1842);
+const c = scoopShade("cloud", "2026-09-16", 1842);
+assert.deepEqual(a, b, "same article and day must give same color");
 assert.notDeepEqual(a, c, "different day should shade differently");
+const sameDay = [1842, 1906, 1907].map(id => scoopShade("cloud", "2026-10-24", id));
+assert.equal(new Set(sameDay.map(color => color.h)).size, 1, "articles retain their domain hue");
+assert.equal(new Set(sameDay.map(color => color.s)).size, 3);
+assert.equal(new Set(sameDay.map(color => color.l)).size, 3);
+for (let i = 1; i < sameDay.length; i++) {
+  assert.ok(Math.abs(sameDay[i].l - sameDay[i - 1].l) >= 4, "reported cloud articles have visibly separated lightness");
+}
+for (const domain of [...Object.keys(DOMAIN_FLAVORS), "unknown"]) {
+  for (let id = 1; id <= 300; id++) {
+    const shade = scoopShade(domain, "2026-10-24", id);
+    assert.ok(shade.s >= 30 && shade.s <= 92, "saturation stays in palette limits");
+    assert.ok(shade.l >= 44 && shade.l <= 90, "lightness stays in palette limits");
+  }
+  assert.equal(new Set([1917, 1918, 1919].map(id => scoopShade(domain, "2026-10-24", id).l)).size, 3,
+    "even pale flavors retain all three lightness bands");
+}
 assert.match(hslStr(a), /^hsl\([\d.-]+, [\d.]+%, [\d.]+%\)$/, `bad hsl: ${hslStr(a)}`);
 // 특정 색값을 박지 않는다 — 테마가 생기면 팔레트가 바뀐다(확장.md §2-7).
 // 대신 형식과 "아는 슬러그는 폴백과 다르다"는 불변식만 본다.

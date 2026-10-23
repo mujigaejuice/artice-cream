@@ -107,6 +107,25 @@ async function main() {
     IS_REACT_ACT_ENVIRONMENT: true, BroadcastChannel: undefined })) {
     Object.defineProperty(globalThis, key, { configurable: true, value });
   }
+  const { ScoopCone } = await import("../components/ScoopCone");
+  const cloudScoops: Scoop[] = [1842, 1906, 1907].map((articleId, i) => ({
+    ...october!.scoops[1], id: i + 1, articleId, domain: "cloud", domainLabel: "클라우드",
+    date: "2026-10-24", title: `Article ${articleId}`,
+  }));
+  const colors = (scoops: Scoop[], selectedId?: number) => {
+    const svg = JSDOM.fragment(renderToStaticMarkup(createElement(ScoopCone, { scoops, selectedId })));
+    return new Map([...svg.querySelectorAll('.ac-scoop[role="button"]')].map(scoop =>
+      [scoop.getAttribute("aria-label"), scoop.querySelector("path")!.getAttribute("fill")]));
+  };
+  const initialColors = colors(cloudScoops);
+  assert.equal(new Set(initialColors.values()).size, 3, "same-day cloud scoops render different article tones");
+  const changedColors = colors([
+    ...cloudScoops.toReversed().map(scoop => ({ ...scoop, id: scoop.id + 100, variantId: 999 })),
+    { ...cloudScoops[0], id: 104, articleId: 1918, title: "New article" },
+  ], 101);
+  for (const [label, fill] of initialColors) {
+    assert.equal(changedColors.get(label), fill, "colors survive reordering, selection, new scoops and variant/progress ID changes");
+  }
   dom.window.HTMLElement.prototype.scrollIntoView = () => {};
   dom.window.localStorage.setItem("artice-auth", JSON.stringify({ access_token: "test-token", refresh_token: "test-refresh", token_type: "bearer",
     expires_at: Math.floor(Date.now() / 1000) + 3600, user: { id: uid, is_anonymous: false } }));
