@@ -29,7 +29,7 @@ const existingSources: Source[] = [
   { id: "aws-news", url: "https://aws.amazon.com/blogs/aws/feed/", lang: "en", kind: "news" },
   { id: "gcp-blog", url: "https://cloudblog.withgoogle.com/rss/", lang: "en", kind: "news" },
   { id: "cloudflare", url: "https://blog.cloudflare.com/rss/", lang: "en", kind: "blog" },
-  { id: "kubernetes", url: "https://kubernetes.io/feed.xml", lang: "en", kind: "blog" },
+  { id: "kubernetes", url: "https://kubernetes.io/feed.xml", lang: "en", kind: "blog", archive: { url: "https://kubernetes.io/en/sitemap.xml", match: "https://kubernetes.io/blog/20" } },
   { id: "cncf", url: "https://www.cncf.io/feed/", lang: "en", kind: "blog" },
   { id: "thenewstack", url: "https://thenewstack.io/feed/", lang: "en", kind: "news" },
   { id: "infoq", url: "https://feed.infoq.com/", lang: "en", kind: "news" },
@@ -107,7 +107,7 @@ const existingSources: Source[] = [
   // 데이터
   { id: "databricks", url: "https://www.databricks.com/feed", lang: "en", kind: "blog" },
   { id: "towardsdatascience", url: "https://towardsdatascience.com/feed/", lang: "en", kind: "blog" },
-  { id: "duckdb", url: "https://duckdb.org/feed.xml", lang: "en", kind: "blog" },
+  { id: "duckdb", url: "https://duckdb.org/feed.xml", lang: "en", kind: "blog", archive: { url: "https://duckdb.org/sitemap.xml", match: "https://duckdb.org/20" } },
   { id: "spotify-eng", url: "https://engineering.atspotify.com/feed/", lang: "en", kind: "blog" },
   { id: "devsisters", url: "https://tech.devsisters.com/rss.xml", lang: "ko", kind: "blog" },
 ];

@@ -28,7 +28,7 @@ export interface NewsSource {
   fetchLatest(): Promise<NewsItem[]>;
   /** 아카이브가 있는가. 없는 소스에 `fetchArchive`를 부르면 빈 배열이다. */
   readonly hasArchive: boolean;
-  /** 지난 글(아카이브가 있는 소스만). 호출자가 그중 일부를 무작위로 고른다. */
+  /** 지난 글(아카이브가 있는 소스만). 호출자가 DB 중복을 제외한 뒤 수집량을 제한한다. */
   fetchArchive?(): Promise<NewsItem[]>;
 }
 
@@ -76,12 +76,13 @@ export function parseFeed(xmlText: string): FeedEntry[] {
 
   const urls = asArray<Record<string, unknown>>(doc?.urlset?.url);
   if (urls.length) {
-    return urls.map((u) => ({
-      title: titleFromUrl(str(u.loc)),
-      link: str(u.loc),
-      summary: "",
-      publishedAt: Date.parse(str(u.lastmod)) || 0,
-    }));
+    return urls.map((u) => {
+      const link = str(u.loc);
+      // A sitemap's lastmod is a revision date, not a dated blog post's publication date.
+      const date = link.match(/\/(\d{4})\/(\d{2})\/(\d{2})\//);
+      return { title: titleFromUrl(link), link, summary: "",
+        publishedAt: date ? Date.parse(`${date[1]}-${date[2]}-${date[3]}T00:00:00Z`) || 0 : Date.parse(str(u.lastmod)) || 0 };
+    });
   }
 
   const rss = asArray<Record<string, unknown>>(doc?.rss?.channel?.item);
@@ -170,12 +171,22 @@ export class FeedSource implements NewsSource {
   readonly lang: "ko" | "en";
   readonly kind: SourceKind;
   readonly hasArchive: boolean;
+  private readonly entries = new Map<string, Promise<FeedEntry[]>>();
 
   constructor(private readonly source: Source) {
     this.id = source.id;
     this.lang = source.lang;
     this.kind = source.kind;
     this.hasArchive = Boolean(source.archive);
+  }
+
+  private fetchEntriesOnce(url: string): Promise<FeedEntry[]> {
+    let pending = this.entries.get(url);
+    if (!pending) {
+      pending = fetchEntries(url);
+      this.entries.set(url, pending);
+    }
+    return pending;
   }
 
   private toItem(e: { title: string; link: string; summary: string; publishedAt: number }): NewsItem {
@@ -190,7 +201,7 @@ export class FeedSource implements NewsSource {
   }
 
   async fetchLatest(): Promise<NewsItem[]> {
-    const entries = (await fetchEntries(this.source.url)).sort(
+    const entries = (await this.fetchEntriesOnce(this.source.url)).toSorted(
       (a, b) => b.publishedAt - a.publishedAt,
     );
     const within = (days: number) => {
@@ -208,10 +219,11 @@ export class FeedSource implements NewsSource {
     const archive = this.source.archive;
     if (!archive) return [];
     const oldest = Date.UTC(ARCHIVE_MIN_YEAR, 0, 1);
-    const entries = await fetchEntries(archiveUrl(archive));
+    const entries = await this.fetchEntriesOnce(archiveUrl(archive));
     return entries
       .filter((e) => !archive.match || e.link.includes(archive.match))
       .filter((e) => e.publishedAt === 0 || e.publishedAt >= oldest)
+      .sort((a, b) => b.publishedAt - a.publishedAt)
       .map((e) => this.toItem(e));
   }
 }

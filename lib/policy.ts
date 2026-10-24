@@ -47,18 +47,23 @@ export const INGEST_DAILY_BUDGET_USD = Number(
  */
 export const CATEGORY_COUNT = 8;
 
+/** vercel.json schedules four collection/processing rounds per day. */
+export const INGEST_RUNS_PER_DAY = 4;
+export const COLLECT_CANDIDATES_PER_SOURCE = 20;
+export const AUTO_REVIEW_LIMIT = 128;
+
 /**
  * 한 분류의 가공 조각이 쓸 수 있는 예산.
  *
  * 인제스트를 분류별 cron으로 쪼개면서 조각마다 계측기가 따로 생겼다. 조각마다 일일
- * 예산을 통째로 주면 하루 예산이 여덟 배가 된다. 정책.md §12의 일일 예산을 분류 수로
- * 나눠 쓴다.
+ * 예산을 통째로 주면 실행 횟수만큼 배가 된다. 정책.md §12의 일일 예산을
+ * 분류 수와 하루 예약 실행 횟수로 나눠 쓴다. 수동 실행의 전역 예산은 아니다.
  */
-export const INGEST_BUDGET_PER_CATEGORY_USD = INGEST_DAILY_BUDGET_USD / CATEGORY_COUNT;
+export const INGEST_BUDGET_PER_CATEGORY_USD = INGEST_DAILY_BUDGET_USD / CATEGORY_COUNT / INGEST_RUNS_PER_DAY;
 
 /** 소스분류.md §3 분류마다 실제 가공할 기사 수. */
 export const ARTICLES_PER_CATEGORY = Number(
-  process.env.INGEST_ARTICLES_PER_DOMAIN ?? 1,
+  process.env.INGEST_ARTICLES_PER_DOMAIN ?? 4,
 );
 
 /** 소스분류.md §4 분류 콜 배치 크기. */

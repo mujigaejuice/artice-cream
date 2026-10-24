@@ -26,6 +26,7 @@ async function main() {
   globalThis.fetch = async (input, init) => {
     const url = new URL(input instanceof Request ? input.url : String(input));
     if (url.origin === "https://kubernetes.io") {
+      if (url.pathname === "/en/sitemap.xml") return new Response("<urlset/>");
       assert.equal(url.pathname, "/feed.xml"); feedCalls++;
       return new Response(`<rss><channel><item><title>New unreviewed fixture</title><link>https://kubernetes.io/blog/new-fixture/</link><description>PRIVATE_UNREVIEWED_SUMMARY</description><pubDate>${new Date().toUTCString()}</pubDate></item></channel></rss>`);
     }

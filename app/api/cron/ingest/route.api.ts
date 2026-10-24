@@ -13,7 +13,8 @@ import {
   URL_FILTER_CHUNK,
 } from "@/lib/news/ingest";
 import { feedSources, type NewsItem } from "@/lib/news/source";
-import { CLASSIFY_BATCH_SIZE } from "@/lib/policy";
+import { AUTO_REVIEW_LIMIT, CLASSIFY_BATCH_SIZE, COLLECT_CANDIDATES_PER_SOURCE } from "@/lib/policy";
+import { selectUnseenCandidates } from "@/lib/news/discovery";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { DomainRow } from "@/lib/supabase/types";
 import { articleAllows, getSourceRights, sourceAllows, type ArticleRights } from "@/lib/content-rights";
@@ -37,9 +38,6 @@ import { DOCUMENT_SOURCE_IDS, syncDocumentCandidates } from "@/lib/news/document
 export const maxDuration = 300; // Hobby 상한. lib/news/ingest.ts의 INGEST_MAX_SECONDS와 함께 움직인다.
 export const dynamic = "force-dynamic";
 
-/** 브로커·줄리아 에반스처럼 아카이브 전체가 피드 하나/사이트맵에 있는 소스는 여러 편을 뽑는다. */
-const WIDE_ARCHIVE_SOURCES = new Set(["brooker", "julia-evans"]);
-
 // A stalled provider must leave time to persist completed batches and return diagnostics.
 const CLASSIFY_TIMEOUT_MS = 60_000;
 const CLASSIFY_FINISH_RESERVE_SECONDS = 15;
@@ -57,16 +55,6 @@ type Candidate = { item: NewsItem; kind: SourceKind };
 
 /** 소스 한 곳이 이번 런에 무엇을 내놓았는지. "왜 이 분류가 비었나"는 여기서부터 본다. */
 type SourceReport = { id: string; latest: number; archive: number; error?: string };
-
-function pickRandom<T>(arr: T[], n: number): T[] {
-  if (arr.length <= n) return arr;
-  const copy = [...arr];
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [copy[i], copy[j]] = [copy[j], copy[i]];
-  }
-  return copy.slice(0, n);
-}
 
 export async function GET(request: NextRequest) {
   if (!authorizeCron(request)) {
@@ -123,8 +111,9 @@ export async function GET(request: NextRequest) {
     if (src.hasArchive) {
       try {
         const archived = await src.fetchArchive();
-        const n = WIDE_ARCHIVE_SOURCES.has(src.id) ? 10 : 1;
-        for (const item of pickRandom(archived, n)) {
+        // Apply the source cap only after DB deduplication. Sampling first can
+        // repeatedly select known URLs while unseen archive articles never enter the queue.
+        for (const item of archived) {
           items.push({ item, kind: src.kind });
           report.archive += 1;
         }
@@ -156,11 +145,14 @@ export async function GET(request: NextRequest) {
       .select("source_url")
       .in("source_url", part);
     // 여기서 조용히 넘어가면 이미 본 글을 다시 분류한다 — 돈이 새므로 남긴다.
-    if (lookupError) console.error("[ingest] 중복 조회 실패", lookupError);
+    if (lookupError) {
+      console.error("[ingest] 중복 조회 실패", lookupError);
+      return NextResponse.json({ error: "discovery_lookup_failed" }, { status: 503 });
+    }
     for (const row of data ?? []) known.add(row.source_url as string);
   }
 
-  const fresh = deduped.filter(({ item }) => !known.has(item.url));
+  const fresh = selectUnseenCandidates(deduped, known, COLLECT_CANDIDATES_PER_SOURCE);
   // Store metadata first, then automatically verify source-specific license and attribution.
   // RSS descriptions never enter the LLM before article-level approval.
   for (const part of chunk(fresh, 200)) {
@@ -322,6 +314,8 @@ export async function GET(request: NextRequest) {
     afterDedupe: deduped.length,
     alreadyKnown: known.size,
     discovered: fresh.length,
+    discoveryLimitPerSource: COLLECT_CANDIDATES_PER_SOURCE,
+    reviewLimit: AUTO_REVIEW_LIMIT,
     awaitingRightsReview: awaitingReview.error ? null : awaitingReview.count,
     autoReview,
     documents,

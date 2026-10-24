@@ -87,6 +87,7 @@ async function main() {
     globalThis.fetch = async (input, init) => {
       const url = new URL(input instanceof Request ? input.url : String(input));
       if (url.origin === "https://kubernetes.io") {
+        if (url.pathname === "/en/sitemap.xml") return new Response("<urlset/>");
         if (url.pathname === "/feed.xml") return new Response(`<rss><channel><item><title>New RSS title</title><link>https://kubernetes.io/blog/item-2/</link><description>UNREVIEWED_RSS_DESCRIPTION</description><pubDate>${new Date().toUTCString()}</pubDate></item></channel></rss>`);
         pageCalls++;
         if (mode === "source-withdrawn") source.allow_process = false;

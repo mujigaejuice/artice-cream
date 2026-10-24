@@ -3,8 +3,8 @@ import { getSourceRights, sourceAllows, type ArticleRights, type SourceRights } 
 import { AUTO_REVIEW_SOURCES, AUTO_REVIEW_VERSION, createAutoReviewer, type AutoReviewResult, type ReviewArticle } from "./auto-review";
 import { mapPool, type Deadline } from "./ingest";
 import { DOCUMENT_SOURCE_IDS } from "./document-candidates";
+import { AUTO_REVIEW_LIMIT } from "../policy";
 
-const REVIEW_LIMIT = 32;
 const REVIEW_CONCURRENCY = 4;
 const REVIEW_TIMEOUT_MS = 20_000;
 const RETRY_HOURS = 12;
@@ -27,7 +27,7 @@ export async function reviewPendingArticles(db: SupabaseClient, rights: Map<stri
     .eq("status", "pending").eq("rights_status", "unreviewed").in("source", sources)
     .or(`rights_reviewed_at.is.null,rights_reviewed_at.lt.${retryBefore}`)
     .order("rights_reviewed_at", { ascending: true, nullsFirst: true })
-    .order("fetched_at", { ascending: false }).order("id", { ascending: false }).limit(REVIEW_LIMIT);
+    .order("fetched_at", { ascending: false }).order("id", { ascending: false }).limit(AUTO_REVIEW_LIMIT);
   if (error) throw new Error(`auto-review queue: ${error.message}`);
   summary.candidates = count ?? data?.length ?? 0;
   const review = createAutoReviewer();
