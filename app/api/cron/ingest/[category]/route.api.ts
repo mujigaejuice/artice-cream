@@ -120,6 +120,7 @@ export async function GET(request: NextRequest, { params }: Params) {
   const failures: Record<string, unknown>[] = [];
   const { processed, skippedSource, stoppedBy } = await processQueue(pending, {
     cap: ARTICLES_PER_CATEGORY,
+    maxPerSource: ARTICLES_PER_CATEGORY,
     concurrency: ARTICLE_CONCURRENCY,
     canStart: () => {
       if (estimateCost(meter) >= INGEST_BUDGET_PER_CATEGORY_USD) return "budget";

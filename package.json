@@ -30,7 +30,7 @@
     "test:scoop-arrival": "tsx scripts/check-scoop-arrival.tsx",
     "test:music": "tsx scripts/check-background-music.tsx && tsx scripts/check-background-music.tsx --native",
     "test:rights": "tsx scripts/check-content-rights.ts && tsx scripts/check-collect-rights.ts",
-    "test:ingest": "tsx scripts/check-ingest.ts && tsx scripts/check-ingest-schedule.ts && tsx scripts/check-classify-batch.ts",
+    "test:ingest": "tsx scripts/check-ingest.ts && tsx scripts/check-ingest-schedule.ts && tsx scripts/check-classify-batch.ts && tsx scripts/check-process-queue.ts",
     "test:auto-review": "tsx scripts/check-auto-review.ts",
     "test:documents": "tsx scripts/check-document-sources.ts && tsx scripts/check-document-cron.ts",
     "test:originals": "tsx scripts/check-originals.ts && tsx scripts/check-originals-ui.tsx",
