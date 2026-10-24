@@ -587,12 +587,17 @@ export async function classifyCandidates(
   context?: TraceContext,
 ): Promise<Classify["items"]> {
   if (candidates.length === 0) return [];
+  const completeBatch = ClassifySchema.refine(({ items }) =>
+    items.length === candidates.length && new Set(items.map(item => item.i)).size === candidates.length &&
+    items.every(item => item.i < candidates.length),
+  { message: `Return every input index from 0 to ${candidates.length - 1} exactly once.` });
   const result = await callJSON(
-    ClassifySchema,
+    completeBatch,
     CLASSIFY_SYSTEM,
     buildClassifyUser(candidates),
-    // 후보 20건 기준 여유 있게. 항목당 ~15토큰이면 20건에 400토큰 안팎이다.
-    Math.max(500, candidates.length * 40),
+    // The gateway consumed all 800 tokens twice for a 20-item batch, leaving
+    // invalid JSON. Allow formatting/reasoning overhead as well as the labels.
+    Math.max(2048, candidates.length * 160),
     0,
     meter,
     signal,
