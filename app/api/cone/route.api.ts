@@ -31,7 +31,7 @@ export async function GET(request: Request) {
       getScoopMonths(admin, user.id),
     ]);
 
-    return json(request, { status: "ok", domains, scoops, months });
+    return json(request, { status: "ok", userId: user.id, domains, scoops, months });
   } catch {
     return apiError(request, "저장한 학습 기록을 불러오지 못했어요.", 503);
   }

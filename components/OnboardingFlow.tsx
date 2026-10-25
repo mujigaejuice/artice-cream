@@ -7,10 +7,11 @@ import { EmailCodeForm } from "@/components/EmailCodeForm";
 import { TermCheck } from "@/components/TermCheck";
 import { WelcomeTutorial } from "@/components/WelcomeTutorial";
 import { coreColor } from "@/lib/color";
+import { apiJson } from "@/lib/client-api";
 import { authRedirectUrl, openExternal } from "@/lib/native";
 import { createClient } from "@/lib/supabase/client";
 import type { DomainRow } from "@/lib/supabase/types";
-import { levelFromTermCheck, type DomainTerms } from "@/lib/terms";
+import type { DomainTerms } from "@/lib/terms";
 
 type Props = {
   domains: DomainRow[];
@@ -34,8 +35,6 @@ export function OnboardingFlow({
   onSignedIn,
 }: Props) {
   const router = useRouter();
-  const supabase = createClient();
-
   const [selected, setSelected] = useState<Set<number>>(
     () =>
       new Set(
@@ -60,44 +59,22 @@ export function OnboardingFlow({
     });
   }
 
-  function levelFor(domainId: number): number {
-    if (initialLevels[String(domainId)] != null) return initialLevels[String(domainId)];
-    return levelFromTermCheck(checkedRare[domainId]?.size ?? 0);
-  }
-
   async function saveAndContinue() {
     setBusy(true);
     setError(null);
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      setError("세션이 없어요. 새로고침 해 주세요.");
-      setBusy(false);
-      return;
-    }
-
-    const rows = [...selected].map((domainId) => ({
-      user_id: user.id,
-      domain_id: domainId,
-      level: levelFor(domainId),
-      recent_scores: [],
-      updated_at: new Date().toISOString(),
-    }));
-
-    const { error } = await supabase
-      .from("user_domain_levels")
-      .upsert(rows, { onConflict: "user_id,domain_id" });
-
-    if (error) {
+    try {
+      await apiJson("/api/onboarding", {
+        method: "POST",
+        body: JSON.stringify({ selections: [...selected].map((domainId) => ({
+          domainId, rareChecked: checkedRare[domainId]?.size ?? 0,
+        })) }),
+      });
+      router.push("/");
+    } catch {
       setError("저장하지 못했어요. 다시 시도해 주세요.");
       setBusy(false);
-      return;
     }
-
-    router.push("/");
   }
 
   if (!isSignedIn) return (

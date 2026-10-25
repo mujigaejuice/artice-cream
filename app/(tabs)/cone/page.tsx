@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { ConeBoard } from "@/components/ConeBoard";
+import { CreditSummary } from "@/components/CreditSummary";
 import { PageError, PageLoading } from "@/components/ScreenState";
 import { apiJson } from "@/lib/client-api";
 import { dayKey, isMonthKey } from "@/lib/day";
@@ -21,7 +22,7 @@ import { useRefreshOnResume } from "@/lib/use-refresh-on-resume";
 
 type ConeData =
   | { status: "onboarding" }
-  | { status: "ok"; domains: DomainRow[]; scoops: Scoop[]; months: string[] };
+  | { status: "ok"; userId: string; domains: DomainRow[]; scoops: Scoop[]; months: string[] };
 
 export default function ConePage() {
   const router = useRouter();
@@ -107,6 +108,10 @@ export default function ConePage() {
         </h1>
         <p className="text-xs text-stone-500">스쿱 {scoops.length}개</p>
       </header>
+
+      <div className="mb-4">
+        <CreditSummary key={data.userId} userId={data.userId} compact />
+      </div>
 
       <label className="mb-3 flex items-center gap-2 text-sm text-stone-600">
         월 선택

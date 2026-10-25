@@ -18,21 +18,36 @@ async function main(){
   const questions=Array.from({length:4},(_,i)=>({id:i+10,variant_id:2,position:i+1,prompt:`문제${i}`,options:['가','나','다','라'],correct_index:i,explanation:'근거'}));
   let progress:any={id:3,user_id:uid,article_id:1,variant_id:2,status:'started',quiz_score:null,quiz_answers:null,completed_at:null,saved_at:null};
   const originalFetch=globalThis.fetch;let writes=0,casRace=false,auth=true;
+  const creditResult={status:'already_granted',newlyGranted:0,articleReward:{base:10,bonus:10,total:20},welcomeReward:100,balance:120,policyVersion:1};
   globalThis.fetch=async(input,init)=>{
     const url=new URL(input instanceof Request?input.url:String(input));assert.equal(url.origin,'https://originals.invalid');
     if(url.pathname==='/auth/v1/user')return Response.json(auth?{id:uid,is_anonymous:false}:{message:'no'}, {status:auth?200:401});
     const table=url.pathname.split('/').pop(),method=init?.method??'GET';
+    if(table==='grade_quiz_with_credits'){
+      const body=JSON.parse(String(init?.body));
+      assert.equal(body.p_user_id,uid);assert.equal(body.p_variant_id,2);
+      if(article.editorial_status==='withdrawn')return Response.json({error:'not found'});
+      const answers=body.p_answers as Record<string,number>;
+      if(Object.keys(answers).length!==4||questions.some(q=>!Number.isInteger(answers[q.id])||answers[q.id]<0||answers[q.id]>=4))return Response.json({error:'incomplete'});
+      if(!progress)return Response.json({error:'article not opened'});
+      if(casRace)progress={...progress,status:'saved',quiz_score:0.25,completed_at:past,saved_at:past};
+      const isReview=progress.status!=='started',correct=questions.filter(q=>answers[q.id]===q.correct_index).length;
+      if(!isReview){writes++;Object.assign(progress,{status:'completed',quiz_score:correct/4,quiz_answers:answers,completed_at:past});}
+      return Response.json({score:correct/4,correct,total:4,review:[],prevLevel:null,newLevel:null,dir:'유지',rollingAccuracy:null,
+        domain:'cloud',domainLabel:'클라우드',articleId:1,variantId:2,isOriginal:true,isReview,canSave:progress.status==='completed',sourceUrl:null,
+        credits:isReview?creditResult:{...creditResult,status:'granted',newlyGranted:120}});
+    }
+    if(table==='get_credit_result'){
+      const body=JSON.parse(String(init?.body));assert.deepEqual(body,{p_user_id:uid,p_article_id:1});
+      return Response.json(creditResult);
+    }
     if(table==='content_source_rights')return Response.json([source]);
     if(table==='articles')return Response.json(article);
     if(table==='article_variants')return Response.json(url.searchParams.has('level')?[variant]:variant);
     if(table==='quiz_questions')return Response.json(questions);
-    assert.equal(table,'user_article_progress','Original quizzes must never read/write proficiency, quota or rewards');
+    assert.equal(table,'user_article_progress','Original quizzes must not write proficiency or quota');
     assert.equal(url.searchParams.get('user_id'),`eq.${uid}`,'verified user ownership');
-    if(method==='GET')return Response.json(url.searchParams.has('article_id')||url.searchParams.has('id')?progress:progress?[progress]:[]);
-    assert.equal(method,'PATCH');writes++;
-    if(casRace){progress={...progress,status:'saved',quiz_score:0.25,completed_at:past,saved_at:past};return Response.json([]);}
-    if(url.searchParams.get('status')==='eq.started'&&progress.status!=='started')return Response.json([]);
-    Object.assign(progress,JSON.parse(String(init?.body)));return Response.json([{id:3}]);
+    assert.equal(method,'GET');return Response.json(url.searchParams.has('article_id')||url.searchParams.has('id')?progress:progress?[progress]:[]);
   };
   try{
     const {GET}=await import('../app/api/quiz/route.api');
@@ -44,7 +59,7 @@ async function main(){
     let response=await GET(request('/api/quiz?v=2'));let data=await response.json();
     assert.equal(data.mode,'quiz');assert.equal(data.isOriginal,true);assert.doesNotMatch(JSON.stringify(data),/correct_index|explanation/);
     response=await POST(request('/api/quiz/grade',{variantId:2,answers}));data=await response.json();
-    assert.equal(data.score,1);assert.equal(data.isReview,false);assert.equal(data.canSave,true);assert.equal(data.newLevel,null);assert.equal(progress.status,'completed');
+    assert.equal(data.score,1);assert.equal(data.isReview,false);assert.equal(data.canSave,true);assert.equal(data.newLevel,null);assert.equal(progress.status,'completed');assert.equal(data.credits.newlyGranted,120);
     const first=JSON.stringify(progress),firstWrites=writes;
     for(let i=0;i<3;i++){
       data=await (await GET(request('/api/quiz?v=2&practice=1'))).json();assert.equal(data.mode,'quiz');assert.equal(data.isPractice,true);
@@ -53,7 +68,7 @@ async function main(){
     }
     assert.equal(writes,firstWrites);
     progress.status='saved';progress.saved_at=past;const saved=JSON.stringify(progress);
-    data=await(await GET(request('/api/quiz?v=2'))).json();assert.equal(data.mode,'result');assert.equal(data.result.canSave,false);
+    data=await(await GET(request('/api/quiz?v=2'))).json();assert.equal(data.mode,'result');assert.equal(data.result.canSave,false);assert.equal(data.result.credits.newlyGranted,0);
     data=await(await GET(request('/api/quiz?v=2&practice=1'))).json();assert.equal(data.mode,'quiz');assert.doesNotMatch(JSON.stringify(data),/correct_index|explanation/);
     data=await(await POST(request('/api/quiz/grade',{variantId:2,answers}))).json();assert.equal(data.canSave,false);assert.equal(JSON.stringify(progress),saved);assert.equal(writes,firstWrites);
     const picks=await getOriginalPicks(createAdminClient(),uid,[{id:1,slug:'cloud',name_ko:'클라우드',name_en:null,rss_topic:null,active:true}]);

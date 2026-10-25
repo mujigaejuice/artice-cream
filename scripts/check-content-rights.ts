@@ -75,6 +75,23 @@ async function main() {
         ? { opened: true, variant: variant(), progress: { status: "saved", quiz_score: 1 } }
         : openResult);
     }
+    if (table === "grade_quiz_with_credits" || table === "save_article_progress") {
+      const body = JSON.parse(String(init?.body));
+      assert.equal(body.p_user_id, userId);
+      if (table === "grade_quiz_with_credits") assert.equal(body.p_variant_id, 2);
+      else assert.equal(body.p_article_id, 1);
+      if (articleReadFails || registryMode !== "valid" || !articleAllows(current, sources, "publish")) {
+        return Response.json({ error: "not found" });
+      }
+      if (progressReadFails) return Response.json({ message: "storage error" }, { status: 500 });
+      if (table === "grade_quiz_with_credits" && progressMissing) {
+        return Response.json({ error: "article not opened" });
+      }
+      writes.push(table);
+      return Response.json(table === "save_article_progress"
+        ? { ok: true, saved: true, scoopId: 3 }
+        : { error: "incomplete" });
+    }
     if (init?.method && init.method !== "GET") {
       writes.push(table!);
       if (table === "open_article_with_quota") return openFails

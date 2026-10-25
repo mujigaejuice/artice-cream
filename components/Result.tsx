@@ -8,6 +8,7 @@ import { quizHref, readHref } from "@/lib/routes";
 import { apiJson } from "@/lib/client-api";
 import { PROMOTE_AT, levelLabel } from "@/lib/level";
 import { prepareScoopSound } from "@/lib/scoop-sound";
+import type { CreditResult } from "@/lib/credits";
 import type { QuizReviewItem } from "@/lib/supabase/types";
 import { useReadingProgress } from "@/components/ReadingExitNotice";
 
@@ -30,6 +31,8 @@ export type GradeResult = {
   isOriginal?: boolean;
   variantId?: number;
   canSave?: boolean;
+  /** P1 server response; displayed in the P2 credit UI. */
+  credits?: CreditResult;
 };
 
 /**
@@ -98,6 +101,8 @@ export function Result({
           />
         )}
       </section>
+
+      {result.credits && <CreditResultNote credits={result.credits} isReview={result.isReview} />}
 
       <section className="mt-6" aria-labelledby="review-heading">
         <h2 id="review-heading" className="mb-3 text-sm font-semibold text-stone-700">
@@ -182,6 +187,36 @@ export function Result({
         </a>}
       </div>
     </main>
+  );
+}
+
+function CreditResultNote({ credits, isReview }: { credits: CreditResult; isReview: boolean }) {
+  if (credits.status === "disabled") return (
+    <p className="mt-4 rounded-xl bg-stone-100 p-4 text-sm text-stone-600">크레딧 적립을 준비 중이에요.</p>
+  );
+  if (credits.status === "not_eligible") return (
+    <p className="mt-4 rounded-xl bg-stone-100 p-4 text-sm text-stone-600">크레딧 도입 이전에 완료한 학습이에요.</p>
+  );
+  const amount = credits.articleReward.total;
+  return (
+    <section aria-label="크레딧 적립 결과" className={`mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-emerald-950 ${
+      !isReview && credits.status === "granted" && credits.newlyGranted > 0
+        ? "motion-safe:animate-[ac-credit-reveal_450ms_ease-out]" : ""
+    }`}>
+      <p className="text-sm font-medium">
+        {isReview ? "복습은 크레딧이 추가 적립되지 않아요." :
+          credits.status === "granted" && credits.newlyGranted > 0
+            ? `이번 학습으로 +${credits.newlyGranted}크레딧`
+            : `이 학습으로 ${amount}크레딧을 받았어요.`}
+      </p>
+      <p className="mt-2 text-sm text-emerald-900">
+        학습 완료 +{credits.articleReward.base} · 퀴즈 보너스 +{credits.articleReward.bonus}
+      </p>
+      {credits.welcomeReward > 0 && <p className="mt-1 text-sm text-emerald-900">첫 학습 축하 +{credits.welcomeReward}</p>}
+      <p className="mt-3 border-t border-emerald-200 pt-3 text-xs text-emerald-900">
+        현재 잔액 {credits.balance.toLocaleString("ko-KR")}크레딧 · 콘에 올리기와 별도로 적립돼요.
+      </p>
+    </section>
   );
 }
 

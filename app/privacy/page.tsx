@@ -11,6 +11,7 @@ export const metadata: Metadata = {
 const sections = [
   { id: "contact", title: "운영자와 개인정보 보호책임자" },
   { id: "data", title: "어떤 정보를 사용하나요?" },
+  { id: "credits", title: "크레딧 기록" },
   { id: "retention", title: "언제까지 보관하나요?" },
   { id: "deletion", title: "파기 절차와 방법" },
   { id: "providers", title: "외부 서비스와 처리위탁" },
@@ -63,6 +64,11 @@ export default function PrivacyPage() {
           <p>계정·학습에 필요한 정보를 제공하지 않으면 해당 기능의 이용이 제한됩니다. 서비스 소개, 이 방침과 계정 삭제 안내는 가입 없이 읽을 수 있습니다.</p>
         </section>
 
+        <section id="credits" aria-labelledby="credits-title">
+          <h2 id="credits-title">크레딧 기록</h2>
+          <p>학습 보상을 계산하고 잔액과 내역을 보여주기 위해 계정 ID, 지급·사용 금액과 사유, 관련 학습 ID, 정책 버전, 기록 시각을 저장합니다. 퀴즈 답안이나 이메일은 크레딧 원장에 복제하지 않습니다.</p>
+          <p>크레딧은 계정에 연결되며 계정과 데이터 삭제가 완료되면 원장 기록도 함께 삭제됩니다. 별도의 만료일이나 월별 초기화는 적용하지 않습니다.</p>
+        </section>
         <section id="retention" aria-labelledby="retention-title">
           <h2 id="retention-title">언제까지 보관하나요?</h2>
           <dl className="mt-3 divide-y divide-stone-200 rounded-xl border border-stone-200 bg-white px-4">

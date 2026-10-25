@@ -56,18 +56,9 @@ export async function GET(request: Request) {
   const admin = createAdminClient();
   if (!await canPublishArticle(admin, article.id)) return apiError(request, "not found", 404);
 
-  const { data: rows } = await admin
-    .from("quiz_questions")
-    .select("*")
-    .eq("variant_id", variantId)
-    .order("position");
-
-  const questionRows = (rows ?? []) as QuizQuestionRow[];
-  if (questionRows.length === 0) return apiError(request, "no questions", 404);
-
   const { data: progress, error: progressError } = await admin
     .from("user_article_progress")
-    .select("status, quiz_score, quiz_answers")
+    .select("status, variant_id, quiz_score, quiz_answers")
     .eq("user_id", user.id)
     .eq("article_id", article.id)
     .maybeSingle();
@@ -76,8 +67,34 @@ export async function GET(request: Request) {
   if (!progress) return apiError(request, "article not opened", 403);
   const isOriginal = article.content_kind === "original";
   const practice = isOriginal && new URL(request.url).searchParams.get("practice") === "1";
+  const isResult = !practice && (progress.status === "completed" || progress.status === "saved");
+  const resultVariantId = isResult ? progress.variant_id : variantId;
+  let resultTitle = variant.title;
+  if (isResult && resultVariantId !== variantId) {
+    const { data: completedVariant, error } = await admin.from("article_variants")
+      .select("id, article_id, title").eq("id", resultVariantId).maybeSingle();
+    if (error || !completedVariant || completedVariant.article_id !== article.id) {
+      return apiError(request, "reading temporarily unavailable", 503);
+    }
+    resultTitle = completedVariant.title;
+  }
+  const { data: rows, error: questionError } = await admin
+    .from("quiz_questions")
+    .select("*")
+    .eq("variant_id", resultVariantId)
+    .order("position");
+  if (questionError) return apiError(request, "reading temporarily unavailable", 503);
+  const questionRows = (rows ?? []) as QuizQuestionRow[];
+  if (questionRows.length === 0) return apiError(request, "no questions", 404);
 
-  if (!practice && (progress.status === "completed" || progress.status === "saved")) {
+  if (isResult) {
+    const { data: credits, error: creditError } = await admin.rpc("get_credit_result", {
+      p_user_id: user.id, p_article_id: article.id,
+    });
+    if (creditError || !credits || typeof credits !== "object" ||
+        !Number.isSafeInteger(credits.balance)) {
+      return apiError(request, "reading temporarily unavailable", 503);
+    }
     const answers = (progress.quiz_answers ?? {}) as Record<string, number>;
     const review: QuizReviewItem[] = questionRows.map((q) => {
       const picked = answers[String(q.id)] ?? null;
@@ -94,7 +111,7 @@ export async function GET(request: Request) {
 
     return json(request, {
       mode: "result",
-      articleTitle: variant.title,
+      articleTitle: resultTitle,
       result: {
         score: progress.quiz_score ?? 0,
         correct: review.filter((r) => r.correct).length,
@@ -110,8 +127,9 @@ export async function GET(request: Request) {
         isReview: progress.status === "saved",
         sourceUrl: article.source_url,
         isOriginal,
-        variantId,
+        variantId: resultVariantId,
         canSave: progress.status === "completed",
+        credits,
       },
     });
   }

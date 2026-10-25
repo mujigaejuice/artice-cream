@@ -255,6 +255,14 @@ npm run build:app      # 앱용 정적 번들 (out/)
 npm run app:run        # 번들 → cap sync → 안드로이드 빌드·설치·실행
 ```
 
+## 크레딧 출시 준비
+
+크레딧 원장·원자적 채점과 잔액·내역 화면은 로컬에서 구현·검증했다. 현재 운영 DB에는 크레딧 마이그레이션을 적용하지 않았으며 적립도 활성화하지 않았다. 정책과 단계별 적용 순서는 [크레딧 정책 계획](./크레딧정책.md), [P2 구현 기록](./크레딧-P2-구현.md)을 따른다.
+
+운영 Supabase 마이그레이션 이력은 로컬보다 짧다. 기존 이력을 확인하기 전에는 전체 `db push`를 실행하지 않는다. 크레딧 SQL 두 건을 순서대로 적용하고 비활성 상태를 확인한 뒤 웹을 배포한다. 구버전 쓰기 요청이 끝난 다음 쓰기 계약과 적립을 전환한다.
+
+로컬 검사: `npm run test:credits-db`, `npm run test:credits`, `npm run test:credits-ui`, `npm run typecheck`, `npm run build`, `npm run build:app`.
+
 ## 배포
 
 읽기 횟수·광고 보상 API를 배포하기 전에 `supabase/migrations/0006_atomic_quota.sql`을 적용한다.

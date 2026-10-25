@@ -9,6 +9,11 @@
   color-scheme: light;
 }
 
+@keyframes ac-credit-reveal {
+  from { opacity: 0.45; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 html {
   /* 한국어 본문은 글자가 아니라 어절 단위로 끊어야 읽힌다. */
   word-break: keep-all;

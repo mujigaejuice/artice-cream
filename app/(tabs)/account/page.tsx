@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { PageError, PageLoading } from "@/components/ScreenState";
+import { CreditSummary } from "@/components/CreditSummary";
 import { createClient, signOutCurrentDevice } from "@/lib/supabase/client";
 
 export default function AccountPage() {
@@ -83,6 +84,10 @@ export default function AccountPage() {
       <p className="mt-2 text-sm leading-relaxed text-stone-600">
         읽은 글과 쌓은 스쿱이 이 계정에 저장돼요.
       </p>
+
+      <div className="mt-6">
+        <CreditSummary key={user.id} userId={user.id} />
+      </div>
 
       <section aria-labelledby="account-heading" className="mt-8">
         <h2 id="account-heading" className="text-sm font-semibold text-stone-900">로그인한 계정</h2>
