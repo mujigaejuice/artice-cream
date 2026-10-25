@@ -63,7 +63,8 @@ try {
     'supabase/migrations/20261022095402_original_foundations.sql',
     'supabase/migrations/20261022180420_article_reader_rpc.sql',
     'supabase/migrations/20261025145740_credits_core.sql',
-    'supabase/migrations/20261025145758_credit_reads.sql']) {
+    'supabase/migrations/20261025145758_credit_reads.sql',
+    'supabase/migrations/20261025160738_cosmetic_shop.sql']) {
     await sql(await readFile(new URL(`../${file}`, import.meta.url), 'utf8'));
   }
 
@@ -183,8 +184,41 @@ try {
   const withdrawn = await rows(`select * from public.get_credit_history('${uid(1)}', null, null, 5)`);
   assert.ok(withdrawn.every(row => row.article_title === null));
   assert.equal((await rpc(`public.get_credit_snapshot('${uid(1)}')`)).balance, '118');
+  await sql(`update public.credit_policy set spending_enabled=true where id=1;
+    update public.cosmetic_items set is_active=true;
+    insert into public.credit_events(user_id,amount,reason,source_id,policy_version)
+      values('${uid(6)}',137,'adjustment','shop-fixture',1);`);
+  const spend = (user, item, version = 1) => rpc(`public.spend_credits('${uid(user)}','${item}',${version})`);
+  assert.equal((await spend(1,'berry-palette')).error,'insufficient_credits');
+  assert.equal((await spend(6,'berry-palette',2)).error,'price_changed');
+  const duplicate = await burst(12, () => spend(3,'berry-palette'));
+  assert.equal(duplicate.filter(row => row.status === 'purchased').length,1);
+  assert.equal(duplicate.filter(row => row.status === 'already_owned').length,11);
+  assert.equal((await rows(`select count(*) as n from public.credit_events where user_id='${uid(3)}' and reason='purchase'`))[0].n,1);
+  assert.equal((await rpc(`public.equip_cosmetic('${uid(3)}','cone','berry-palette')`)).error,'wrong_slot');
+  assert.equal((await rpc(`public.equip_cosmetic('${uid(3)}','palette','berry-palette')`)).equipped.palette,'berry-palette');
+  assert.equal((await rpc(`public.equip_cosmetic('${uid(3)}','palette',null)`)).equipped.palette,undefined);
+  assert.equal((await spend(6,'berry-palette')).status,'purchased');
+  assert.equal((await spend(6,'cocoa-cone')).status,'purchased');
+  assert.equal((await spend(6,'sugar-stars')).error,'insufficient_credits');
+  assert.equal((await rpc(`public.get_shop_snapshot('${uid(6)}')`)).balance,'0');
+  await sql(`update public.credit_policy set spending_enabled=false where id=1;`);
+  assert.equal((await spend(6,'berry-palette')).status,'already_owned');
+  assert.equal((await spend(5,'night-sky')).error,'shop_unavailable');
+  await sql(`update public.credit_policy set spending_enabled=true where id=1;
+    create function shop_test_fail() returns trigger language plpgsql as $$
+      begin if new.user_id='${uid(5)}' then raise exception 'injected unlock failure'; end if; return new; end; $$;
+    create trigger shop_test_fail before insert on public.user_unlocks
+      for each row execute function shop_test_fail();`);
+  await assert.rejects(() => spend(5,'night-sky'), /injected unlock failure/);
+  assert.equal((await rows(`select count(*) as n from public.credit_events where user_id='${uid(5)}' and reason='purchase'`))[0].n,0);
+  await sql(`drop trigger shop_test_fail on public.user_unlocks; drop function shop_test_fail();`);
+  await assert.rejects(() => sql(`set role authenticated; insert into public.user_unlocks(user_id,item_id,purchase_event_id)
+    values('${uid(1)}','berry-palette',1);`), /permission denied|row-level security/);
+  console.log('PASS shop duplicate purchase, overspend, equip/reset, sale pause, rollback and privileges');
   await sql(`delete from auth.users where id='${uid(6)}';`);
   assert.equal((await rows(`select count(*) as count from public.credit_events where user_id='${uid(6)}'`))[0].count,0);
+  assert.equal((await rows(`select count(*) as count from public.user_unlocks where user_id='${uid(6)}'`))[0].count,0);
   console.log('PASS transactional rollback, onboarding preservation, legacy-write guard and database privileges');
 } finally {
   await command(['stop', container]).catch(() => {});

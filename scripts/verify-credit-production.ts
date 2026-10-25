@@ -92,6 +92,17 @@ async function main() {
       assert.equal(snapshot.hasWelcome, true);
       assert.equal(history.events?.length, 3);
       assert.equal(history.events.reduce((sum: number, event: { amount: number }) => sum + event.amount, 0), snapshot.balance);
+      const shop = await request("/api/shop");
+      assert.equal(shop.spendingEnabled, false);
+      assert.equal(shop.items?.length, 4);
+      assert.deepEqual(shop.ownedItems, []);
+      const blocked = await fetch(`${site}/api/credits/spend`, {
+        method: "POST", cache: "no-store", signal: AbortSignal.timeout(60_000),
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ itemId: "sugar-stars", catalogVersion: 1 }),
+      });
+      assert.equal(blocked.status, 503);
+      assert.equal((await blocked.json()).error, "shop_unavailable");
     } else {
       assert.equal(snapshot.balance, 0);
       assert.deepEqual(history.events, []);

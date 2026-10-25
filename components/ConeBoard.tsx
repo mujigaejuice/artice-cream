@@ -8,6 +8,7 @@ import { ScoopPanel } from "@/components/ScoopPanel";
 import { coreColor } from "@/lib/color";
 import { coneHeight, slotRange } from "@/lib/cone";
 import type { Scoop } from "@/lib/feed";
+import type { Equipped } from "@/lib/cosmetics";
 import type { DomainRow } from "@/lib/supabase/types";
 
 /**
@@ -30,6 +31,7 @@ type Props = {
   justAddedId?: number | null;
   /** 리더 링크 접두사. 목데이터 미리보기가 /preview 아래에서 쓴다. */
   base?: string;
+  equipped?: Equipped;
 };
 
 export function ConeBoard({
@@ -38,6 +40,7 @@ export function ConeBoard({
   initialScoopId,
   justAddedId = null,
   base = "",
+  equipped,
 }: Props) {
   const [selectedId, setSelectedId] = useState<number | null>(initialScoopId);
   /** 우리가 history에 항목을 쌓았는지 — 뒤로가기로 닫을지 판단한다. */
@@ -162,7 +165,7 @@ export function ConeBoard({
   if (n === 0) {
     return (
       <div className="py-6">
-        <ScoopCone scoops={[]} />
+        <ScoopCone scoops={[]} equipped={equipped} />
         <div className="mt-6 text-center">
           <p className="text-sm text-stone-600">
             아티클을 읽고 퀴즈를 풀면 스쿱이 하나 올라가요.
@@ -181,20 +184,21 @@ export function ConeBoard({
   return (
     <div>
       {/* 높이가 선택 상태에 따라 변하지 않는다 — 콘도 아래 스쿱도 그 자리에 있는다. */}
-      <div className="relative" onClick={onBackgroundClick}>
+      <div className={`relative rounded-3xl ${equipped?.background === "night-sky" ? "bg-[#1F2441]" : ""}`} onClick={onBackgroundClick}>
         <ScoopCone
           scoops={ordered}
           selectedId={selectedId}
           justAddedId={justAddedId}
           onArrivalComplete={finishArrival}
           onSelect={select}
+          equipped={equipped}
         />
 
         {selected && slot && (
           <div
             ref={panelRef}
             /* 왼쪽은 빠져나온 스쿱(오른끝 x=88≈34%)을 피해 잡는다. */
-            className="ac-panel absolute left-[37%] right-[3%] overflow-hidden"
+            className={`ac-panel absolute left-[37%] right-[3%] overflow-hidden ${equipped?.background === "night-sky" ? "rounded-xl bg-white/95 px-2" : ""}`}
             style={{ top: slot.top, height: slot.height }}
           >
             <ScoopPanel scoop={selected} base={base} animate={animatePanel} />

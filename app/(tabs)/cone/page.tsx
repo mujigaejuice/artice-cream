@@ -5,10 +5,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { ConeBoard } from "@/components/ConeBoard";
 import { CreditSummary } from "@/components/CreditSummary";
+import { ShopSheet } from "@/components/ShopSheet";
 import { PageError, PageLoading } from "@/components/ScreenState";
 import { apiJson } from "@/lib/client-api";
 import { dayKey, isMonthKey } from "@/lib/day";
 import type { Scoop } from "@/lib/feed";
+import { safeEquipped, type Equipped } from "@/lib/cosmetics";
+import type { CreditSnapshot } from "@/lib/credits";
 import type { DomainRow } from "@/lib/supabase/types";
 import { useQueryParams } from "@/lib/use-query";
 import { useRefreshOnResume } from "@/lib/use-refresh-on-resume";
@@ -30,17 +33,23 @@ export default function ConePage() {
   const [data, setData] = useState<ConeData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [month, setMonth] = useState<string | null>(null);
+  const [shopOpen, setShopOpen] = useState(false);
+  const [equipped, setEquipped] = useState<Equipped>({});
+  const [shopRevision, setShopRevision] = useState(0);
   const requestId = useRef(0);
+  const appearanceRequestId = useRef(0);
   const currentMonth = dayKey().slice(0, 7);
 
   useEffect(() => {
     if (!query) return;
     const requested = query.get("month");
     setMonth(requested && isMonthKey(requested) ? requested : currentMonth);
+    setShopOpen(query.get("shop") === "1");
   }, [query, currentMonth]);
 
   useEffect(() => {
     function onPop() {
+      setShopOpen(new URLSearchParams(window.location.search).get("shop") === "1");
       const requested = new URLSearchParams(window.location.search).get("month");
       const next = requested && isMonthKey(requested) ? requested : currentMonth;
       if (next === month) return;
@@ -68,6 +77,35 @@ export default function ConePage() {
     return () => { requestId.current++; };
   }, [load]);
   useRefreshOnResume(load);
+
+  const userId = data?.status === "ok" ? data.userId : null;
+  useEffect(() => {
+    const id = ++appearanceRequestId.current;
+    setEquipped({});
+    if (!userId) return;
+    apiJson<CreditSnapshot>("/api/credits")
+      .then((snapshot) => { if (id === appearanceRequestId.current && snapshot.userId === userId) {
+        setEquipped(safeEquipped(snapshot.equipped));
+      } })
+      .catch(() => {});
+    return () => { appearanceRequestId.current++; };
+  }, [userId]);
+
+  const applyAppearance = useCallback((next: Equipped) => setEquipped(safeEquipped(next)), []);
+
+  const openShop = useCallback(() => {
+    const url = new URL(window.location.href);
+    url.searchParams.set("shop", "1");
+    window.history.pushState(null, "", url.pathname + url.search);
+    setShopOpen(true);
+  }, []);
+
+  const closeShop = useCallback(() => {
+    const url = new URL(window.location.href);
+    url.searchParams.delete("shop");
+    window.history.replaceState(null, "", url.pathname + url.search);
+    setShopOpen(false);
+  }, []);
 
   useEffect(() => {
     if (data?.status === "onboarding") router.replace("/onboarding");
@@ -110,8 +148,13 @@ export default function ConePage() {
       </header>
 
       <div className="mb-4">
-        <CreditSummary key={data.userId} userId={data.userId} compact />
+        <CreditSummary key={`${data.userId}:${shopRevision}`} userId={data.userId} compact />
       </div>
+
+      <button type="button" onClick={openShop}
+        className="mb-5 min-h-11 rounded-xl border border-stone-300 bg-white px-5 text-sm font-semibold text-stone-900 focus-visible:outline-2 focus-visible:outline-offset-2">
+        내 콘 꾸미기
+      </button>
 
       <label className="mb-3 flex items-center gap-2 text-sm text-stone-600">
         월 선택
@@ -135,7 +178,10 @@ export default function ConePage() {
         initialScoopId={asScoopId(new URLSearchParams(window.location.search).get("scoop"))}
         // 저장 직후 결과 화면이 ?new=<progress id>로 보낸다.
         justAddedId={asScoopId(new URLSearchParams(window.location.search).get("new"))}
+        equipped={equipped}
       />
+      {shopOpen && <ShopSheet userId={data.userId} scoops={scoops} onClose={closeShop}
+        onApplied={applyAppearance} onBalanceChanged={() => setShopRevision((value) => value + 1)} />}
     </main>
   );
 }

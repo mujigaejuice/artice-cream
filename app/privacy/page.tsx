@@ -68,6 +68,7 @@ export default function PrivacyPage() {
           <h2 id="credits-title">크레딧 기록</h2>
           <p>학습 보상을 계산하고 잔액과 내역을 보여주기 위해 계정 ID, 지급·사용 금액과 사유, 관련 학습 ID, 정책 버전, 기록 시각을 저장합니다. 퀴즈 답안이나 이메일은 크레딧 원장에 복제하지 않습니다.</p>
           <p>크레딧은 계정에 연결되며 계정과 데이터 삭제가 완료되면 원장 기록도 함께 삭제됩니다. 별도의 만료일이나 월별 초기화는 적용하지 않습니다.</p>
+          <p>꾸미기를 구매하면 상품 ID와 구매 거래, 구매 시각을 저장하고, 적용한 꾸미기의 슬롯과 상품 ID를 저장합니다. 계정 삭제 시 보유·적용 기록도 함께 삭제합니다.</p>
         </section>
         <section id="retention" aria-labelledby="retention-title">
           <h2 id="retention-title">언제까지 보관하나요?</h2>

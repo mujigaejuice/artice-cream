@@ -87,6 +87,9 @@ export default function AccountPage() {
 
       <div className="mt-6">
         <CreditSummary key={user.id} userId={user.id} />
+        <Link href="/cone/?shop=1" className="mt-3 inline-flex min-h-11 items-center rounded-xl border border-stone-300 bg-white px-4 text-sm font-medium text-stone-900 focus-visible:outline-2">
+          내 콘 꾸미기
+        </Link>
       </div>
 
       <section aria-labelledby="account-heading" className="mt-8">

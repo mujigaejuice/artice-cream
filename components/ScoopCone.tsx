@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 
 import {
   CHERRY_FILL,
@@ -40,6 +40,7 @@ import {
   waveMarkPath,
 } from "@/lib/cone";
 import type { Scoop } from "@/lib/feed";
+import { safeEquipped, type Equipped } from "@/lib/cosmetics";
 import { useScoopArrival } from "@/lib/use-scoop-arrival";
 
 /**
@@ -72,10 +73,15 @@ type Props = {
   justAddedId?: number | null;
   onSelect?: (scoop: Scoop) => void;
   onArrivalComplete?: (id: number) => void;
+  equipped?: Equipped;
+  interactive?: boolean;
 };
 
-export function ScoopCone({ scoops, selectedId, justAddedId, onSelect, onArrivalComplete }: Props) {
+export function ScoopCone({ scoops, selectedId, justAddedId, onSelect, onArrivalComplete, equipped,
+  interactive = true }: Props) {
   const [focusedId, setFocusedId] = useState<number | null>(null);
+  const patternId = `ac-waffle-${useId().replace(/:/g, "")}`;
+  const appearance = safeEquipped(equipped);
   const arrival = useScoopArrival(
     scoops.some((scoop) => scoop.id === justAddedId) ? justAddedId ?? null : null,
     onArrivalComplete,
@@ -99,7 +105,9 @@ export function ScoopCone({ scoops, selectedId, justAddedId, onSelect, onArrival
   const tipY = topY + CONE_H;
   const d = useMemo(() => scoopPath(), []);
 
-  const coneInk = hslStr(outlineColor(CONE_FILL));
+  const coneFill = appearance.cone === "cocoa-cone" ? { h: 25, s: 43, l: 43 } : CONE_FILL;
+  const coneLattice = appearance.cone === "cocoa-cone" ? { h: 24, s: 35, l: 32 } : CONE_LATTICE;
+  const coneInk = hslStr(outlineColor(coneFill));
   const cherryInk = hslStr(outlineColor(CHERRY_FILL));
   const conePath = `M ${CX - CONE_HALF} ${topY} L ${CX + CONE_HALF} ${topY} L ${CX + 4} ${tipY - 6} Q ${CX} ${tipY} ${CX - 4} ${tipY - 6} Z`;
 
@@ -116,11 +124,11 @@ export function ScoopCone({ scoops, selectedId, justAddedId, onSelect, onArrival
       aria-label={`아이스크림 콘, 스쿱 ${n}개`}
     >
       <defs>
-        <pattern id="ac-waffle" width="16" height="16" patternUnits="userSpaceOnUse">
-          <rect width="16" height="16" fill={hslStr(CONE_FILL)} />
+        <pattern id={patternId} width="16" height="16" patternUnits="userSpaceOnUse">
+          <rect width="16" height="16" fill={hslStr(coneFill)} />
           <path
             d="M0 0 L16 16 M16 0 L0 16"
-            stroke={hslStr(CONE_LATTICE)}
+            stroke={hslStr(coneLattice)}
             strokeWidth="1.6"
           />
         </pattern>
@@ -134,7 +142,7 @@ export function ScoopCone({ scoops, selectedId, justAddedId, onSelect, onArrival
       >
         <path
           d={conePath}
-          fill="url(#ac-waffle)"
+          fill={`url(#${patternId})`}
           stroke={coneInk}
           strokeWidth={LINE}
           strokeLinejoin="round"
@@ -156,7 +164,9 @@ export function ScoopCone({ scoops, selectedId, justAddedId, onSelect, onArrival
         const x = isSel ? DETACH_CX : CX;
         const scale = isSel ? DETACH_SCALE : 1;
 
-        const base = scoopShade(s.domain, s.date, s.articleId);
+        const original = scoopShade(s.domain, s.date, s.articleId);
+        const base = appearance.palette === "berry-palette"
+          ? { h: 332, s: Math.max(original.s, 54), l: original.l } : original;
         const fill = hslStr(base);
         const ink = hslStr(outlineColor(base));
         const glow = hslStr(highlightColor(base));
@@ -177,8 +187,8 @@ export function ScoopCone({ scoops, selectedId, justAddedId, onSelect, onArrival
                 if (event.animationName === "ac-plop") arrival.land();
                 if (event.animationName === "ac-settle") arrival.complete();
               }}
-              role="button"
-              tabIndex={s.id === justAddedId && arrival.waiting ? -1 : 0}
+              role={interactive ? "button" : undefined}
+              tabIndex={interactive && !(s.id === justAddedId && arrival.waiting) ? 0 : -1}
               aria-hidden={s.id === justAddedId && arrival.waiting ? true : undefined}
               aria-pressed={isSel}
               aria-label={`${s.domainLabel} · ${formatDate(s.date)} · ${s.title}`}
@@ -254,7 +264,14 @@ export function ScoopCone({ scoops, selectedId, justAddedId, onSelect, onArrival
               />
 
               {/* 가장 최근 스쿱: 체리. 중심이 돔 정수리에 얹힌다. 빠져나와도 따라간다. */}
-              {i === cherryIdx && (
+              {i === cherryIdx && appearance.topping === "sugar-stars" && (
+                <g aria-label="설탕 별 토핑" fill="#F8D872" stroke="#9A7334" strokeWidth="1.4">
+                  <path d="M-27 -45 l3 7 8 1 -6 5 2 8 -7 -4 -7 4 2 -8 -6 -5 8 -1 Z" />
+                  <path d="M0 -57 l3 7 8 1 -6 5 2 8 -7 -4 -7 4 2 -8 -6 -5 8 -1 Z" />
+                  <path d="M27 -44 l3 7 8 1 -6 5 2 8 -7 -4 -7 4 2 -8 -6 -5 8 -1 Z" />
+                </g>
+              )}
+              {i === cherryIdx && appearance.topping !== "sugar-stars" && (
                 <>
                   <circle
                     cx={0}

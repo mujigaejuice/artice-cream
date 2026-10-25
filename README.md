@@ -259,9 +259,11 @@ npm run app:run        # 번들 → cap sync → 안드로이드 빌드·설치�
 
 크레딧 원장·원자적 채점과 잔액·내역 화면은 구현·검증하고 main에 배포했다. 운영 DB의 적립은 2026-10-26 KST에 활성화했다. 꾸미기 구매는 아직 비활성이다. 정책과 단계별 적용 기록은 [크레딧 정책 계획](./크레딧정책.md), [P2 구현 기록](./크레딧-P2-구현.md)을 따른다.
 
+P3 꾸미기 스키마와 상품 4종은 운영 DB에 판매 비활성으로 적용했다. 웹 상점·콘 외형과 구매·적용 API의 검증 및 남은 출시 조건은 [P3 구현 기록](./크레딧-P3-구현.md)을 따른다. 앱 스토어 빌드가 배포되기 전에는 `spending_enabled`와 상품 `is_active`를 켜지 않는다.
+
 운영 Supabase의 이전 마이그레이션 이력은 로컬보다 짧다. 전체 `db push`는 실행하지 않는다. 새 크레딧 SQL 두 건은 운영 이력에 기록했다. 구버전 직접 쓰기 차단과 활성 적립을 임시 계정의 운영 API로 확인했다.
 
-로컬 검사: `npm run test:credits-db`, `npm run test:credits`, `npm run test:credits-ui`, `npm run typecheck`, `npm run build`, `npm run build:app`.
+로컬 검사: `npm run test:credits-db`, `npm run test:credits`, `npm run test:credits-ui`, `npm run test:shop-api`, `npm run test:shop-ui`, `npm run typecheck`, `npm run build`, `npm run build:app`.
 
 ## 배포
 

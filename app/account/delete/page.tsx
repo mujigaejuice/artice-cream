@@ -23,7 +23,7 @@ export default function DeleteAccountPage() {
       <section aria-labelledby="deletion-scope" className="mt-8 rounded-2xl border border-stone-200 bg-white p-5">
         <h2 id="deletion-scope" className="font-semibold text-stone-900">함께 삭제되는 정보</h2>
         <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-stone-700">
-          <li>적립한 크레딧 잔액과 지급·사용 내역</li>
+          <li>적립한 크레딧 잔액과 지급·사용 내역, 구매한 꾸미기와 적용 상태</li>
           <li>artice cream 로그인 계정과 프로필</li>
           <li>관심 분야·읽기 수준, 퀴즈 답안과 점수</li>
           <li>읽기·저장 기록과 내 콘에 쌓은 스쿱</li>
