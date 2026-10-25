@@ -62,8 +62,8 @@ try {
     'supabase/migrations/0006_atomic_quota.sql',
     'supabase/migrations/20261022095402_original_foundations.sql',
     'supabase/migrations/20261022180420_article_reader_rpc.sql',
-    'supabase/migrations/20261025052243_credits_core.sql',
-    'supabase/migrations/20261025142945_credit_reads.sql']) {
+    'supabase/migrations/20261025145740_credits_core.sql',
+    'supabase/migrations/20261025145758_credit_reads.sql']) {
     await sql(await readFile(new URL(`../${file}`, import.meta.url), 'utf8'));
   }
 
