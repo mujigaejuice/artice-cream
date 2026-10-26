@@ -10,7 +10,7 @@ import { PageError, PageLoading } from "@/components/ScreenState";
 import { apiJson } from "@/lib/client-api";
 import { dayKey, isMonthKey } from "@/lib/day";
 import type { Scoop } from "@/lib/feed";
-import { safeEquipped, type Equipped } from "@/lib/cosmetics";
+import { OPEN_SHOP_EVENT, safeEquipped, type Equipped } from "@/lib/cosmetics";
 import type { CreditSnapshot } from "@/lib/credits";
 import type { DomainRow } from "@/lib/supabase/types";
 import { useQueryParams } from "@/lib/use-query";
@@ -95,10 +95,16 @@ export default function ConePage() {
 
   const openShop = useCallback(() => {
     const url = new URL(window.location.href);
+    if (url.searchParams.get("shop") === "1") return;
     url.searchParams.set("shop", "1");
     window.history.pushState(null, "", url.pathname + url.search);
     setShopOpen(true);
   }, []);
+
+  useEffect(() => {
+    window.addEventListener(OPEN_SHOP_EVENT, openShop);
+    return () => window.removeEventListener(OPEN_SHOP_EVENT, openShop);
+  }, [openShop]);
 
   const closeShop = useCallback(() => {
     const url = new URL(window.location.href);
@@ -150,11 +156,6 @@ export default function ConePage() {
       <div className="mb-4">
         <CreditSummary key={`${data.userId}:${shopRevision}`} userId={data.userId} compact />
       </div>
-
-      <button type="button" onClick={openShop}
-        className="mb-5 min-h-11 rounded-xl border border-stone-300 bg-white px-5 text-sm font-semibold text-stone-900 focus-visible:outline-2 focus-visible:outline-offset-2">
-        내 콘 꾸미기
-      </button>
 
       <label className="mb-3 flex items-center gap-2 text-sm text-stone-600">
         월 선택

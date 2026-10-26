@@ -65,6 +65,7 @@ async function main() {
     assert.equal((await equip(request("/api/cosmetics/equip", { slot: "cone", itemId: product.id }))).status, 409);
     assert.equal((await (await equip(request("/api/cosmetics/equip", { slot: "topping", itemId: product.id }))).json()).equipped.topping, product.id);
     assert.deepEqual((await (await equip(request("/api/cosmetics/equip", { slot: "topping", itemId: null }))).json()).equipped, {});
+    assert.equal((await equip(request("/api/cosmetics/equip", { slot: "music", itemId: null }))).status, 200);
     assert.equal((await (await shop(request("/api/shop"))).json()).ownedItems[0], product.id);
     owned = false;
     balance = 500;

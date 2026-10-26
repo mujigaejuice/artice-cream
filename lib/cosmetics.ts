@@ -4,9 +4,13 @@ export const COSMETIC_ASSETS = {
   "cocoa-cone": "cone",
   "sugar-stars": "topping",
   "night-sky": "background",
+  "one-scoop-of-joy": "music",
+  "tiptoe-into-sunlight": "music",
+  "two-scoops-of-july": "music",
+  "waffle-cone-waltz": "music",
 } as const;
 
-export type CosmeticSlot = "palette" | "cone" | "topping" | "background";
+export type CosmeticSlot = "palette" | "cone" | "topping" | "background" | "music";
 export type Equipped = Partial<Record<CosmeticSlot, string>>;
 export type CosmeticItem = {
   id: string;
@@ -27,6 +31,8 @@ export type ShopSnapshot = {
   ownedItems: string[];
   equipped: Equipped;
 };
+
+export const OPEN_SHOP_EVENT = "artice:open-shop";
 
 export function safeEquipped(equipped: Equipped | null | undefined): Equipped {
   const safe: Equipped = {};

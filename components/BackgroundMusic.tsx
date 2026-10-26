@@ -1,16 +1,22 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
+import { OPEN_SHOP_EVENT } from "@/lib/cosmetics";
 import { isNative } from "@/lib/native";
 import { readMusicPreference, writeMusicPreference } from "@/lib/music-preferences";
+import { apiJson } from "@/lib/client-api";
+import type { CreditSnapshot } from "@/lib/credits";
+import { createClient } from "@/lib/supabase/client";
+import { DEFAULT_MUSIC_SOURCE, MUSIC_EQUIPPED_EVENT, MUSIC_PREVIEW_EVENT, musicSource } from "@/lib/shop-music";
 
 type Playback = "idle" | "loading" | "playing" | "paused" | "blocked" | "error";
 type MusicState = { ready: boolean; enabled: boolean; playback: Playback };
-const SOURCE = "/audio/ice-cream-basic.mp3";
 
 /** One player in the root layout; route changes never recreate the audio element. */
 export function BackgroundMusic() {
+  const pathname = usePathname();
   const [state, setState] = useState<MusicState>({ ready: false, enabled: false, playback: "idle" });
   const actions = useRef<{ toggle(): void; retry(): void } | null>(null);
 
@@ -27,13 +33,19 @@ export function BackgroundMusic() {
     let pageHidden = false;
     let nativeActive = !isNative();
     let nativeRevision = 0;
+    let source = DEFAULT_MUSIC_SOURCE;
+    let selectedUser: string | null = null;
+    let musicRequest = 0;
+    let previewing = false;
+    let authTimer: ReturnType<typeof setTimeout> | undefined;
+    let unsubscribeAuth: (() => void) | undefined;
     const nativeRemovers: Array<() => Promise<void>> = [];
 
     function update(next: Playback) {
       playback = next;
       if (!disposed) setState({ ready: true, enabled, playback });
     }
-    function canPlay() { return !disposed && enabled && !document.hidden && !pageHidden && nativeActive; }
+    function canPlay() { return !disposed && enabled && !previewing && !document.hidden && !pageHidden && nativeActive; }
     function pause() {
       request++;
       audio.pause();
@@ -43,7 +55,7 @@ export function BackgroundMusic() {
       if (!canPlay() || playback === "loading" || playback === "playing") return;
       const attempt = ++request;
       // Leave src unset until music is enabled to avoid downloading on a silent visit.
-      if (!audio.getAttribute("src")) audio.src = SOURCE;
+      if (!audio.getAttribute("src")) audio.src = source;
       if (audio.error) audio.load();
       update("loading");
       const failed = (error: unknown) => {
@@ -63,6 +75,39 @@ export function BackgroundMusic() {
       if (!canPlay()) pause();
       else if (playback !== "error" && playback !== "blocked") play();
     }
+    function selectSource(next: string) {
+      if (source === next) return;
+      source = next;
+      request++;
+      const loaded = !!audio.getAttribute("src");
+      audio.pause();
+      if (loaded) { audio.src = next; audio.load(); }
+      update("idle");
+      reconcile();
+    }
+    async function refreshMusic() {
+      const id = ++musicRequest;
+      try {
+        const { data: { session } } = await createClient().auth.getSession();
+        if (disposed || id !== musicRequest) return;
+        const userId = session?.user && session.user.is_anonymous !== true ? session.user.id : null;
+        if (userId !== selectedUser) {
+          selectedUser = userId;
+          selectSource(DEFAULT_MUSIC_SOURCE);
+        }
+        if (!userId) return;
+        const snapshot = await apiJson<CreditSnapshot>("/api/credits");
+        if (disposed || id !== musicRequest || snapshot.userId !== userId) return;
+        selectSource(musicSource(snapshot.equipped?.music));
+      } catch {
+        // Music stays optional when auth or credit lookup is unavailable.
+      }
+    }
+    const equippedChanged = () => { void refreshMusic(); };
+    const previewChanged = (event: Event) => {
+      previewing = (event as CustomEvent<boolean>).detail === true;
+      reconcile();
+    };
     const playing = () => { if (canPlay()) update("playing"); else pause(); };
     const waiting = () => { if (canPlay() && !audio.paused) update("loading"); };
     const paused = () => {
@@ -79,6 +124,8 @@ export function BackgroundMusic() {
     document.addEventListener("visibilitychange", visibility);
     window.addEventListener("pagehide", hide);
     window.addEventListener("pageshow", show);
+    window.addEventListener(MUSIC_EQUIPPED_EVENT, equippedChanged);
+    window.addEventListener(MUSIC_PREVIEW_EVENT, previewChanged);
 
     actions.current = {
       toggle() {
@@ -98,6 +145,15 @@ export function BackgroundMusic() {
       update("idle");
       reconcile();
     });
+    try {
+      const { data: { subscription } } = createClient().auth.onAuthStateChange((event) => {
+        if (event === "INITIAL_SESSION") return;
+        if (authTimer) clearTimeout(authTimer);
+        authTimer = setTimeout(() => { void refreshMusic(); }, 0);
+      });
+      unsubscribeAuth = () => subscription.unsubscribe();
+      void refreshMusic();
+    } catch { /* A missing auth configuration must not break the music toggle. */ }
 
     if (isNative()) {
       void (async () => {
@@ -133,6 +189,9 @@ export function BackgroundMusic() {
     return () => {
       disposed = true;
       request++;
+      musicRequest++;
+      if (authTimer) clearTimeout(authTimer);
+      unsubscribeAuth?.();
       actions.current = null;
       audio.removeEventListener("playing", playing);
       audio.removeEventListener("waiting", waiting);
@@ -141,6 +200,8 @@ export function BackgroundMusic() {
       document.removeEventListener("visibilitychange", visibility);
       window.removeEventListener("pagehide", hide);
       window.removeEventListener("pageshow", show);
+      window.removeEventListener(MUSIC_EQUIPPED_EVENT, equippedChanged);
+      window.removeEventListener(MUSIC_PREVIEW_EVENT, previewChanged);
       nativeRemovers.forEach(remove => { void remove().catch(() => {}); });
       audio.pause();
       audio.removeAttribute("src");
@@ -160,7 +221,18 @@ export function BackgroundMusic() {
     : state.enabled ? "음악 일시정지" : "";
 
   return (
-    <div className="mb-3 flex min-h-11 justify-end" aria-label="배경음악">
+    <div className="mb-3 flex min-h-11 items-center justify-end gap-1" aria-label="상단 도구">
+      {pathname?.replace(/\/$/, "") === "/cone" && <button type="button"
+        aria-label="꾸미기 상점 열기" title="꾸미기 상점 열기"
+        onClick={() => window.dispatchEvent(new window.Event(OPEN_SHOP_EVENT))}
+        className="inline-flex size-11 items-center justify-center rounded-full text-stone-800 transition hover:bg-stone-200/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-800">
+        <svg viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth="1.7"
+          strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M4 10.5v9h16v-9M3 9l2-5h14l2 5" />
+          <path d="M3 9c0 1.7 2.5 2.6 3.6.8.8 1.9 3.3 1.9 4.2 0 .8 1.9 3.3 1.9 4.2 0 1.1 1.8 3.6.9 3.6-.8" />
+          <path d="M9 19.5v-5h6v5" />
+        </svg>
+      </button>}
       <span role="status" className="sr-only">{message}</span>
       <button type="button" disabled={!state.ready} aria-pressed={isPlaying}
         aria-label={label} title={label}
