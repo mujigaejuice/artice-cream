@@ -21,7 +21,7 @@
     "test:credits": "tsx scripts/check-credits-api.ts",
     "test:credits-ui": "tsx scripts/check-credits-ui.tsx",
     "test:shop-api": "tsx scripts/check-shop-api.ts",
-    "test:shop-ui": "tsx scripts/check-shop-ui.tsx",
+    "test:shop-ui": "tsx scripts/check-shop-ui.tsx && tsx scripts/check-shop-interaction.tsx",
     "test:reader": "tsx scripts/check-reader.ts && tsx scripts/check-reader-ui.tsx",
     "test:reading-exit": "tsx scripts/check-reading-exit.tsx",
     "test:feed": "tsx scripts/check-feed-pagination.ts",

@@ -179,6 +179,7 @@ try {
   await assert.rejects(() => sql(`delete from public.user_article_progress where user_id='${uid(5)}' and article_id=3;`), /credit write contract required/);
   assert.equal(await sql(`select has_function_privilege('authenticated','public.grade_quiz_with_credits(uuid,bigint,jsonb)','execute');`),'f');
   assert.equal(await sql(`select has_function_privilege('authenticated','public.get_credit_snapshot(uuid)','execute');`),'f');
+  assert.equal(await sql(`select has_function_privilege('authenticated','public.get_quiz_spendable_balance(uuid)','execute');`),'f');
   assert.equal(await sql(`select has_function_privilege('authenticated','public.get_credit_history(uuid,timestamptz,bigint,integer)','execute');`),'f');
   await assert.rejects(() => sql(`set role authenticated; insert into public.credit_events(user_id,amount,reason,source_id,policy_version) values ('${uid(5)}',10,'article_read','fake',1);`), /permission denied|row-level security/);
   await sql(`update public.articles set rights_status='blocked' where id=1;`);
