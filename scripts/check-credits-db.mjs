@@ -66,7 +66,8 @@ try {
     'supabase/migrations/20261025145758_credit_reads.sql',
     'supabase/migrations/20261025160738_cosmetic_shop.sql',
     'supabase/migrations/20261026071437_quiz_only_spending.sql',
-    'supabase/migrations/20261026184211_music_shop.sql']) {
+    'supabase/migrations/20261026184211_music_shop.sql',
+    'supabase/migrations/20261026191921_expanded_cone_cosmetics.sql']) {
     await sql(await readFile(new URL(`../${file}`, import.meta.url), 'utf8'));
   }
 
@@ -208,6 +209,20 @@ try {
   assert.equal((await rpc(`public.equip_cosmetic('${uid(3)}','cone','berry-palette')`)).error,'wrong_slot');
   assert.equal((await rpc(`public.equip_cosmetic('${uid(3)}','palette','berry-palette')`)).equipped.palette,'berry-palette');
   assert.equal((await rpc(`public.equip_cosmetic('${uid(3)}','palette',null)`)).equipped.palette,undefined);
+  assert.equal((await rpc(`public.set_scoop_colors('${uid(6)}','{}'::jsonb)`)).error,'item_not_owned');
+  assert.equal((await rpc(`public.set_scoop_colors('${uid(3)}','{"wrong":"#123456"}'::jsonb)`)).error,'invalid_body');
+  const chosenColors = { cloud:'#8A6CCF', infra:'#EBAE8A', data:'#75B3A2',
+    'cs-fundamentals':'#E7C06F', 'deep-learning':'#8E9BD7', llm:'#C88FD1',
+    'ai-security':'#E985A3', security:'#A0B66A' };
+  const savedColors = await rpc(`public.set_scoop_colors('${uid(3)}','${JSON.stringify(chosenColors)}'::jsonb)`);
+  assert.equal(savedColors.status,'saved');
+  assert.equal(savedColors.equipped.palette,'berry-palette');
+  assert.deepEqual(savedColors.scoopColors,chosenColors);
+  assert.deepEqual((await rpc(`public.get_shop_snapshot('${uid(3)}')`)).scoopColors,chosenColors);
+  assert.equal((await rows(`select count(*) as n from public.user_scoop_colors where user_id='${uid(3)}'`))[0].n,8);
+  assert.equal(await sql(`select has_function_privilege('authenticated','public.set_scoop_colors(uuid,jsonb)','execute');`),'f');
+  await assert.rejects(() => sql(`set role authenticated; insert into public.user_scoop_colors(user_id,domain_slug,color_hex)
+    values ('${uid(6)}','cloud','#FFFFFF');`), /permission denied|row-level security/);
   assert.equal((await spend(6,'berry-palette')).status,'purchased');
   assert.equal((await spend(6,'cocoa-cone')).error,'insufficient_credits');
   assert.equal((await spend(6,'sugar-stars')).error,'insufficient_credits');
@@ -232,6 +247,12 @@ try {
   assert.equal((await spend(5,'tiptoe-into-sunlight',2)).error,'insufficient_credits');
   assert.equal((await rpc(`public.equip_cosmetic('${uid(5)}','music','one-scoop-of-joy')`)).equipped.music,'one-scoop-of-joy');
   assert.equal((await rpc(`public.equip_cosmetic('${uid(5)}','music',null)`)).equipped.music,undefined);
+  assert.equal((await spend(5,'cloud-swirl')).shortfall,130);
+  await sql(`insert into public.credit_events(user_id,amount,reason,source_id,policy_version)
+    values('${uid(5)}',130,'quiz_bonus','texture-quiz-fixture',1);`);
+  assert.equal((await spend(5,'cloud-swirl')).status,'purchased');
+  assert.equal((await rpc(`public.equip_cosmetic('${uid(5)}','texture','cloud-swirl')`)).equipped.texture,'cloud-swirl');
+  assert.equal((await rpc(`public.equip_cosmetic('${uid(5)}','texture',null)`)).equipped.texture,undefined);
   assert.equal((await rpc(`public.get_shop_snapshot('${uid(5)}')`)).spendableBalance,'0');
   assert.equal((await rpc(`public.get_shop_snapshot('${uid(5)}')`)).balance,'500');
   await assert.rejects(() => sql(`set role authenticated; insert into public.user_unlocks(user_id,item_id,purchase_event_id)

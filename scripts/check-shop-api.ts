@@ -10,6 +10,7 @@ async function main() {
   let balance = 160;
   let spendableBalance = 160;
   let owned = false;
+  let ownsPalette = false;
   let equipped: Record<string,string> = {};
   const product = { id: "sugar-stars", slot: "topping", nameKo: "설탕 별 토핑", price: 150,
     assetKey: "sugar-stars", catalogVersion: 1, isActive: true };
@@ -34,6 +35,11 @@ async function main() {
       owned = true; balance -= product.price; spendableBalance -= product.price;
       return Response.json({ status: "purchased", itemId: product.id, balance, spendableBalance });
     }
+    if (rpc === "set_scoop_colors") {
+      if (!ownsPalette) return Response.json({ error: "item_not_owned" });
+      equipped = { ...equipped, palette: "berry-palette" };
+      return Response.json({ status: "saved", equipped, scoopColors: body.p_colors });
+    }
     assert.equal(rpc, "equip_cosmetic");
     if (body.p_item_id && !owned) return Response.json({ error: "item_not_owned" });
     if (body.p_item_id && body.p_slot !== "topping") return Response.json({ error: "wrong_slot" });
@@ -49,6 +55,7 @@ async function main() {
     const { GET: shop } = await import("../app/api/shop/route.api");
     const { POST: spend } = await import("../app/api/credits/spend/route.api");
     const { POST: equip } = await import("../app/api/cosmetics/equip/route.api");
+    const { POST: colors } = await import("../app/api/cosmetics/colors/route.api");
     let response = await shop(request("/api/shop"));
     assert.equal(response.status, 200);
     assert.equal(response.headers.get("cache-control"), "no-store");
@@ -66,6 +73,14 @@ async function main() {
     assert.equal((await (await equip(request("/api/cosmetics/equip", { slot: "topping", itemId: product.id }))).json()).equipped.topping, product.id);
     assert.deepEqual((await (await equip(request("/api/cosmetics/equip", { slot: "topping", itemId: null }))).json()).equipped, {});
     assert.equal((await equip(request("/api/cosmetics/equip", { slot: "music", itemId: null }))).status, 200);
+    assert.equal((await equip(request("/api/cosmetics/equip", { slot: "texture", itemId: null }))).status, 200);
+    assert.equal((await colors(request("/api/cosmetics/colors", { colors: { unknown: "#123456" } }))).status, 400);
+    assert.equal((await colors(request("/api/cosmetics/colors", { colors: { cloud: "red" } }))).status, 400);
+    assert.equal((await colors(request("/api/cosmetics/colors", { colors: { cloud: "#123456" } }))).status, 403);
+    ownsPalette = true;
+    const savedColors = await colors(request("/api/cosmetics/colors", { colors: { cloud: "#123456" } }));
+    assert.equal(savedColors.status, 200);
+    assert.deepEqual((await savedColors.json()).scoopColors, { cloud: "#123456" });
     assert.equal((await (await shop(request("/api/shop"))).json()).ownedItems[0], product.id);
     owned = false;
     balance = 500;
@@ -81,6 +96,7 @@ async function main() {
     assert.equal((await shop(request("/api/shop"))).status, 401);
     assert.equal((await spend(request("/api/credits/spend", { itemId: product.id, catalogVersion: 1 }))).status, 401);
     assert.equal((await equip(request("/api/cosmetics/equip", { slot: "topping", itemId: null }))).status, 401);
+    assert.equal((await colors(request("/api/cosmetics/colors", { colors: {} }))).status, 401);
     console.log("PASS shop API identity binding, purchase recovery, equip and errors");
   } finally { globalThis.fetch = originalFetch; }
 }

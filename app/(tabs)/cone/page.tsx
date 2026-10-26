@@ -10,7 +10,7 @@ import { PageError, PageLoading } from "@/components/ScreenState";
 import { apiJson } from "@/lib/client-api";
 import { dayKey, isMonthKey } from "@/lib/day";
 import type { Scoop } from "@/lib/feed";
-import { OPEN_SHOP_EVENT, safeEquipped, type Equipped } from "@/lib/cosmetics";
+import { OPEN_SHOP_EVENT, safeEquipped, safeScoopColors, type Equipped, type ScoopColors } from "@/lib/cosmetics";
 import type { CreditSnapshot } from "@/lib/credits";
 import type { DomainRow } from "@/lib/supabase/types";
 import { useQueryParams } from "@/lib/use-query";
@@ -35,6 +35,7 @@ export default function ConePage() {
   const [month, setMonth] = useState<string | null>(null);
   const [shopOpen, setShopOpen] = useState(false);
   const [equipped, setEquipped] = useState<Equipped>({});
+  const [scoopColors, setScoopColors] = useState<ScoopColors>({});
   const [shopRevision, setShopRevision] = useState(0);
   const requestId = useRef(0);
   const appearanceRequestId = useRef(0);
@@ -82,16 +83,19 @@ export default function ConePage() {
   useEffect(() => {
     const id = ++appearanceRequestId.current;
     setEquipped({});
+    setScoopColors({});
     if (!userId) return;
     apiJson<CreditSnapshot>("/api/credits")
       .then((snapshot) => { if (id === appearanceRequestId.current && snapshot.userId === userId) {
         setEquipped(safeEquipped(snapshot.equipped));
+        setScoopColors(safeScoopColors(snapshot.scoopColors));
       } })
       .catch(() => {});
     return () => { appearanceRequestId.current++; };
   }, [userId]);
 
   const applyAppearance = useCallback((next: Equipped) => setEquipped(safeEquipped(next)), []);
+  const applyScoopColors = useCallback((next: ScoopColors) => setScoopColors(safeScoopColors(next)), []);
 
   const openShop = useCallback(() => {
     const url = new URL(window.location.href);
@@ -180,9 +184,11 @@ export default function ConePage() {
         // 저장 직후 결과 화면이 ?new=<progress id>로 보낸다.
         justAddedId={asScoopId(new URLSearchParams(window.location.search).get("new"))}
         equipped={equipped}
+        scoopColors={scoopColors}
       />
       {shopOpen && <ShopSheet userId={data.userId} scoops={scoops} onClose={closeShop}
-        onApplied={applyAppearance} onBalanceChanged={() => setShopRevision((value) => value + 1)} />}
+        onApplied={applyAppearance} onColorsChanged={applyScoopColors}
+        onBalanceChanged={() => setShopRevision((value) => value + 1)} />}
     </main>
   );
 }

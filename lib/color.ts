@@ -38,6 +38,53 @@ export const hslc = (h: number, s: number, l: number) =>
 
 export const hslStr = (c: Hsl) => hslc(c.h, c.s, c.l);
 
+export function hslToHex({ h, s, l }: Hsl): string {
+  const hue = ((h % 360) + 360) % 360;
+  const saturation = s / 100;
+  const lightness = l / 100;
+  const a = saturation * Math.min(lightness, 1 - lightness);
+  const channel = (n: number) => {
+    const k = (n + hue / 30) % 12;
+    return Math.round(255 * (lightness - a * Math.max(-1, Math.min(k - 3, 9 - k, 1))))
+      .toString(16).padStart(2, "0");
+  };
+  return `#${channel(0)}${channel(8)}${channel(4)}`.toUpperCase();
+}
+
+export function defaultScoopHex(domainKey: string): string {
+  return hslToHex(DOMAIN_FLAVORS[domainKey] ?? FALLBACK);
+}
+
+function hexToHsl(hex: string): Hsl | null {
+  if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return null;
+  const [r, g, b] = [1, 3, 5].map((index) => parseInt(hex.slice(index, index + 2), 16) / 255);
+  const hi = Math.max(r, g, b), lo = Math.min(r, g, b), d = hi - lo;
+  let h = 0;
+  if (d) {
+    if (hi === r) h = ((g - b) / d) % 6;
+    else if (hi === g) h = (b - r) / d + 2;
+    else h = (r - g) / d + 4;
+    h = (h * 60 + 360) % 360;
+  }
+  const l = (hi + lo) / 2;
+  const s = d ? d / (1 - Math.abs(2 * l - 1)) : 0;
+  return { h: round1(h), s: round1(s * 100), l: round1(l * 100) };
+}
+
+/** Keep per-article lightness variation while following the chosen flavor color. */
+export function customScoopShade(domainKey: string, dateStr: string, articleId: number,
+  hex: string | undefined): Hsl {
+  const original = scoopShade(domainKey, dateStr, articleId);
+  const chosen = hex && hexToHsl(hex);
+  if (!chosen) return original;
+  const baseline = DOMAIN_FLAVORS[domainKey] ?? FALLBACK;
+  return {
+    h: chosen.h,
+    s: round1(clamp(chosen.s + (original.s - baseline.s) * 0.35, 0, 100)),
+    l: round1(clamp(chosen.l + (original.l - baseline.l) * 0.55, 14, 94)),
+  };
+}
+
 /** 'YYYY-MM-DD' 문자열에서 직접 계산 — 어디서 돌든 같은 값이 나온다. */
 const dayIndex = (dateStr: string) => {
   const [y, m, d] = dateStr.split("-").map(Number);

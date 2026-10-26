@@ -8,6 +8,7 @@ import {
   CHERRY_STEM,
   CONE_FILL,
   CONE_LATTICE,
+  customScoopShade,
   formatDate,
   highlightColor,
   hslStr,
@@ -40,13 +41,13 @@ import {
   waveMarkPath,
 } from "@/lib/cone";
 import type { Scoop } from "@/lib/feed";
-import { safeEquipped, type Equipped } from "@/lib/cosmetics";
+import { safeEquipped, safeScoopColors, type Equipped, type ScoopColors } from "@/lib/cosmetics";
 import { useScoopArrival } from "@/lib/use-scoop-arrival";
 
 /**
  * 콘 — 아이스크림 도안.png(시안 4번 물결형)의 플랫 일러스트를 따른다.
  *
- * 입체 표현을 쓰지 않는다(그림자·그라디언트·질감 없음). 깊이는 겹침으로만 만들고,
+ * 기본 도안의 단색과 외곽선을 유지한다. 구매한 질감만 스쿱 내부에 얹고,
  * 그래서 렌더 순서가 아래→위인 것이 중요하다.
  *
  * **외곽선은 도형마다 자기 채움색의 진한 버전이다**(outlineColor). 모든 도형에
@@ -74,14 +75,17 @@ type Props = {
   onSelect?: (scoop: Scoop) => void;
   onArrivalComplete?: (id: number) => void;
   equipped?: Equipped;
+  scoopColors?: ScoopColors;
   interactive?: boolean;
 };
 
-export function ScoopCone({ scoops, selectedId, justAddedId, onSelect, onArrivalComplete, equipped,
+export function ScoopCone({ scoops, selectedId, justAddedId, onSelect, onArrivalComplete, equipped, scoopColors,
   interactive = true }: Props) {
   const [focusedId, setFocusedId] = useState<number | null>(null);
   const patternId = `ac-waffle-${useId().replace(/:/g, "")}`;
+  const clipId = `ac-scoop-clip-${useId().replace(/:/g, "")}`;
   const appearance = safeEquipped(equipped);
+  const chosenColors = safeScoopColors(scoopColors);
   const arrival = useScoopArrival(
     scoops.some((scoop) => scoop.id === justAddedId) ? justAddedId ?? null : null,
     onArrivalComplete,
@@ -132,6 +136,7 @@ export function ScoopCone({ scoops, selectedId, justAddedId, onSelect, onArrival
             strokeWidth="1.6"
           />
         </pattern>
+        <clipPath id={clipId}><path d={d} /></clipPath>
       </defs>
 
       {/* 콘 — 선택 중에는 아래 무리와 함께 내려가 슬롯을 대칭으로 벌린다.
@@ -166,7 +171,8 @@ export function ScoopCone({ scoops, selectedId, justAddedId, onSelect, onArrival
 
         const original = scoopShade(s.domain, s.date, s.articleId);
         const base = appearance.palette === "berry-palette"
-          ? { h: 332, s: Math.max(original.s, 54), l: original.l } : original;
+          ? customScoopShade(s.domain, s.date, s.articleId, chosenColors[s.domain as keyof ScoopColors])
+          : original;
         const fill = hslStr(base);
         const ink = hslStr(outlineColor(base));
         const glow = hslStr(highlightColor(base));
@@ -217,8 +223,21 @@ export function ScoopCone({ scoops, selectedId, justAddedId, onSelect, onArrival
                 />
               )}
 
-              {/* 본체 — 단색 + 자기 색 외곽선. 그라디언트도 질감도 없다. */}
+              {/* 본체는 기본 도안의 단색. 선택한 질감은 도형 안에서만 보인다. */}
               <path d={d} fill={fill} />
+
+              {appearance.texture === "cloud-swirl" && <g clipPath={`url(#${clipId})`}
+                fill="none" stroke="#FFFDF9" strokeLinecap="round" opacity=".82">
+                <path d="M-62 -19C-42 -34-32 -14-13-23S18-40 39-28s31 5 43-8" strokeWidth="8" />
+                <path d="M-63 4C-42-11-33 9-13 0S22-19 45-7s27 6 39-3" strokeWidth="6" opacity=".74" />
+                <path d="M-58 23C-36 10-28 30-9 21s38-13 53-2 31 4 42-3" strokeWidth="5" opacity=".62" />
+              </g>}
+              {appearance.texture === "gelato-folds" && <g clipPath={`url(#${clipId})`}
+                fill="none" strokeLinecap="round" opacity=".8">
+                <path d="M-57-4q16-29 35-21t30 5q12-18 33-9t30 5" stroke={glow} strokeWidth="10" />
+                <path d="M-63 13q22-19 37-11t31 3q17-16 34-6t34 1" stroke={mark} strokeWidth="5" opacity=".7" />
+                <path d="M-42 31q18-19 35-8t33-4q21-12 40 0" stroke={glow} strokeWidth="8" opacity=".7" />
+              </g>}
 
               {/* 빛은 왼쪽 위에서 온다 — 돔의 큰 하이라이트와 로브의 윤기가 한 광원이다. */}
               <ellipse
@@ -271,7 +290,40 @@ export function ScoopCone({ scoops, selectedId, justAddedId, onSelect, onArrival
                   <path d="M27 -44 l3 7 8 1 -6 5 2 8 -7 -4 -7 4 2 -8 -6 -5 8 -1 Z" />
                 </g>
               )}
-              {i === cherryIdx && appearance.topping !== "sugar-stars" && (
+              {i === cherryIdx && appearance.topping === "rainbow-sprinkles" && <g aria-label="무지개 스프링클">
+                {[[ -39,-25,-25,"#F37E9A"],[-26,-38,26,"#F7D56E"],[-10,-29,-36,"#8EC8B0"],
+                  [7,-42,28,"#B2A0DE"],[24,-29,-24,"#F49765"],[39,-18,30,"#78B7D7"],
+                  [-32,-4,32,"#A9A1E8"],[-15,-12,-18,"#F5D271"],[5,-15,30,"#E56B85"],
+                  [23,-7,-33,"#8FC9AE"],[-7,9,25,"#F49765"],[35,8,-19,"#B2A0DE"]].map(([x,y,rot,color], index) =>
+                  <rect key={index} x={Number(x)-5} y={Number(y)-2} width="10" height="4" rx="2"
+                    fill={String(color)} transform={`rotate(${rot} ${x} ${y})`} />)}
+              </g>}
+              {i === cherryIdx && appearance.topping === "chocolate-drizzle" && <g aria-label="초코 드리즐"
+                fill="none" stroke="#654137" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M-48-17q24-17 48-5t48-3M-53-5q26-15 52-4t53-2" strokeWidth="8" />
+                <path d="M-37-16v22q0 9 6 9t6-9V-8M6-19v30q0 11 7 11t7-11V-15M38-20V1q0 8 6 8t6-8V-18"
+                  strokeWidth="7" />
+                <path d="M-45-19q24-14 45-3t45-3" stroke="#9A6950" strokeWidth="2" opacity=".7" />
+              </g>}
+              {i === cherryIdx && appearance.topping === "cheese-cubes" && <g aria-label="치즈 큐브"
+                stroke="#D4A95D" strokeWidth="1.6" strokeLinejoin="round">
+                {[[ -33,-26,-15],[0,-41,12],[31,-25,17],[-9,-11,-12],[21,-4,-15]].map(([x,y,rot], index) =>
+                  <g key={index} transform={`translate(${x} ${y}) rotate(${rot})`}>
+                    <path d="M-8-6h16l5 5-5 10H-8l-5-5Z" fill="#F9DE8A" />
+                    <path d="M8-6l5 5-5 10-5-5Z" fill="#EBC773" />
+                    <circle cx="-2" cy="1" r="1.4" fill="#E8C46E" stroke="none" />
+                  </g>)}
+              </g>}
+              {i === cherryIdx && appearance.topping === "fresh-strawberry" && <g aria-label="딸기 토핑">
+                <path d="M-17-46q0-15 17-13 17-2 17 13Q15-21 0-12q-15-9-17-34Z"
+                  fill="#F06273" stroke="#BB4055" strokeWidth="2.6" />
+                <path d="M0-57q-10-10-17-8 6 8 13 10-13-3-17 2 11 8 21 2 10 6 21-2-5-5-17-2 7-2 13-10-8-2-17 8Z"
+                  fill="#75A979" stroke="#4F8059" strokeWidth="2" />
+                <path d="M0-55v-13" stroke="#4F8059" strokeWidth="2.5" strokeLinecap="round" />
+                {[[ -8,-43],[5,-42],[-4,-32],[9,-29],[1,-21]].map(([x,y], index) =>
+                  <ellipse key={index} cx={x} cy={y} rx="1.5" ry="2.4" fill="#FFE3B4" />)}
+              </g>}
+              {i === cherryIdx && !appearance.topping && (
                 <>
                   <circle
                     cx={0}

@@ -3,7 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 export const OPTIONS = preflight;
-const slots = new Set(["palette", "cone", "topping", "background", "music"]);
+const slots = new Set(["palette", "cone", "topping", "background", "texture", "music"]);
 
 export async function POST(request: Request) {
   const { user } = await getRequestContext(request);

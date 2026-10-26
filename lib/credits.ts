@@ -1,5 +1,5 @@
 /** Credits attached to a grading response or a saved quiz result. */
-import type { Equipped } from "./cosmetics";
+import type { Equipped, ScoopColors } from "./cosmetics";
 export type CreditResult = {
   status: "granted" | "already_granted" | "not_eligible" | "disabled";
   newlyGranted: number;
@@ -20,6 +20,7 @@ export type CreditSnapshot = {
   rules: { article: number; quizBonusMax: number; welcome: number };
   ownedItems?: string[];
   equipped?: Equipped;
+  scoopColors?: ScoopColors;
 };
 
 export type CreditEvent = {

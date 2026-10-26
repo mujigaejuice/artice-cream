@@ -1,23 +1,34 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { ScoopCone } from "@/components/ScoopCone";
+import { ConeScene } from "@/components/ConeScene";
 import { apiFetch, apiJson } from "@/lib/client-api";
-import { safeEquipped, type CosmeticItem, type CosmeticSlot, type Equipped, type ShopSnapshot } from "@/lib/cosmetics";
+import { safeEquipped, safeScoopColors, type CosmeticItem, type CosmeticSlot, type Equipped,
+  type ScoopColors, type ShopSnapshot } from "@/lib/cosmetics";
+import { defaultScoopHex, DOMAIN_FLAVORS } from "@/lib/color";
 import { dayKey } from "@/lib/day";
 import type { Scoop } from "@/lib/feed";
 import { MUSIC_EQUIPPED_EVENT, MUSIC_PREVIEW_EVENT, MUSIC_TRACKS, isMusicKey } from "@/lib/shop-music";
 import { createClient } from "@/lib/supabase/client";
 
 const slots: { slot: CosmeticSlot; label: string }[] = [
-  { slot: "palette", label: "스쿱 색" }, { slot: "cone", label: "콘" },
-  { slot: "topping", label: "토핑" }, { slot: "background", label: "배경" },
+  { slot: "palette", label: "스쿱 색" }, { slot: "texture", label: "질감" },
+  { slot: "topping", label: "토핑" }, { slot: "cone", label: "콘" },
+  { slot: "background", label: "배경" },
   { slot: "music", label: "배경음악" },
 ];
 
-function ShopArtwork({ product, scoops, equipped }: { product: CosmeticItem; scoops: Scoop[]; equipped: Equipped }) {
+const SAMPLE_COLORS: ScoopColors = {
+  cloud: "#BB8FDD", infra: "#F3AE91", data: "#83B8A8", "cs-fundamentals": "#E7BE78",
+  "deep-learning": "#9DAEE7", llm: "#C994C7", "ai-security": "#E98BA2", security: "#A7B96B",
+};
+
+function ShopArtwork({ product, scoops, equipped, scoopColors }: {
+  product: CosmeticItem; scoops: Scoop[]; equipped: Equipped; scoopColors: ScoopColors;
+}) {
   if (product.slot === "music") {
     const track = isMusicKey(product.assetKey) ? MUSIC_TRACKS[product.assetKey] : null;
     return <div className="relative flex h-28 items-center justify-center overflow-hidden rounded-xl"
@@ -35,9 +46,16 @@ function ShopArtwork({ product, scoops, equipped }: { product: CosmeticItem; sco
     </div>;
   }
   const look = { ...equipped, [product.slot]: product.assetKey };
-  return <div className={`flex h-28 items-center justify-center overflow-hidden rounded-xl ${
-    look.background === "night-sky" ? "bg-[#1F2441]" : "bg-[#EDE9E0]"}`} aria-hidden="true">
-    <div className="w-24"><ScoopCone scoops={scoops.slice(-1)} equipped={look} interactive={false} /></div>
+  const colors = product.slot === "palette" && !product.owned ? SAMPLE_COLORS : scoopColors;
+  return <div className="relative isolate flex h-28 items-center justify-center overflow-hidden rounded-xl bg-[#EDE9E0]"
+    aria-hidden="true">
+    <ConeScene scene={look.background} />
+    <div className="relative z-10 w-24"><ScoopCone scoops={scoops.slice(-1)} equipped={look}
+      scoopColors={colors} interactive={false} /></div>
+    {product.slot === "palette" && <div className="absolute bottom-1 right-2 z-10 flex gap-0.5 rounded-full bg-white/85 p-1">
+      {Object.values(SAMPLE_COLORS).map((color) => <span key={color} className="size-1.5 rounded-full"
+        style={{ backgroundColor: color }} />)}
+    </div>}
   </div>;
 }
 
@@ -46,16 +64,19 @@ type Props = {
   scoops: Scoop[];
   onClose: () => void;
   onApplied: (equipped: Equipped) => void;
+  onColorsChanged?: (colors: ScoopColors) => void;
   onBalanceChanged: () => void;
 };
 
-export function ShopSheet({ userId, scoops, onClose, onApplied, onBalanceChanged }: Props) {
+export function ShopSheet({ userId, scoops, onClose, onApplied, onColorsChanged, onBalanceChanged }: Props) {
   const [shop, setShop] = useState<ShopSnapshot | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [previewingMusic, setPreviewingMusic] = useState<string | null>(null);
+  const [draftColors, setDraftColors] = useState<ScoopColors>({});
+  const [previewDomain, setPreviewDomain] = useState<keyof ScoopColors>("cloud");
   const requestId = useRef(0);
   const previewAudio = useRef<HTMLAudioElement | null>(null);
   const previewTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -97,12 +118,15 @@ export function ShopSheet({ userId, scoops, onClose, onApplied, onBalanceChanged
       if (next.userId !== userId) throw new Error("계정이 변경됐어요.");
       setShop(next);
       onApplied(safeEquipped(next.equipped));
+      const colors = safeScoopColors(next.scoopColors);
+      setDraftColors(colors);
+      onColorsChanged?.(colors);
       return next;
     } catch {
       if (id === requestId.current) setError("꾸미기 정보를 불러오지 못했어요. 다시 시도해 주세요.");
       return null;
     }
-  }, [onApplied, userId]);
+  }, [onApplied, onColorsChanged, userId]);
 
   useEffect(() => {
     previousFocus.current = document.activeElement as HTMLElement | null;
@@ -119,10 +143,11 @@ export function ShopSheet({ userId, scoops, onClose, onApplied, onBalanceChanged
       setSelected(null);
       stopPreview();
       onApplied({});
+      onColorsChanged?.({});
       onClose();
     });
     return () => subscription.unsubscribe();
-  }, [userId, onApplied, onClose, stopPreview]);
+  }, [userId, onApplied, onColorsChanged, onClose, stopPreview]);
 
   const item = shop?.items.find((entry) => entry.id === selected) ?? null;
   const equipped = safeEquipped(shop?.equipped);
@@ -131,6 +156,9 @@ export function ShopSheet({ userId, scoops, onClose, onApplied, onBalanceChanged
     id: -1, variantId: null, articleId: 1, domain: "ai-security", domainLabel: "미리보기",
     date: dayKey(), title: "미리보기", summaryFirstLine: null, score: 1,
   }];
+  const palettePreviewScoops = item?.slot === "palette" ? [{ ...previewScoops.at(-1)!,
+    domain: previewDomain, domainLabel: DOMAIN_FLAVORS[previewDomain].label }] : previewScoops;
+  const previewColors = item?.slot === "palette" && !item.owned ? SAMPLE_COLORS : draftColors;
 
   function onKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
     if (event.key === "Escape" && !busy) { event.preventDefault(); onClose(); }
@@ -193,6 +221,22 @@ export function ShopSheet({ userId, scoops, onClose, onApplied, onBalanceChanged
     } finally { setBusy(false); }
   }
 
+  async function saveColors() {
+    if (busy || !item?.owned || item.slot !== "palette") return;
+    setBusy(true);
+    setError("");
+    try {
+      const result = await apiJson<{ userId: string; equipped: Equipped; scoopColors: ScoopColors }>(
+        "/api/cosmetics/colors", { method: "POST", body: JSON.stringify({ colors: draftColors }) });
+      if (result.userId !== userId) throw new Error("account changed");
+      onApplied(safeEquipped(result.equipped));
+      onColorsChanged?.(safeScoopColors(result.scoopColors));
+      await load();
+    } catch {
+      setError("색을 저장하지 못했어요. 다시 시도해 주세요.");
+    } finally { setBusy(false); }
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-stone-950/55" onMouseDown={(event) => {
       if (event.target === event.currentTarget && !busy) onClose();
@@ -218,9 +262,11 @@ export function ShopSheet({ userId, scoops, onClose, onApplied, onBalanceChanged
             전체 잔액 {shop.balance.toLocaleString("ko-KR")}크레딧
           </p>}
           {item?.slot === "music" ? <div className="mx-auto mt-3 max-w-sm">
-            <ShopArtwork product={item} scoops={previewScoops} equipped={equipped} />
-          </div> : <div className={`mt-3 rounded-3xl ${preview.background === "night-sky" ? "bg-[#1F2441]" : "bg-[#EDE9E0]"}`}>
-            <div className="mx-auto w-48"><ScoopCone scoops={previewScoops} equipped={preview} interactive={false} /></div>
+            <ShopArtwork product={item} scoops={previewScoops} equipped={equipped} scoopColors={draftColors} />
+          </div> : <div className="relative isolate mt-3 overflow-hidden rounded-3xl bg-[#EDE9E0]">
+            <ConeScene scene={preview.background} />
+            <div className="relative z-10 mx-auto w-48"><ScoopCone scoops={palettePreviewScoops}
+              equipped={preview} scoopColors={previewColors} interactive={false} /></div>
           </div>}
           <p className="mt-2 text-center text-xs text-stone-600">{item?.slot === "music" ?
             "음악은 미리듣고 고를 수 있어요 · 선택만으로 재생곡이 바뀌지 않아요" :
@@ -228,30 +274,6 @@ export function ShopSheet({ userId, scoops, onClose, onApplied, onBalanceChanged
           {!shop.spendingEnabled && <p className="mt-4 rounded-xl bg-amber-100 px-4 py-3 text-sm text-amber-950">
             꾸미기 구매를 준비 중이에요. 미리보기는 사용할 수 있어요.
           </p>}
-          {slots.map(({ slot, label }) => <section key={slot} className="mt-6" aria-label={label}>
-            <div className="flex items-center justify-between"><h3 className="font-semibold text-stone-900">{label}</h3>
-              {equipped[slot] && <button type="button" onClick={() => void equip(slot, null)} disabled={busy}
-                className="text-sm text-stone-600 underline disabled:opacity-50">기본으로 되돌리기</button>}</div>
-            <div className="mt-2 grid grid-cols-2 gap-3">
-              {shop.items.filter((entry) => entry.slot === slot).map((product) => <div key={product.id}
-                className={`rounded-2xl border bg-white p-2 ${selected === product.id ?
-                  "border-stone-900 ring-1 ring-stone-900" : "border-stone-200"}`}>
-                <button type="button" onClick={() => { stopPreview(); setSelected(product.id); setConfirming(false); setError(""); }}
-                  aria-pressed={selected === product.id}
-                  className="w-full rounded-xl text-left text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-900">
-                  <ShopArtwork product={product} scoops={previewScoops} equipped={equipped} />
-                  <span className="mt-2 block px-1 font-semibold leading-5 text-stone-900">{product.nameKo}</span>
-                  <span className="mt-1 block px-1 pb-1 text-xs text-stone-600">{product.owned ?
-                    "보유 중" : `${product.price}크레딧`}</span>
-                </button>
-                {product.slot === "music" && <button type="button" onClick={() => playPreview(product)}
-                  aria-label={`${product.nameKo} ${previewingMusic === product.id ? "미리듣기 중지" : "15초 미리듣기"}`}
-                  className="mt-1 min-h-11 w-full rounded-lg border border-stone-300 px-2 text-xs font-medium text-stone-800 focus-visible:outline-2">
-                  {previewingMusic === product.id ? "■ 중지" : "▶ 15초 미리듣기"}
-                </button>}
-              </div>)}
-            </div>
-          </section>)}
           {item && <div className="mt-6 border-t border-stone-300 pt-5">
             <p className="font-semibold text-stone-900">{item.nameKo}</p>
             {equipped[item.slot] === item.assetKey ? <p className="mt-2 text-sm text-stone-600">현재 적용 중이에요.</p> :
@@ -270,6 +292,69 @@ export function ShopSheet({ userId, scoops, onClose, onApplied, onBalanceChanged
                 className="mt-3 min-h-12 w-full rounded-xl bg-stone-900 px-4 font-semibold text-white disabled:opacity-50">
                 {item.price}크레딧으로 구매</button>}
           </div>}
+          {item?.slot === "palette" && item.owned && <section className="mt-5 rounded-2xl border border-stone-200 bg-white p-4"
+            aria-label="분야별 스쿱 색 설정">
+            <h3 className="font-semibold text-stone-900">8개 분야별 색</h3>
+            <p className="mt-1 text-xs leading-relaxed text-stone-600">분야마다 색을 고르세요. 원래 색으로 되돌릴 수도 있어요.</p>
+            <div className="mt-4 space-y-2">
+              {Object.entries(DOMAIN_FLAVORS).map(([domain, flavor]) => {
+                const key = domain as keyof ScoopColors;
+                const chosen = draftColors[key];
+                return <div key={domain} className={`flex items-center gap-2 rounded-xl border p-2 ${
+                  previewDomain === key ? "border-stone-900" : "border-stone-200"}`}>
+                  <button type="button" onClick={() => setPreviewDomain(key)}
+                    className="flex min-h-11 min-w-0 flex-1 items-center gap-2 rounded-lg text-left text-sm font-medium focus-visible:outline-2"
+                    aria-pressed={previewDomain === key}>
+                    <span className="size-6 shrink-0 rounded-full border border-stone-300"
+                      style={{ backgroundColor: chosen ?? defaultScoopHex(domain) }} aria-hidden="true" />
+                    {flavor.label}
+                  </button>
+                  <input type="color" value={chosen ?? defaultScoopHex(domain)}
+                    aria-label={`${flavor.label} 색 고르기`}
+                    onChange={(event) => { setPreviewDomain(key); setDraftColors((colors) => ({
+                      ...colors, [key]: event.target.value.toUpperCase(),
+                    })); }} disabled={busy}
+                    className="size-11 shrink-0 cursor-pointer rounded-lg border border-stone-300 bg-white p-1" />
+                  <button type="button" disabled={!chosen || busy}
+                    onClick={() => { setPreviewDomain(key); setDraftColors((colors) => {
+                      const next = { ...colors }; delete next[key]; return next;
+                    }); }} className="min-h-11 shrink-0 rounded-lg px-2 text-xs text-stone-600 disabled:opacity-40">
+                    원래 색
+                  </button>
+                </div>;
+              })}
+            </div>
+            <button type="button" onClick={() => void saveColors()} disabled={busy}
+              className="mt-4 min-h-12 w-full rounded-xl bg-stone-900 px-4 font-semibold text-white disabled:opacity-50">
+              색 저장하고 적용
+            </button>
+          </section>}
+          {slots.map(({ slot, label }) => <section key={slot} className="mt-6" aria-label={label}>
+            <div className="flex items-center justify-between"><h3 className="font-semibold text-stone-900">{label}</h3>
+              {equipped[slot] && <button type="button" onClick={() => void equip(slot, null)} disabled={busy}
+                className="text-sm text-stone-600 underline disabled:opacity-50">기본으로 되돌리기</button>}</div>
+            <div className="mt-2 grid grid-cols-2 gap-3">
+              {shop.items.filter((entry) => entry.slot === slot).map((product) => <div key={product.id}
+                className={`rounded-2xl border bg-white p-2 ${selected === product.id ?
+                  "border-stone-900 ring-1 ring-stone-900" : "border-stone-200"}`}>
+                <button type="button" onClick={() => { stopPreview(); setSelected(product.id); setConfirming(false);
+                  setError(""); if (dialog.current) dialog.current.scrollTop = 0; }}
+                  aria-pressed={selected === product.id}
+                  className="w-full rounded-xl text-left text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-900">
+                  <ShopArtwork product={product} scoops={previewScoops} equipped={equipped}
+                    scoopColors={draftColors} />
+                  <span className="mt-2 block px-1 font-semibold leading-5 text-stone-900">{product.nameKo}</span>
+                  <span className="mt-1 block px-1 pb-1 text-xs text-stone-600">{product.owned ?
+                    "보유 중" : `${product.price}크레딧`}</span>
+                </button>
+                {product.slot === "music" && <button type="button" onClick={() => playPreview(product)}
+                  aria-label={`${product.nameKo} ${previewingMusic === product.id ? "미리듣기 중지" : "15초 미리듣기"}`}
+                  className="mt-1 min-h-11 w-full rounded-lg border border-stone-300 px-2 text-xs font-medium text-stone-800 focus-visible:outline-2">
+                  {previewingMusic === product.id ? "■ 중지" : "▶ 15초 미리듣기"}
+                </button>}
+              </div>)}
+            </div>
+          </section>)}
           {busy && <p role="status" className="mt-3 text-sm text-stone-600">처리 중…</p>}
           {error && <p role="alert" className="mt-3 text-sm text-red-800">{error}</p>}
         </>}
