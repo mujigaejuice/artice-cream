@@ -17,12 +17,14 @@ const articleId = 1917;
 const itemId = process.argv.includes("--palette") ? "berry-palette"
   : process.argv.includes("--texture") ? "cloud-swirl"
   : process.argv.includes("--scene") ? "pink-parlor"
+  : process.argv.includes("--topping") ? "rainbow-sprinkles"
   : process.argv.includes("--music") ? "one-scoop-of-joy" : "night-sky";
 const slot = itemId === "berry-palette" ? "palette" : itemId === "cloud-swirl" ? "texture"
-  : itemId === "one-scoop-of-joy" ? "music" : "background";
-const expectedPrice = slot === "music" ? 150 : slot === "palette" || slot === "texture" ? 130 : 120;
+  : itemId === "rainbow-sprinkles" ? "topping" : itemId === "one-scoop-of-joy" ? "music" : "background";
+const expectedPrice = slot === "music" || slot === "topping" ? 150
+  : slot === "palette" || slot === "texture" ? 130 : 120;
 const catalogVersion = slot === "music" || slot === "palette" ? 2 : 1;
-const extraQuizzes = slot === "music" ? 2 : expectedPrice > 120 ? 1 : 0;
+const extraQuizzes = expectedPrice === 150 ? 2 : expectedPrice > 120 ? 1 : 0;
 const quizCredits = 120 + extraQuizzes * 20;
 const finalSpendable = quizCredits - expectedPrice;
 const finalBalance = 500 + finalSpendable;
