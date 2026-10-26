@@ -23,10 +23,11 @@
 import { spawn, spawnSync } from "node:child_process";
 import { existsSync, rmSync } from "node:fs";
 import { homedir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 
-const mode = process.argv[2] ?? "build"; // build | dev | run
-const dev = mode !== "build";
+const mode = process.argv[2] ?? "build"; // build | dev | run | release
+const dev = mode === "dev" || mode === "run";
+const release = mode === "release";
 const win = process.platform === "win32";
 
 const APP_ID = "com.articecream.app";
@@ -35,6 +36,22 @@ const APK = join("android", "app", "build", "outputs", "apk", "debug", "app-debu
 // 에뮬레이터가 호스트를 보는 주소. 실기기는 LAN IP, 배포 뒤에는 https 주소.
 const apiBase = process.env.APP_API_BASE ?? "http://10.0.2.2:3000";
 const target = process.env.APP_TARGET;
+
+if (release) {
+  if (!process.env.APP_API_BASE || !/^https:\/\/[^/]+\/?$/.test(process.env.APP_API_BASE)) {
+    console.error("APP_API_BASE에 운영 HTTPS API 원점을 지정해야 한다.");
+    process.exit(1);
+  }
+  for (const name of ["ARTICE_UPLOAD_STORE_FILE", "ARTICE_UPLOAD_STORE_PASSWORD",
+    "ARTICE_UPLOAD_KEY_ALIAS", "ARTICE_UPLOAD_KEY_PASSWORD"]) {
+    if (!process.env[name]) { console.error(`${name}이 필요하다.`); process.exit(1); }
+  }
+  process.env.ARTICE_UPLOAD_STORE_FILE = resolve(process.env.ARTICE_UPLOAD_STORE_FILE);
+  if (!existsSync(process.env.ARTICE_UPLOAD_STORE_FILE)) {
+    console.error("ARTICE_UPLOAD_STORE_FILE 파일을 찾지 못했다.");
+    process.exit(1);
+  }
+}
 
 const devEnv = { CAP_DEV: "1" };
 
@@ -124,10 +141,18 @@ run("npx", ["next", "build"], {
   env: {
     APP_EXPORT: "1",
     ...(dev ? { ...devEnv, NEXT_PUBLIC_API_BASE: apiBase } : {}),
+    ...(release ? { NEXT_PUBLIC_API_BASE: process.env.APP_API_BASE } : {}),
   },
 });
 
-if (dev) run("npx", ["cap", "sync", "android"], { env: devEnv });
+if (dev || release) run("npx", ["cap", "sync", "android"], { env: dev ? devEnv : {} });
+
+if (release) {
+  const sdk = androidHome();
+  run(win ? ".\\gradlew.bat" : "./gradlew", ["bundleRelease", "--console=plain"], {
+    cwd: "android", env: { ANDROID_HOME: sdk, ANDROID_SDK_ROOT: sdk },
+  });
+}
 
 if (mode === "run") {
   const sdk = androidHome();

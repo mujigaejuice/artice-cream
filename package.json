@@ -40,6 +40,7 @@
     "test:documents": "tsx scripts/check-document-sources.ts && tsx scripts/check-document-cron.ts",
     "test:originals": "tsx scripts/check-originals.ts && tsx scripts/check-originals-ui.tsx",
     "build:app": "node scripts/build-app.mjs build",
+    "app:release": "node scripts/build-app.mjs release",
     "app:dev": "node scripts/build-app.mjs dev",
     "app:run": "node scripts/build-app.mjs run"
   },
