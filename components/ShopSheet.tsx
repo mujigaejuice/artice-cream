@@ -152,8 +152,12 @@ export function ShopSheet({ userId, scoops, onClose, onApplied, onBalanceChanged
           {error && <button type="button" onClick={() => void load()} className="ml-2 underline">다시 시도</button>}
         </div> : <>
           <p className="mt-5 text-sm font-semibold text-stone-800" aria-live="polite">
-            현재 {shop.balance.toLocaleString("ko-KR")}크레딧
+            구매 가능 {shop.spendableBalance.toLocaleString("ko-KR")}크레딧
           </p>
+          <p className="mt-1 text-xs text-stone-600">퀴즈를 풀어 받은 크레딧만 구매에 사용할 수 있어요.</p>
+          {shop.spendableBalance !== shop.balance && <p className="mt-1 text-xs text-stone-600">
+            전체 잔액 {shop.balance.toLocaleString("ko-KR")}크레딧
+          </p>}
           <div className={`mt-3 rounded-3xl ${preview.background === "night-sky" ? "bg-[#1F2441]" : "bg-[#EDE9E0]"}`}>
             <div className="mx-auto w-48"><ScoopCone scoops={previewScoops} equipped={preview} interactive={false} /></div>
           </div>
@@ -182,11 +186,11 @@ export function ShopSheet({ userId, scoops, onClose, onApplied, onBalanceChanged
               item.owned ? <button type="button" onClick={() => void equip(item.slot, item.id)} disabled={busy}
                 className="mt-3 min-h-12 w-full rounded-xl bg-stone-900 px-4 font-semibold text-white disabled:opacity-50">적용하기</button> :
               !shop.spendingEnabled || !item.isActive ? <p className="mt-2 text-sm text-stone-600">판매 준비 중이에요.</p> :
-              shop.balance < item.price ? <div className="mt-2 text-sm text-stone-700">
-                <p>크레딧 {item.price - shop.balance}개가 더 필요해요.</p>
+              shop.spendableBalance < item.price ? <div className="mt-2 text-sm text-stone-700">
+                <p>구매 가능 크레딧 {item.price - shop.spendableBalance}개가 더 필요해요.</p>
                 <Link href="/" className="mt-2 inline-block underline">학습하러 가기</Link>
               </div> : confirming ? <div className="mt-3 rounded-xl bg-white p-4 text-sm">
-                <p>{item.nameKo}을(를) {item.price}크레딧으로 구매할까요? 구매 후 {shop.balance - item.price}크레딧이 남아요.</p>
+                <p>{item.nameKo}을(를) {item.price}크레딧으로 구매할까요? 구매 후 사용 가능한 크레딧은 {shop.spendableBalance - item.price}개예요.</p>
                 <div className="mt-3 flex gap-2"><button type="button" onClick={() => void purchase(item)} disabled={busy}
                   className="min-h-11 flex-1 rounded-lg bg-stone-900 px-4 text-white disabled:opacity-50">구매 확인</button>
                   <button type="button" onClick={() => setConfirming(false)} className="min-h-11 rounded-lg border px-4">취소</button></div>

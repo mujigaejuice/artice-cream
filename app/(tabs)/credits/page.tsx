@@ -137,6 +137,9 @@ export default function CreditsPage() {
             snapshot.earningMode === "paused" ? "새 적립이 잠시 멈췄어요. 기존 잔액은 유지돼요." :
             "새로운 글을 처음 완료할 때 크레딧이 쌓여요."}
         </p>
+        {snapshot.spendingEnabled && <p className="mt-2 text-sm text-[#e4dceb]">
+          꾸미기 구매 가능: {snapshot.spendableBalance.toLocaleString("ko-KR")}크레딧
+        </p>}
       </section>
 
       {snapshot.earningMode !== "inactive" && (

@@ -15,8 +15,11 @@ export async function GET(request: Request) {
     });
     if (error || !data || typeof data !== "object") throw error ?? new Error("Invalid credit snapshot");
     const balance = BigInt(data.balance);
-    if (balance < 0n || balance > BigInt(Number.MAX_SAFE_INTEGER)) throw new Error("Invalid balance");
-    const snapshot: CreditSnapshot = { ...data, userId: user.id, balance: Number(balance) };
+    const spendableBalance = BigInt(data.spendableBalance);
+    if (balance < 0n || balance > BigInt(Number.MAX_SAFE_INTEGER) ||
+        spendableBalance < 0n || spendableBalance > balance) throw new Error("Invalid balance");
+    const snapshot: CreditSnapshot = { ...data, userId: user.id, balance: Number(balance),
+      spendableBalance: Number(spendableBalance) };
     if (!Number.isInteger(snapshot.policyVersion) ||
         !["inactive", "active", "paused"].includes(snapshot.earningMode) ||
         typeof snapshot.hasWelcome !== "boolean" || !snapshot.rules) {

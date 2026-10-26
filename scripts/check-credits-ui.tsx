@@ -39,7 +39,7 @@ async function main() {
     return new Promise<Response>((resolve) => { pending.push(resolve); });
   };
   const snapshot = (userId: string, balance: number) => Response.json({
-    userId, balance, policyVersion: 1, earningMode: "active", spendingEnabled: false,
+    userId, balance, spendableBalance: balance, policyVersion: 1, earningMode: "active", spendingEnabled: false,
     hasWelcome: true, rules: { article: 10, quizBonusMax: 10, welcome: 100 },
   });
   try {

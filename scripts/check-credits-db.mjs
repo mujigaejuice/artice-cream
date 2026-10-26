@@ -64,7 +64,8 @@ try {
     'supabase/migrations/20261022180420_article_reader_rpc.sql',
     'supabase/migrations/20261025145740_credits_core.sql',
     'supabase/migrations/20261025145758_credit_reads.sql',
-    'supabase/migrations/20261025160738_cosmetic_shop.sql']) {
+    'supabase/migrations/20261025160738_cosmetic_shop.sql',
+    'supabase/migrations/20261026071437_quiz_only_spending.sql']) {
     await sql(await readFile(new URL(`../${file}`, import.meta.url), 'utf8'));
   }
 
@@ -187,9 +188,15 @@ try {
   await sql(`update public.credit_policy set spending_enabled=true where id=1;
     update public.cosmetic_items set is_active=true;
     insert into public.credit_events(user_id,amount,reason,source_id,policy_version)
-      values('${uid(6)}',137,'adjustment','shop-fixture',1);`);
+      values('${uid(5)}',500,'adjustment','shop-fixture',1);`);
   const spend = (user, item, version = 1) => rpc(`public.spend_credits('${uid(user)}','${item}',${version})`);
   assert.equal((await spend(1,'berry-palette')).error,'insufficient_credits');
+  assert.equal((await spend(5,'sugar-stars')).error,'insufficient_credits');
+  assert.equal((await spend(5,'sugar-stars')).shortfall,30);
+  const adjusted = await rpc(`public.get_shop_snapshot('${uid(5)}')`);
+  assert.equal(adjusted.balance,'620');
+  assert.equal(adjusted.spendableBalance,'120');
+  assert.equal((await rpc(`public.get_credit_snapshot('${uid(5)}')`)).spendableBalance,'120');
   assert.equal((await spend(6,'berry-palette',2)).error,'price_changed');
   const duplicate = await burst(12, () => spend(3,'berry-palette'));
   assert.equal(duplicate.filter(row => row.status === 'purchased').length,1);
@@ -199,9 +206,9 @@ try {
   assert.equal((await rpc(`public.equip_cosmetic('${uid(3)}','palette','berry-palette')`)).equipped.palette,'berry-palette');
   assert.equal((await rpc(`public.equip_cosmetic('${uid(3)}','palette',null)`)).equipped.palette,undefined);
   assert.equal((await spend(6,'berry-palette')).status,'purchased');
-  assert.equal((await spend(6,'cocoa-cone')).status,'purchased');
+  assert.equal((await spend(6,'cocoa-cone')).error,'insufficient_credits');
   assert.equal((await spend(6,'sugar-stars')).error,'insufficient_credits');
-  assert.equal((await rpc(`public.get_shop_snapshot('${uid(6)}')`)).balance,'0');
+  assert.equal((await rpc(`public.get_shop_snapshot('${uid(6)}')`)).spendableBalance,'3');
   await sql(`update public.credit_policy set spending_enabled=false where id=1;`);
   assert.equal((await spend(6,'berry-palette')).status,'already_owned');
   assert.equal((await spend(5,'night-sky')).error,'shop_unavailable');

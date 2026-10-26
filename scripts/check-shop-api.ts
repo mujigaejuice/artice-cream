@@ -8,6 +8,7 @@ async function main() {
   const user = "11111111-1111-4111-8111-111111111111";
   let signedIn = true;
   let balance = 160;
+  let spendableBalance = 160;
   let owned = false;
   let equipped: Record<string,string> = {};
   const product = { id: "sugar-stars", slot: "topping", nameKo: "설탕 별 토핑", price: 150,
@@ -21,15 +22,17 @@ async function main() {
     assert.equal(body.p_user_id, user, "RPC must use verified account");
     const rpc = url.pathname.split("/").pop();
     if (rpc === "get_shop_snapshot") return Response.json({ balance: String(balance),
+      spendableBalance: String(spendableBalance),
       spendingEnabled: true, items: [{ ...product, owned }],
       ownedItems: owned ? [product.id] : [], equipped });
     if (rpc === "spend_credits") {
       assert.equal(body.p_item_id, product.id);
-      if (owned) return Response.json({ status: "already_owned", itemId: product.id, balance });
+      if (owned) return Response.json({ status: "already_owned", itemId: product.id, balance, spendableBalance });
       if (body.p_catalog_version !== 1) return Response.json({ error: "price_changed", price: 150, catalogVersion: 1 });
-      if (balance < product.price) return Response.json({ error: "insufficient_credits", balance, shortfall: 150-balance });
-      owned = true; balance -= product.price;
-      return Response.json({ status: "purchased", itemId: product.id, balance });
+      if (spendableBalance < product.price) return Response.json({ error: "insufficient_credits", balance,
+        spendableBalance, shortfall: 150-spendableBalance });
+      owned = true; balance -= product.price; spendableBalance -= product.price;
+      return Response.json({ status: "purchased", itemId: product.id, balance, spendableBalance });
     }
     assert.equal(rpc, "equip_cosmetic");
     if (body.p_item_id && !owned) return Response.json({ error: "item_not_owned" });
@@ -50,6 +53,7 @@ async function main() {
     assert.equal(response.status, 200);
     assert.equal(response.headers.get("cache-control"), "no-store");
     assert.equal((await response.json()).balance, 160);
+    assert.equal((await (await shop(request("/api/shop"))).json()).spendableBalance, 160);
     assert.equal((await spend(request("/api/credits/spend", { itemId: "x", catalogVersion: 0 }))).status, 400);
     assert.equal((await equip(request("/api/cosmetics/equip", { slot: "wrong", itemId: null }))).status, 400);
     assert.equal((await (await equip(request("/api/cosmetics/equip", { slot: "topping", itemId: product.id }))).json()).error, "item_not_owned");
@@ -62,6 +66,16 @@ async function main() {
     assert.equal((await (await equip(request("/api/cosmetics/equip", { slot: "topping", itemId: product.id }))).json()).equipped.topping, product.id);
     assert.deepEqual((await (await equip(request("/api/cosmetics/equip", { slot: "topping", itemId: null }))).json()).equipped, {});
     assert.equal((await (await shop(request("/api/shop"))).json()).ownedItems[0], product.id);
+    owned = false;
+    balance = 500;
+    spendableBalance = 10;
+    const adjustmentOnly = await (await shop(request("/api/shop"))).json();
+    assert.equal(adjustmentOnly.balance, 500);
+    assert.equal(adjustmentOnly.spendableBalance, 10);
+    response = await spend(request("/api/credits/spend", { itemId: product.id, catalogVersion: 1 }));
+    assert.equal(response.status, 409);
+    assert.deepEqual(await response.json(), { error: "insufficient_credits", balance: 500,
+      spendableBalance: 10, shortfall: 140 });
     signedIn = false;
     assert.equal((await shop(request("/api/shop"))).status, 401);
     assert.equal((await spend(request("/api/credits/spend", { itemId: product.id, catalogVersion: 1 }))).status, 401);

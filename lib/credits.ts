@@ -12,6 +12,7 @@ export type CreditResult = {
 export type CreditSnapshot = {
   userId: string;
   balance: number;
+  spendableBalance: number;
   policyVersion: number;
   earningMode: "inactive" | "active" | "paused";
   spendingEnabled: boolean;

@@ -27,9 +27,12 @@ export async function POST(request: Request) {
       return json(request, data, { status: status[data.error] ?? 503 });
     }
     const balance = BigInt(data.balance);
+    const spendableBalance = BigInt(data.spendableBalance);
     if (!["purchased", "already_owned"].includes(data.status) || data.itemId !== itemId ||
-        balance < 0n || balance > BigInt(Number.MAX_SAFE_INTEGER)) throw new Error("Invalid purchase result");
-    return json(request, { ...data, balance: Number(balance) });
+        balance < 0n || balance > BigInt(Number.MAX_SAFE_INTEGER) ||
+        spendableBalance < 0n || spendableBalance > balance) throw new Error("Invalid purchase result");
+    return json(request, { ...data, balance: Number(balance),
+      spendableBalance: Number(spendableBalance) });
   } catch {
     return apiError(request, "shop_unavailable", 503);
   }

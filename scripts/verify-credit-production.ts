@@ -54,6 +54,7 @@ async function main() {
     const before = await request("/api/credits");
     assert.equal(before.earningMode, mode === "active" ? "active" : "inactive");
     assert.equal(before.balance, 0);
+    if (mode === "active") assert.equal(before.spendableBalance, 0);
     const reader = await request("/api/read/open", { variantId });
     assert.equal(reader.opened, true);
     assert.equal(reader.reader?.articleId, articleId);
@@ -89,11 +90,13 @@ async function main() {
     const history = await request("/api/credits/history");
     if (mode === "active") {
       assert.equal(snapshot.balance, grade.credits.newlyGranted);
+      assert.equal(snapshot.spendableBalance, snapshot.balance);
       assert.equal(snapshot.hasWelcome, true);
       assert.equal(history.events?.length, 3);
       assert.equal(history.events.reduce((sum: number, event: { amount: number }) => sum + event.amount, 0), snapshot.balance);
       const shop = await request("/api/shop");
       assert.equal(shop.spendingEnabled, false);
+      assert.equal(shop.spendableBalance, shop.balance);
       assert.equal(shop.items?.length, 4);
       assert.deepEqual(shop.ownedItems, []);
       const blocked = await fetch(`${site}/api/credits/spend`, {

@@ -21,6 +21,7 @@ export type CosmeticItem = {
 export type ShopSnapshot = {
   userId: string;
   balance: number;
+  spendableBalance: number;
   spendingEnabled: boolean;
   items: CosmeticItem[];
   ownedItems: string[];

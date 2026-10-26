@@ -30,7 +30,8 @@ async function main() {
     assert.equal(body.p_user_id, currentUser, "server binds the verified account");
     if (storageFails) return Response.json({ message: "database unavailable" }, { status: 503 });
     if (rpc === "get_credit_snapshot") return Response.json({
-      balance: currentUser.startsWith("1") ? "340" : "0", policyVersion: 1,
+      balance: currentUser.startsWith("1") ? "340" : "0",
+      spendableBalance: currentUser.startsWith("1") ? "320" : "0", policyVersion: 1,
       earningMode: "active", spendingEnabled: false, hasWelcome: true,
       rules: { article: 10, quizBonusMax: 10, welcome: 100 },
     });
@@ -50,6 +51,7 @@ async function main() {
     assert.equal(response.headers.get("cache-control"), "no-store");
     const firstSnapshot = await response.json();
     assert.equal(firstSnapshot.balance, 340);
+    assert.equal(firstSnapshot.spendableBalance, 320);
     assert.equal(firstSnapshot.userId, currentUser);
     response = await history(request("/api/credits/history"));
     assert.equal(response.status, 200);
