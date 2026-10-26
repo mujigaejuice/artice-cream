@@ -27,7 +27,7 @@ async function main() {
   const root = createRoot(container);
   const router = { back() {}, forward() {}, refresh() {}, hmrRefresh() {}, push() {},
     replace() {}, prefetch() {}, bfcacheId: "fixture" };
-  let balance = 120;
+  let balance = 150;
   let owned = false;
   let equipped: Record<string, string> = {};
   let purchases = 0;
@@ -43,8 +43,8 @@ async function main() {
   }
   Object.defineProperty(dom.window, "Audio", { configurable: true, value: FakeAudio });
   const originalFetch = globalThis.fetch;
-  const product = { id: "one-scoop-of-joy", slot: "music", nameKo: "One Scoop of Joy", price: 120,
-    assetKey: "one-scoop-of-joy", catalogVersion: 1, isActive: true };
+  const product = { id: "one-scoop-of-joy", slot: "music", nameKo: "One Scoop of Joy", price: 150,
+    assetKey: "one-scoop-of-joy", catalogVersion: 2, isActive: true };
   globalThis.fetch = async (input, init) => {
     const url = input instanceof Request ? input.url : String(input);
     if (url === "https://shop-music-auth.invalid/auth/v1/user") {
@@ -86,7 +86,7 @@ async function main() {
     await click("중지");
     assert.equal(previewEvents.at(-1), false);
     await click("One Scoop of Joy");
-    await click("120크레딧으로 구매");
+    await click("150크레딧으로 구매");
     await click("구매 확인");
     assert.equal(purchases, 1);
     assert.match(container.textContent!, /구매 가능 0크레딧/);

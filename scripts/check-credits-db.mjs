@@ -191,6 +191,7 @@ try {
     update public.cosmetic_items set is_active=true;
     insert into public.credit_events(user_id,amount,reason,source_id,policy_version)
       values('${uid(5)}',500,'adjustment','shop-fixture',1);`);
+  await sql(await readFile(new URL('../supabase/migrations/20261026185542_music_price_150.sql', import.meta.url), 'utf8'));
   const spend = (user, item, version = 1) => rpc(`public.spend_credits('${uid(user)}','${item}',${version})`);
   assert.equal((await spend(1,'berry-palette')).error,'insufficient_credits');
   assert.equal((await spend(5,'sugar-stars')).error,'insufficient_credits');
@@ -222,8 +223,13 @@ try {
   await assert.rejects(() => spend(5,'night-sky'), /injected unlock failure/);
   assert.equal((await rows(`select count(*) as n from public.credit_events where user_id='${uid(5)}' and reason='purchase'`))[0].n,0);
   await sql(`drop trigger shop_test_fail on public.user_unlocks; drop function shop_test_fail();`);
-  assert.equal((await spend(5,'one-scoop-of-joy')).status,'purchased');
-  assert.equal((await spend(5,'tiptoe-into-sunlight')).error,'insufficient_credits');
+  assert.equal((await spend(5,'one-scoop-of-joy')).error,'price_changed');
+  assert.equal((await spend(5,'one-scoop-of-joy',2)).shortfall,30);
+  await sql(`insert into public.credit_events(user_id,amount,reason,source_id,policy_version)
+    values('${uid(5)}',30,'quiz_bonus','music-quiz-fixture',1);`);
+  assert.equal((await rpc(`public.get_shop_snapshot('${uid(5)}')`)).spendableBalance,'150');
+  assert.equal((await spend(5,'one-scoop-of-joy',2)).status,'purchased');
+  assert.equal((await spend(5,'tiptoe-into-sunlight',2)).error,'insufficient_credits');
   assert.equal((await rpc(`public.equip_cosmetic('${uid(5)}','music','one-scoop-of-joy')`)).equipped.music,'one-scoop-of-joy');
   assert.equal((await rpc(`public.equip_cosmetic('${uid(5)}','music',null)`)).equipped.music,undefined);
   assert.equal((await rpc(`public.get_shop_snapshot('${uid(5)}')`)).spendableBalance,'0');

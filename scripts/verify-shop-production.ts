@@ -16,6 +16,10 @@ const variantId = 362;
 const articleId = 1917;
 const itemId = process.argv.includes("--music") ? "one-scoop-of-joy" : "night-sky";
 const slot = itemId === "night-sky" ? "background" : "music";
+const expectedPrice = slot === "music" ? 150 : 120;
+const catalogVersion = slot === "music" ? 2 : 1;
+const finalSpendable = slot === "music" ? 10 : 0;
+const finalBalance = 500 + finalSpendable;
 let userId: string | undefined;
 
 async function main() {
@@ -43,6 +47,24 @@ async function main() {
       assert.equal(response.status, expected, `${path}: ${response.status} ${JSON.stringify(data)}`);
       return data;
     };
+    const completeQuiz = async (selectedVariant: number, expectedArticle: number) => {
+      const reader = await request("/api/read/open", { variantId: selectedVariant });
+      assert.equal(reader.opened, true);
+      assert.equal(reader.reader?.articleId, expectedArticle);
+      const quiz = await request(`/api/quiz?v=${selectedVariant}`);
+      assert.equal(quiz.mode, "quiz");
+      const { data: keys, error: keyError } = await admin.from("quiz_questions")
+        .select("id,correct_index").eq("variant_id", selectedVariant);
+      if (keyError) throw keyError;
+      assert.equal(keys?.length, quiz.questions?.length);
+      const questionIds = new Set(quiz.questions.map((question: { id: number }) => question.id));
+      assert.ok(keys?.every((key) => questionIds.has(key.id)));
+      const answers = Object.fromEntries(keys!.map((key) => [key.id, key.correct_index]));
+      const grade = await request("/api/quiz/grade", { variantId: selectedVariant, answers });
+      assert.equal(grade.isReview, false);
+      assert.equal(grade.credits?.status, "granted");
+      return grade.credits.newlyGranted as number;
+    };
     const onboarding = await request("/api/onboarding");
     const domainId = onboarding.domains?.[0]?.id;
     assert.ok(Number.isSafeInteger(domainId));
@@ -53,7 +75,12 @@ async function main() {
     assert.equal(before.spendableBalance, 0);
     assert.equal(before.items?.length, 8);
     assert.ok(before.items.every((item: { isActive: boolean }) => item.isActive));
+    const product = before.items.find((item: { id: string }) => item.id === itemId);
+    assert.equal(product?.price, expectedPrice);
+    assert.equal(product?.catalogVersion, catalogVersion);
     if (slot === "music") {
+      const stale = await request("/api/credits/spend", { itemId, catalogVersion: 1 }, 409);
+      assert.equal(stale.error, "price_changed");
       for (const name of ["one-scoop-of-joy", "tiptoe-into-sunlight", "two-scoops-of-july", "waffle-cone-waltz"]) {
         const media = await fetch(`${site}/audio/${name}.mp3`, { method: "HEAD",
           signal: AbortSignal.timeout(30_000) });
@@ -69,52 +96,53 @@ async function main() {
     const adjusted = await request("/api/shop");
     assert.equal(adjusted.balance, 500);
     assert.equal(adjusted.spendableBalance, 0);
-    const unaffordable = await request("/api/credits/spend", { itemId, catalogVersion: 1 }, 409);
+    const unaffordable = await request("/api/credits/spend", { itemId, catalogVersion }, 409);
     assert.equal(unaffordable.error, "insufficient_credits");
-    assert.equal(unaffordable.shortfall, 120);
+    assert.equal(unaffordable.shortfall, expectedPrice);
 
-    const reader = await request("/api/read/open", { variantId });
-    assert.equal(reader.opened, true);
-    assert.equal(reader.reader?.articleId, articleId);
-    const quiz = await request(`/api/quiz?v=${variantId}`);
-    assert.equal(quiz.mode, "quiz");
-    const { data: keys, error: keyError } = await admin.from("quiz_questions")
-      .select("id,correct_index").eq("variant_id", variantId);
-    if (keyError) throw keyError;
-    assert.equal(keys?.length, quiz.questions?.length);
-    const questionIds = new Set(quiz.questions.map((question: { id: number }) => question.id));
-    assert.ok(keys?.every((key) => questionIds.has(key.id)));
-    const answers = Object.fromEntries(keys!.map((key) => [key.id, key.correct_index]));
-    const grade = await request("/api/quiz/grade", { variantId, answers });
-    assert.equal(grade.isReview, false);
-    assert.equal(grade.credits?.status, "granted");
-    assert.equal(grade.credits?.newlyGranted, 120);
+    assert.equal(await completeQuiz(variantId, articleId), 120);
     const earned = await request("/api/shop");
     assert.equal(earned.balance, 620);
     assert.equal(earned.spendableBalance, 120);
+    if (slot === "music") {
+      const stillShort = await request("/api/credits/spend", { itemId, catalogVersion }, 409);
+      assert.equal(stillShort.error, "insufficient_credits");
+      assert.equal(stillShort.shortfall, 30);
+      for (const [nextVariant, nextArticle] of [[367, 1922], [368, 1923]]) {
+        const grant: { data: unknown; error: unknown } = await admin.rpc("grant_ad_unlock", {
+          p_user_id: userId, p_nonce: `shop-test:${run}:${nextVariant}`,
+        });
+        if (grant.error) throw grant.error;
+        assert.equal((grant.data as { status?: string } | null)?.status, "granted");
+        assert.equal(await completeQuiz(nextVariant, nextArticle), 20);
+      }
+      const ready = await request("/api/shop");
+      assert.equal(ready.balance, 660);
+      assert.equal(ready.spendableBalance, 160);
+    }
 
-    const bought = await request("/api/credits/spend", { itemId, catalogVersion: 1 });
+    const bought = await request("/api/credits/spend", { itemId, catalogVersion });
     assert.equal(bought.status, "purchased");
-    assert.equal(bought.balance, 500);
-    assert.equal(bought.spendableBalance, 0);
-    const repeat = await request("/api/credits/spend", { itemId, catalogVersion: 1 });
+    assert.equal(bought.balance, finalBalance);
+    assert.equal(bought.spendableBalance, finalSpendable);
+    const repeat = await request("/api/credits/spend", { itemId, catalogVersion });
     assert.equal(repeat.status, "already_owned");
     const equip = await request("/api/cosmetics/equip", { slot, itemId });
     assert.equal(equip.equipped[slot], itemId);
     const after = await request("/api/shop");
-    assert.equal(after.balance, 500);
-    assert.equal(after.spendableBalance, 0);
+    assert.equal(after.balance, finalBalance);
+    assert.equal(after.spendableBalance, finalSpendable);
     assert.deepEqual(after.ownedItems, [itemId]);
     assert.equal(after.equipped[slot], itemId);
-    assert.equal((await request("/api/credits")).spendableBalance, 0);
+    assert.equal((await request("/api/credits")).spendableBalance, finalSpendable);
     assert.equal((await request("/api/credits/spend", { itemId: "berry-palette", catalogVersion: 1 }, 409)).error,
       "insufficient_credits");
     assert.deepEqual((await request("/api/cosmetics/equip", { slot, itemId: null })).equipped, {});
     const history = await request("/api/credits/history");
     assert.equal(history.events?.filter((event: { reason: string }) => event.reason === "purchase").length, 1);
-    assert.equal(history.events?.reduce((total: number, event: { amount: number }) => total + event.amount, 0), 500);
-    console.log(JSON.stringify({ result: "passed", articleId, quizCredits: 120,
-      adjustmentExcluded: 500, purchase: itemId, finalSpendable: 0 }));
+    assert.equal(history.events?.reduce((total: number, event: { amount: number }) => total + event.amount, 0), finalBalance);
+    console.log(JSON.stringify({ result: "passed", articleId, quizCredits: slot === "music" ? 160 : 120,
+      adjustmentExcluded: 500, purchase: itemId, purchasePrice: expectedPrice, finalSpendable }));
   } finally {
     if (userId) {
       const remaining = await admin.auth.admin.getUserById(userId);
