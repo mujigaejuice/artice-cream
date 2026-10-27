@@ -36,6 +36,7 @@ import {
   coneHeight,
   coneTopY,
   du,
+  gelatoScoopPath,
   scoopCy,
   scoopPath,
   waveMarkPath,
@@ -77,13 +78,15 @@ type Props = {
   equipped?: Equipped;
   scoopColors?: ScoopColors;
   interactive?: boolean;
+  previewCrop?: boolean;
 };
 
 export function ScoopCone({ scoops, selectedId, justAddedId, onSelect, onArrivalComplete, equipped, scoopColors,
-  interactive = true }: Props) {
+  interactive = true, previewCrop = false }: Props) {
   const [focusedId, setFocusedId] = useState<number | null>(null);
   const patternId = `ac-waffle-${useId().replace(/:/g, "")}`;
   const clipId = `ac-scoop-clip-${useId().replace(/:/g, "")}`;
+  const gelatoShadeId = `ac-gelato-shade-${useId().replace(/:/g, "")}`;
   const appearance = safeEquipped(equipped);
   const chosenColors = safeScoopColors(scoopColors);
   const arrival = useScoopArrival(
@@ -107,7 +110,8 @@ export function ScoopCone({ scoops, selectedId, justAddedId, onSelect, onArrival
   const H = coneHeight(n);
   const topY = coneTopY(n); // 쉴 때 기준 — 선택 중의 이동은 아래 <g>의 transform이 맡는다
   const tipY = topY + CONE_H;
-  const d = useMemo(() => scoopPath(), []);
+  const gelato = appearance.texture === "gelato-folds";
+  const d = useMemo(() => gelato ? gelatoScoopPath() : scoopPath(), [gelato]);
 
   const coneFill = appearance.cone === "cocoa-cone" ? { h: 25, s: 43, l: 43 } : CONE_FILL;
   const coneLattice = appearance.cone === "cocoa-cone" ? { h: 24, s: 35, l: 32 } : CONE_LATTICE;
@@ -122,7 +126,7 @@ export function ScoopCone({ scoops, selectedId, justAddedId, onSelect, onArrival
   return (
     <svg
       className="ac-svg"
-      viewBox={`0 0 ${VB_W} ${H}`}
+      viewBox={previewCrop && n === 1 ? "80 35 100 110" : `0 0 ${VB_W} ${H}`}
       preserveAspectRatio="xMidYMax meet"
       role="group"
       aria-label={`아이스크림 콘, 스쿱 ${n}개`}
@@ -208,6 +212,11 @@ export function ScoopCone({ scoops, selectedId, justAddedId, onSelect, onArrival
                 }
               }}
             >
+              {gelato && <defs><linearGradient id={`${gelatoShadeId}-${s.id}`} x1="12%" y1="0%" x2="80%" y2="100%">
+                <stop offset="0%" stopColor={glow} />
+                <stop offset="45%" stopColor={fill} />
+                <stop offset="100%" stopColor={mark} />
+              </linearGradient></defs>}
               {/* 선택 표시는 스택에서 빠져나온 것 자체다(화면구성.md §4-2) — 링은 없앴다.
                   키보드 포커스 링(점선)만 남긴다: 훑을 때 위치를 알 방법이 그것뿐이라서. */}
               {s.id === focusedId && !isSel && (
@@ -225,6 +234,7 @@ export function ScoopCone({ scoops, selectedId, justAddedId, onSelect, onArrival
 
               {/* 본체는 기본 도안의 단색. 선택한 질감은 도형 안에서만 보인다. */}
               <path d={d} fill={fill} />
+              {gelato && <path d={d} fill={`url(#${gelatoShadeId}-${s.id})`} opacity=".42" />}
 
               {appearance.texture === "cloud-swirl" && <g clipPath={`url(#${clipId})`}
                 fill="none" stroke="#FFFDF9" strokeLinecap="round" opacity=".82">
@@ -232,23 +242,37 @@ export function ScoopCone({ scoops, selectedId, justAddedId, onSelect, onArrival
                 <path d="M-63 4C-42-11-33 9-13 0S22-19 45-7s27 6 39-3" strokeWidth="6" opacity=".74" />
                 <path d="M-58 23C-36 10-28 30-9 21s38-13 53-2 31 4 42-3" strokeWidth="5" opacity=".62" />
               </g>}
-              {appearance.texture === "gelato-folds" && <g clipPath={`url(#${clipId})`}
-                fill="none" strokeLinecap="round" opacity=".8">
-                <path d="M-57-4q16-29 35-21t30 5q12-18 33-9t30 5" stroke={glow} strokeWidth="10" />
-                <path d="M-63 13q22-19 37-11t31 3q17-16 34-6t34 1" stroke={mark} strokeWidth="5" opacity=".7" />
-                <path d="M-42 31q18-19 35-8t33-4q21-12 40 0" stroke={glow} strokeWidth="8" opacity=".7" />
+              {gelato && <g clipPath={`url(#${clipId})`} fill="none" strokeLinecap="round">
+                <path d="M-37-6C-26-18-17-22-8-17 2-10 5-17 15-20 23-22 30-15 35-11"
+                  stroke={mark} strokeWidth="9" opacity=".27" />
+                <path d="M-37-11C-25-23-17-27-7-21 3-15 6-22 15-24 25-26 31-19 36-15"
+                  stroke={glow} strokeWidth="4" opacity=".77" />
+                <path d="M-40 12C-29 1-25-10-14-8-3-6-5 7 8 7 20 7 23-8 39-4"
+                  stroke={mark} strokeWidth="13" opacity=".34" />
+                <path d="M-40 5C-28-5-24-17-13-15-2-13-4 0 8 0 20 0 24-14 39-10"
+                  stroke={glow} strokeWidth="5" opacity=".83" />
+                <path d="M-38 25C-27 12-18 14-11 21-2 32 8 26 15 17 23 8 30 12 40 18"
+                  stroke={mark} strokeWidth="14" opacity=".33" />
+                <path d="M-39 18C-27 5-18 7-10 14 0 24 8 19 16 10 25 2 31 6 40 11"
+                  stroke={glow} strokeWidth="5" opacity=".76" />
+                <path d="M-27 34C-16 26-12 27-4 31 6 37 16 24 29 28"
+                  stroke={mark} strokeWidth="8" opacity=".27" />
+                <path d="M-29 29C-18 20-12 21-3 25 6 31 17 18 30 22"
+                  stroke={glow} strokeWidth="3.5" opacity=".63" />
+                <path d="M-24-16c5-2 8-1 12 1M16-17c5-1 9 0 12 3M-30 9c4-2 8-1 11 2M10 30c4-1 8-2 11-5"
+                  stroke="#FFF9EC" strokeWidth="1.4" opacity=".5" />
               </g>}
 
               {/* 빛은 왼쪽 위에서 온다 — 돔의 큰 하이라이트와 로브의 윤기가 한 광원이다. */}
-              <ellipse
+              {!gelato && <ellipse
                 cx={0}
                 cy={0}
                 rx={du(HIGHLIGHT.rx)}
                 ry={du(HIGHLIGHT.ry)}
                 fill={glow}
                 transform={`translate(${du(HIGHLIGHT.x)} ${du(HIGHLIGHT.y)}) rotate(${HIGHLIGHT.rot})`}
-              />
-              {GLINTS.map((g, gi) => (
+              />}
+              {!gelato && GLINTS.map((g, gi) => (
                 <ellipse
                   key={gi}
                   cx={0}
@@ -261,7 +285,7 @@ export function ScoopCone({ scoops, selectedId, justAddedId, onSelect, onArrival
               ))}
 
               {/* 물결 자국 — 이 셋이 있어야 바닥 로브가 물결로 읽힌다. */}
-              {WAVE_MARKS.map((m, mi) => (
+              {!gelato && WAVE_MARKS.map((m, mi) => (
                 <path
                   key={mi}
                   d={waveMarkPath(m)}
@@ -284,44 +308,51 @@ export function ScoopCone({ scoops, selectedId, justAddedId, onSelect, onArrival
 
               {/* 가장 최근 스쿱: 체리. 중심이 돔 정수리에 얹힌다. 빠져나와도 따라간다. */}
               {i === cherryIdx && appearance.topping === "sugar-stars" && (
-                <g aria-label="설탕 별 토핑" fill="#F8D872" stroke="#9A7334" strokeWidth="1.4">
-                  <path d="M-27 -45 l3 7 8 1 -6 5 2 8 -7 -4 -7 4 2 -8 -6 -5 8 -1 Z" />
-                  <path d="M0 -57 l3 7 8 1 -6 5 2 8 -7 -4 -7 4 2 -8 -6 -5 8 -1 Z" />
-                  <path d="M27 -44 l3 7 8 1 -6 5 2 8 -7 -4 -7 4 2 -8 -6 -5 8 -1 Z" />
+                <g aria-label="설탕 별 토핑" clipPath={`url(#${clipId})`} fill="#F8D872"
+                  stroke="#9A7334" strokeWidth="1.4">
+                  <path d="M-18 -18 l3 7 8 1 -6 5 2 8 -7 -4 -7 4 2 -8 -6 -5 8 -1 Z" />
+                  <path d="M0 -33 l3 7 8 1 -6 5 2 8 -7 -4 -7 4 2 -8 -6 -5 8 -1 Z" />
+                  <path d="M18 -18 l3 7 8 1 -6 5 2 8 -7 -4 -7 4 2 -8 -6 -5 8 -1 Z" />
                 </g>
               )}
-              {i === cherryIdx && appearance.topping === "rainbow-sprinkles" && <g aria-label="무지개 스프링클">
-                {[[ -39,-25,-25,"#F37E9A"],[-26,-38,26,"#F7D56E"],[-10,-29,-36,"#8EC8B0"],
-                  [7,-42,28,"#B2A0DE"],[24,-29,-24,"#F49765"],[39,-18,30,"#78B7D7"],
-                  [-32,-4,32,"#A9A1E8"],[-15,-12,-18,"#F5D271"],[5,-15,30,"#E56B85"],
-                  [23,-7,-33,"#8FC9AE"],[-7,9,25,"#F49765"],[35,8,-19,"#B2A0DE"]].map(([x,y,rot,color], index) =>
-                  <rect key={index} x={Number(x)-5} y={Number(y)-2} width="10" height="4" rx="2"
+              {i === cherryIdx && appearance.topping === "rainbow-sprinkles" && <g aria-label="무지개 스프링클"
+                clipPath={`url(#${clipId})`}>
+                {[[-20,-17,-25,"#F37E9A"],[0,-25,26,"#F7D56E"],[18,-17,-36,"#8EC8B0"],
+                  [-28,-3,28,"#B2A0DE"],[-8,-8,-24,"#F49765"],[11,-7,30,"#78B7D7"],
+                  [29,-1,32,"#A9A1E8"],[-21,12,-18,"#F5D271"],[1,11,30,"#E56B85"],
+                  [20,12,-33,"#8FC9AE"],[-4,1,25,"#F49765"],[10,22,-19,"#B2A0DE"]].map(([x,y,rot,color], index) =>
+                  <rect key={index} x={Number(x)-4.5} y={Number(y)-1.8} width="9" height="3.6" rx="1.8"
                     fill={String(color)} transform={`rotate(${rot} ${x} ${y})`} />)}
               </g>}
               {i === cherryIdx && appearance.topping === "chocolate-drizzle" && <g aria-label="초코 드리즐"
-                fill="none" stroke="#654137" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M-48-17q24-17 48-5t48-3M-53-5q26-15 52-4t53-2" strokeWidth="8" />
-                <path d="M-37-16v22q0 9 6 9t6-9V-8M6-19v30q0 11 7 11t7-11V-15M38-20V1q0 8 6 8t6-8V-18"
-                  strokeWidth="7" />
-                <path d="M-45-19q24-14 45-3t45-3" stroke="#9A6950" strokeWidth="2" opacity=".7" />
+                clipPath={`url(#${clipId})`} fill="none" stroke="#654137" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M-35-8C-24-19-13-16-3-11 9-6 18-18 33-12M-34 6C-24-4-13-2-3 3 9 9 21-2 33 1"
+                  strokeWidth="6" />
+                <path d="M-22-12C-20-4-25 3-20 8-16 12-17 5-16 2M9-7C12 1 7 8 11 13 14 16 16 9 14 6"
+                  strokeWidth="4" />
+                <path d="M-33-11C-23-21-12-18-2-14 10-9 20-21 32-15" stroke="#A8775A"
+                  strokeWidth="2" opacity=".8" />
               </g>}
               {i === cherryIdx && appearance.topping === "cheese-cubes" && <g aria-label="치즈 큐브"
-                stroke="#D4A95D" strokeWidth="1.6" strokeLinejoin="round">
-                {[[ -33,-26,-15],[0,-41,12],[31,-25,17],[-9,-11,-12],[21,-4,-15]].map(([x,y,rot], index) =>
+                clipPath={`url(#${clipId})`} stroke="#D4A95D" strokeWidth="1.6" strokeLinejoin="round">
+                {[[ -19,-13,-15],[2,-22,12],[22,-9,17],[-10,5,-12],[12,9,-15]].map(([x,y,rot], index) =>
                   <g key={index} transform={`translate(${x} ${y}) rotate(${rot})`}>
                     <path d="M-8-6h16l5 5-5 10H-8l-5-5Z" fill="#F9DE8A" />
                     <path d="M8-6l5 5-5 10-5-5Z" fill="#EBC773" />
                     <circle cx="-2" cy="1" r="1.4" fill="#E8C46E" stroke="none" />
                   </g>)}
               </g>}
-              {i === cherryIdx && appearance.topping === "fresh-strawberry" && <g aria-label="딸기 토핑">
-                <path d="M-17-46q0-15 17-13 17-2 17 13Q15-21 0-12q-15-9-17-34Z"
-                  fill="#F06273" stroke="#BB4055" strokeWidth="2.6" />
-                <path d="M0-57q-10-10-17-8 6 8 13 10-13-3-17 2 11 8 21 2 10 6 21-2-5-5-17-2 7-2 13-10-8-2-17 8Z"
-                  fill="#75A979" stroke="#4F8059" strokeWidth="2" />
-                <path d="M0-55v-13" stroke="#4F8059" strokeWidth="2.5" strokeLinecap="round" />
-                {[[ -8,-43],[5,-42],[-4,-32],[9,-29],[1,-21]].map(([x,y], index) =>
-                  <ellipse key={index} cx={x} cy={y} rx="1.5" ry="2.4" fill="#FFE3B4" />)}
+              {i === cherryIdx && appearance.topping === "fresh-strawberry" && <g aria-label="딸기 토핑"
+                clipPath={`url(#${clipId})`} transform="translate(1 -12) rotate(-14)">
+                <path d="M-13-9Q0-17 13-9L10 2Q7 12 0 15Q-7 12-10 2Z"
+                  fill="#B93C51" stroke="#8D3445" strokeWidth="1.6" />
+                <path d="M-10-7Q0-14 10-7L8 2Q5 9 0 11Q-5 9-8 2Z"
+                  fill="#FFD4BB" stroke="#F8A89E" strokeWidth="1" />
+                <path d="M-7-6Q0-10 7-6L5 2Q3 6 0 7Q-3 6-5 2Z" fill="#F27B85" />
+                <path d="M-13-9Q0-17 13-9" fill="none" stroke="#6D9F68" strokeWidth="2.5"
+                  strokeLinecap="round" />
+                {[[ -5,-3],[4,-4],[-6,3],[4,3],[0,6]].map(([x,y], index) =>
+                  <ellipse key={index} cx={x} cy={y} rx=".8" ry="1.6" fill="#FFE6B7" />)}
               </g>}
               {i === cherryIdx && !appearance.topping && (
                 <>

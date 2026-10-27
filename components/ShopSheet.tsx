@@ -51,7 +51,8 @@ function ShopArtwork({ product, scoops, equipped, scoopColors }: {
     aria-hidden="true">
     <ConeScene scene={look.background} />
     <div className="relative z-10 w-24"><ScoopCone scoops={scoops.slice(-1)} equipped={look}
-      scoopColors={colors} interactive={false} /></div>
+      scoopColors={colors} interactive={false}
+      previewCrop={product.slot === "topping" || product.slot === "texture" || product.slot === "palette"} /></div>
     {product.slot === "palette" && <div className="absolute bottom-1 right-2 z-10 flex gap-0.5 rounded-full bg-white/85 p-1">
       {Object.values(SAMPLE_COLORS).map((color) => <span key={color} className="size-1.5 rounded-full"
         style={{ backgroundColor: color }} />)}

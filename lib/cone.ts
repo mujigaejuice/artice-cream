@@ -222,6 +222,20 @@ export function scoopPath(r: number = R): string {
   return `${d} Z`;
 }
 
+/** Keep the original dome for toppings, then round the lower half like a gelato scoop. */
+export function gelatoScoopPath(r: number = R): string {
+  const k = DOME_R * r;
+  const f = (v: number) => Number((v * k).toFixed(3));
+  const seams = RIM.map((c, i) => seam(c, RIM[(i + 1) % RIM.length]));
+  const left = seams[seams.length - 1];
+  const right = seams[0];
+  return `M ${f(left[0])} ${f(left[1])}` +
+    ` A ${f(DOME.r)} ${f(DOME.r)} 0 1 1 ${f(right[0])} ${f(right[1])}` +
+    ` C ${f(1.32)} ${f(0.48)} ${f(1.12)} ${f(0.92)} ${f(0.69)} ${f(1.09)}` +
+    ` C ${f(0.31)} ${f(1.24)} ${f(-0.31)} ${f(1.24)} ${f(-0.69)} ${f(1.09)}` +
+    ` C ${f(-1.12)} ${f(0.92)} ${f(-1.32)} ${f(0.48)} ${f(left[0])} ${f(left[1])} Z`;
+}
+
 /* ── 도안의 장식 (좌표·크기는 전부 돔 반지름 단위, 원점은 스쿱 중심) ──── */
 
 /** 왼쪽 위에서 빛이 온다 — 돔의 큰 하이라이트와 로브의 작은 윤기가 모두 왼쪽이다. */
