@@ -119,12 +119,17 @@ export function ScoopCone({ scoops, selectedId, justAddedId, onSelect, onArrival
   const coneLattice = appearance.cone === "cocoa-cone" ? { h: 24, s: 35, l: 32 } : CONE_LATTICE;
   const coneInk = hslStr(outlineColor(coneFill));
   const cherryInk = hslStr(outlineColor(CHERRY_FILL));
-  const coneHalf = gelato && n > 0 ? R * 0.74 : CONE_HALF;
-  const conePath = `M ${CX - coneHalf} ${topY} L ${CX + coneHalf} ${topY} L ${CX + 4} ${tipY - 6} Q ${CX} ${tipY} ${CX - 4} ${tipY - 6} Z`;
+  const conePath = `M ${CX - CONE_HALF} ${topY} L ${CX + CONE_HALF} ${topY} L ${CX + 4} ${tipY - 6} Q ${CX} ${tipY} ${CX - 4} ${tipY - 6} Z`;
 
   // 체리는 가장 최근에 쌓은 스쿱(맨 위)에 귀속된다. 그 스쿱을 골라 빠져나와도
   // 체리는 따라간다 — 아래 스쿱으로 옮겨 달면 "최신"의 표식이 아니게 된다.
   const cherryIdx = n - 1;
+  const coneArt = <g className="ac-cone"
+    transform={`translate(0 ${selIdx != null ? PUSH_BELOW : 0})`}>
+    <path d={conePath} fill={`url(#${patternId})`} stroke={coneInk} strokeWidth={LINE}
+      strokeLinejoin="round" strokeLinecap="round" />
+  </g>;
+  const coneInFront = gelato && n > 0;
 
   return (
     <svg
@@ -148,19 +153,7 @@ export function ScoopCone({ scoops, selectedId, justAddedId, onSelect, onArrival
 
       {/* 콘 — 선택 중에는 아래 무리와 함께 내려가 슬롯을 대칭으로 벌린다.
           내려갈 자리는 뷰박스에 늘 비워 둔 몫이라 콘 높이는 변하지 않는다. */}
-      <g
-        className="ac-cone"
-        transform={`translate(0 ${selIdx != null ? PUSH_BELOW : 0})`}
-      >
-        <path
-          d={conePath}
-          fill={`url(#${patternId})`}
-          stroke={coneInk}
-          strokeWidth={LINE}
-          strokeLinejoin="round"
-          strokeLinecap="round"
-        />
-      </g>
+      {!coneInFront && coneArt}
 
       {/* 빈 상태 */}
       {n === 0 && (
@@ -393,6 +386,7 @@ export function ScoopCone({ scoops, selectedId, justAddedId, onSelect, onArrival
           </g>
         );
       })}
+      {coneInFront && coneArt}
     </svg>
   );
 }
