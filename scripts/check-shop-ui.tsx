@@ -6,7 +6,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { ScoopCone } from "../components/ScoopCone";
 import { ConeScene } from "../components/ConeScene";
 import { COSMETIC_ASSETS, safeEquipped, safeScoopColors } from "../lib/cosmetics";
-import { gelatoScoopPath, scoopPath } from "../lib/cone";
+import { R, SCOOP_DOME, coneTopY, gelatoScoopPath, scoopCy, scoopPath } from "../lib/cone";
 import { DEFAULT_MUSIC_SOURCE, MUSIC_TRACKS, musicSource } from "../lib/shop-music";
 import type { Scoop } from "../lib/feed";
 
@@ -47,7 +47,14 @@ assert.equal(firstArc(gelato), firstArc(original), "gelato keeps the original up
 assert.notEqual(gelato, original, "gelato has a different lower silhouette");
 assert.equal(gelato.split(" A ").length - 1, 2, "gelato is a complete circle of two arcs");
 assert.doesNotMatch(gelato, / C /);
-assert.match(markup({ texture: "gelato-folds" }), /ac-gelato-shade/);
+const gelatoMarkup = markup({ texture: "gelato-folds" });
+assert.match(gelatoMarkup, /ac-gelato-shade/);
+const coneMouth = gelatoMarkup.match(/class="ac-cone"[^>]*><path d="M ([\d.]+) ([\d.]+) L ([\d.]+) ([\d.]+)/);
+assert.ok(coneMouth);
+const mouthHalf = (Number(coneMouth[3]) - Number(coneMouth[1])) / 2;
+const circleReachAtLip = Math.sqrt((SCOOP_DOME * R) ** 2 -
+  (coneTopY(1) - scoopCy(0, 1)) ** 2);
+assert.ok(mouthHalf < circleReachAtLip, "cone lip stays behind the gelato sphere");
 assert.match(markup({ texture: "cloud-swirl" }), /ac-scoop-clip/);
 for (const [key, label] of Object.entries({
   "rainbow-sprinkles": "무지개 스프링클", "chocolate-drizzle": "초코 드리즐",

@@ -119,7 +119,8 @@ export function ScoopCone({ scoops, selectedId, justAddedId, onSelect, onArrival
   const coneLattice = appearance.cone === "cocoa-cone" ? { h: 24, s: 35, l: 32 } : CONE_LATTICE;
   const coneInk = hslStr(outlineColor(coneFill));
   const cherryInk = hslStr(outlineColor(CHERRY_FILL));
-  const conePath = `M ${CX - CONE_HALF} ${topY} L ${CX + CONE_HALF} ${topY} L ${CX + 4} ${tipY - 6} Q ${CX} ${tipY} ${CX - 4} ${tipY - 6} Z`;
+  const coneHalf = gelato && n > 0 ? R * 0.74 : CONE_HALF;
+  const conePath = `M ${CX - coneHalf} ${topY} L ${CX + coneHalf} ${topY} L ${CX + 4} ${tipY - 6} Q ${CX} ${tipY} ${CX - 4} ${tipY - 6} Z`;
 
   // 체리는 가장 최근에 쌓은 스쿱(맨 위)에 귀속된다. 그 스쿱을 골라 빠져나와도
   // 체리는 따라간다 — 아래 스쿱으로 옮겨 달면 "최신"의 표식이 아니게 된다.
