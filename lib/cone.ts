@@ -222,7 +222,7 @@ export function scoopPath(r: number = R): string {
   return `${d} Z`;
 }
 
-/** Keep the original dome for toppings, then round the lower half like a gelato scoop. */
+/** A complete sphere using the same upper arc as the standard scoop. */
 export function gelatoScoopPath(r: number = R): string {
   const k = DOME_R * r;
   const f = (v: number) => Number((v * k).toFixed(3));
@@ -231,9 +231,7 @@ export function gelatoScoopPath(r: number = R): string {
   const right = seams[0];
   return `M ${f(left[0])} ${f(left[1])}` +
     ` A ${f(DOME.r)} ${f(DOME.r)} 0 1 1 ${f(right[0])} ${f(right[1])}` +
-    ` C ${f(1.32)} ${f(0.48)} ${f(1.12)} ${f(0.92)} ${f(0.69)} ${f(1.09)}` +
-    ` C ${f(0.31)} ${f(1.24)} ${f(-0.31)} ${f(1.24)} ${f(-0.69)} ${f(1.09)}` +
-    ` C ${f(-1.12)} ${f(0.92)} ${f(-1.32)} ${f(0.48)} ${f(left[0])} ${f(left[1])} Z`;
+    ` A ${f(DOME.r)} ${f(DOME.r)} 0 0 1 ${f(left[0])} ${f(left[1])} Z`;
 }
 
 /* ── 도안의 장식 (좌표·크기는 전부 돔 반지름 단위, 원점은 스쿱 중심) ──── */

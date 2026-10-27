@@ -44,17 +44,21 @@ const original = scoopPath();
 const gelato = gelatoScoopPath();
 const firstArc = (path: string) => path.match(/^(M .*? A .*?)(?: A | C )/)?.[1];
 assert.equal(firstArc(gelato), firstArc(original), "gelato keeps the original upper dome");
-assert.notEqual(gelato, original, "gelato has a rounded lower silhouette");
+assert.notEqual(gelato, original, "gelato has a different lower silhouette");
+assert.equal(gelato.split(" A ").length - 1, 2, "gelato is a complete circle of two arcs");
+assert.doesNotMatch(gelato, / C /);
 assert.match(markup({ texture: "gelato-folds" }), /ac-gelato-shade/);
 assert.match(markup({ texture: "cloud-swirl" }), /ac-scoop-clip/);
 for (const [key, label] of Object.entries({
-  "sugar-stars": "설탕 별 토핑", "rainbow-sprinkles": "무지개 스프링클",
-  "chocolate-drizzle": "초코 드리즐", "cheese-cubes": "치즈 큐브",
-  "fresh-strawberry": "딸기 토핑",
+  "rainbow-sprinkles": "무지개 스프링클", "chocolate-drizzle": "초코 드리즐",
 })) {
   assert.match(markup({ topping: key }), new RegExp(`aria-label="${label}" clip-path=`),
     `${key} stays on the scoop`);
 }
+assert.match(markup({ topping: "sugar-stars" }), /M-27 -45/);
+assert.match(markup({ topping: "sugar-stars" }), /M0 -57/);
+assert.match(markup({ topping: "cheese-cubes" }), /translate\(-18 -20\) rotate\(-15\)/);
+assert.match(markup({ topping: "fresh-strawberry" }), /translate\(0 -34\) rotate\(-14\) scale\(\.8\)/);
 assert.match(markup({ topping: "fresh-strawberry" }), /fill="#FFD4BB"/);
 for (const scene of ["night-sky", "pink-parlor", "turkish-stand", "evening-street"]) {
   assert.match(renderToStaticMarkup(createElement(ConeScene, { scene })), /<svg/);
@@ -63,4 +67,4 @@ assert.deepEqual(safeScoopColors({ cloud: "#8a6ccf", bad: "#FFFFFF", infra: "red
   { cloud: "#8A6CCF" });
 assert.deepEqual(safeEquipped({ topping: "unknown" }), {});
 assert.equal(markup({ topping: "unknown" }), plain);
-console.log("PASS catalog assets, gelato dome, clipped toppings and account colors");
+console.log("PASS catalog assets, spherical gelato, topping positions and account colors");

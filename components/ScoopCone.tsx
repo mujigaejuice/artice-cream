@@ -68,6 +68,8 @@ import { useScoopArrival } from "@/lib/use-scoop-arrival";
 const RING_CY = ((-SCOOP_DOME + SCOOP_BOTTOM) / 2) * R;
 const RING_RX = R * 1.16;
 const RING_RY = ((SCOOP_DOME + SCOOP_BOTTOM) / 2) * R * 1.16;
+const CHEESE_CUBES = [[-18, -20, -15], [0, -28, 12], [18, -20, 17],
+  [-11, 0, -12], [14, 4, -15]] as const;
 
 type Props = {
   scoops: Scoop[];
@@ -308,11 +310,10 @@ export function ScoopCone({ scoops, selectedId, justAddedId, onSelect, onArrival
 
               {/* 가장 최근 스쿱: 체리. 중심이 돔 정수리에 얹힌다. 빠져나와도 따라간다. */}
               {i === cherryIdx && appearance.topping === "sugar-stars" && (
-                <g aria-label="설탕 별 토핑" clipPath={`url(#${clipId})`} fill="#F8D872"
-                  stroke="#9A7334" strokeWidth="1.4">
-                  <path d="M-18 -18 l3 7 8 1 -6 5 2 8 -7 -4 -7 4 2 -8 -6 -5 8 -1 Z" />
-                  <path d="M0 -33 l3 7 8 1 -6 5 2 8 -7 -4 -7 4 2 -8 -6 -5 8 -1 Z" />
-                  <path d="M18 -18 l3 7 8 1 -6 5 2 8 -7 -4 -7 4 2 -8 -6 -5 8 -1 Z" />
+                <g aria-label="설탕 별 토핑" fill="#F8D872" stroke="#9A7334" strokeWidth="1.4">
+                  <path d="M-27 -45 l3 7 8 1 -6 5 2 8 -7 -4 -7 4 2 -8 -6 -5 8 -1 Z" />
+                  <path d="M0 -57 l3 7 8 1 -6 5 2 8 -7 -4 -7 4 2 -8 -6 -5 8 -1 Z" />
+                  <path d="M27 -44 l3 7 8 1 -6 5 2 8 -7 -4 -7 4 2 -8 -6 -5 8 -1 Z" />
                 </g>
               )}
               {i === cherryIdx && appearance.topping === "rainbow-sprinkles" && <g aria-label="무지개 스프링클"
@@ -334,16 +335,21 @@ export function ScoopCone({ scoops, selectedId, justAddedId, onSelect, onArrival
                   strokeWidth="2" opacity=".8" />
               </g>}
               {i === cherryIdx && appearance.topping === "cheese-cubes" && <g aria-label="치즈 큐브"
-                clipPath={`url(#${clipId})`} stroke="#D4A95D" strokeWidth="1.6" strokeLinejoin="round">
-                {[[ -19,-13,-15],[2,-22,12],[22,-9,17],[-10,5,-12],[12,9,-15]].map(([x,y,rot], index) =>
+                stroke="#D4A95D" strokeWidth="1.6" strokeLinejoin="round">
+                <g clipPath={`url(#${clipId})`} fill={mark} stroke="none" opacity=".27">
+                  {CHEESE_CUBES.map(([x, y], index) =>
+                    <ellipse key={index} cx={x} cy={y + 7} rx="10" ry="4.5" />)}
+                </g>
+                {CHEESE_CUBES.map(([x,y,rot], index) =>
                   <g key={index} transform={`translate(${x} ${y}) rotate(${rot})`}>
                     <path d="M-8-6h16l5 5-5 10H-8l-5-5Z" fill="#F9DE8A" />
                     <path d="M8-6l5 5-5 10-5-5Z" fill="#EBC773" />
                     <circle cx="-2" cy="1" r="1.4" fill="#E8C46E" stroke="none" />
+                    <path d="M-10 5Q0 12 10 5" fill="none" stroke={fill} strokeWidth="4" />
                   </g>)}
               </g>}
               {i === cherryIdx && appearance.topping === "fresh-strawberry" && <g aria-label="딸기 토핑"
-                clipPath={`url(#${clipId})`} transform="translate(1 -12) rotate(-14)">
+                transform="translate(0 -34) rotate(-14) scale(.8)">
                 <path d="M-13-9Q0-17 13-9L10 2Q7 12 0 15Q-7 12-10 2Z"
                   fill="#B93C51" stroke="#8D3445" strokeWidth="1.6" />
                 <path d="M-10-7Q0-14 10-7L8 2Q5 9 0 11Q-5 9-8 2Z"
