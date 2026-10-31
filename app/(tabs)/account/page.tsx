@@ -110,6 +110,19 @@ export default function AccountPage() {
         </dl>
       </section>
 
+      <section aria-labelledby="onboarding-heading" className="mt-8 rounded-2xl border border-stone-200 bg-white p-5">
+        <h2 id="onboarding-heading" className="text-sm font-semibold text-stone-900">읽기 설정</h2>
+        <p className="mt-2 text-sm leading-relaxed text-stone-600">
+          온보딩 항목을 다시 확인하거나 새로운 관심 분야를 추가해요.
+        </p>
+        <Link
+          href="/onboarding/?mode=edit"
+          className="mt-4 inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-stone-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-stone-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-800"
+        >
+          온보딩 다시 하기
+        </Link>
+      </section>
+
       <div className="mt-8">
         <p id="signout-description" className="text-sm leading-relaxed text-stone-600">
           다른 계정을 쓰려면 로그아웃한 뒤 다시 로그인해 주세요.
@@ -135,7 +148,6 @@ export default function AccountPage() {
       </section>
       <footer className="mt-8 flex flex-wrap gap-x-5 border-t border-stone-200 pt-4 text-stone-600">
         <Link href="/privacy/" className="ac-intro-link">개인정보처리방침</Link>
-        <Link href="/onboarding/?mode=edit" className="ac-intro-link">관심 분야·수준 설정</Link>
       </footer>
     </main>
   );
