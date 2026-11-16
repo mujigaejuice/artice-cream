@@ -194,7 +194,7 @@ export function ScoopCone({ scoops, selectedId, justAddedId, onSelect, onArrival
             transform={`translate(${x} ${cy}) scale(${scale})`}
           >
             <g
-              className={`ac-scoop${s.id === justAddedId && arrival.waiting ? " ac-scoop-waiting" : ""}${s.id === justAddedId && arrival.falling ? " ac-plop" : ""}`}
+              className={`ac-scoop${s.id === focusedId ? " ac-scoop-focus" : ""}${s.id === justAddedId && arrival.waiting ? " ac-scoop-waiting" : ""}${s.id === justAddedId && arrival.falling ? " ac-plop" : ""}`}
               style={s.id === justAddedId && arrival.falling ? { animationPlayState: arrival.paused ? "paused" : "running" } : undefined}
               onAnimationEnd={(event) => {
                 if (event.target !== event.currentTarget || s.id !== justAddedId) return;
