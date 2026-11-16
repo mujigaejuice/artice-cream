@@ -105,8 +105,10 @@ async function main() {
     assert.match(title(), /모르는 말/);
     await swipe(-100, 0);
     assert.match(title(), /나만의 콘/);
-    const scoop = container.querySelector<SVGElement>('svg [role="button"]')!;
-    await act(async () => { scoop.dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true })); });
+    // 화면구성.md §7 — 스쿱은 그림 옆 숨김 버튼 목록으로 고른다.
+    const scoop = [...container.querySelectorAll<HTMLButtonElement>('ul.sr-only button')].find((b) => b.textContent?.startsWith("클라우드"))!;
+    await act(async () => { scoop.click(); });
+    assert.equal(scoop.getAttribute("aria-pressed"), "true");
     assert.match(container.querySelector('[role="status"]')!.textContent!, /클라우드/);
     await act(async () => { panel.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true })); });
     assert.equal(loginHidden(), false);

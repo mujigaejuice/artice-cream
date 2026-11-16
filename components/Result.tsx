@@ -165,12 +165,12 @@ export function Result({
             {saved ? "저장했어요 · 콘으로" : saving ? "저장 중…" : "콘에 올리기 🍦"}
           </button>
         ) : (
-          <a
+          <Link
             href="/"
             className="block w-full rounded-xl bg-stone-900 px-4 py-3 text-center font-medium text-white"
           >
             홈으로
-          </a>
+          </Link>
         )}
         {result.isOriginal && result.variantId && <>
           {onRetry ? <button type="button" onClick={onRetry} className="block w-full rounded-xl bg-stone-100 px-4 py-3 font-medium text-stone-700">퀴즈 다시 풀기</button> :
@@ -213,6 +213,7 @@ function CreditResultNote({ credits, isReview }: { credits: CreditResult; isRevi
         학습 완료 +{credits.articleReward.base} · 퀴즈 보너스 +{credits.articleReward.bonus}
       </p>
       {credits.welcomeReward > 0 && <p className="mt-1 text-sm text-emerald-900">첫 학습 축하 +{credits.welcomeReward}</p>}
+      {(credits.streakReward ?? 0) > 0 && <p className="mt-1 text-sm text-emerald-900">연속 학습 보상 +{credits.streakReward}</p>}
       <p className="mt-3 border-t border-emerald-200 pt-3 text-xs text-emerald-900">
         현재 잔액 {credits.balance.toLocaleString("ko-KR")}크레딧 · 콘에 올리기와 별도로 적립돼요.
       </p>

@@ -43,6 +43,8 @@ async function main() {
     assert.equal(url.origin, "https://collect-db.invalid", "collector may fetch only the approved test source");
     const table = url.pathname.split("/").pop();
     const method = init?.method ?? "GET";
+    // 실행 기록(ingest_runs)은 기사 쓰기와 따로 센다.
+    if (method === "POST" && table === "ingest_runs") return new Response(null, { status: 201 });
     if (method !== "GET") {
       assert.equal(table, "articles"); writes.push({ method, body: JSON.parse(String(init?.body)), query: url.search });
       return method === "POST" ? Response.json([{ id: 2 }]) : Response.json([{ id: 1 }]);

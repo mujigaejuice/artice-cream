@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -90,12 +91,12 @@ function NotFound() {
       <p className="mt-2 text-sm text-stone-600">
         주소가 잘못됐거나 내려간 글일 수 있어요.
       </p>
-      <a
+      <Link
         href="/"
         className="mt-6 inline-block rounded-xl bg-stone-900 px-5 py-3 text-sm font-medium text-white"
       >
         오늘의 아티클로
-      </a>
+      </Link>
     </main>
   );
 }
@@ -119,12 +120,12 @@ function QuotaWall({ canUnlockWithAd }: { canUnlockWithAd: boolean }) {
         </div>
       )}
 
-      <a
+      <Link
         href="/"
         className="mt-4 inline-block rounded-xl bg-stone-900 px-5 py-3 text-sm font-medium text-white"
       >
         홈으로
-      </a>
+      </Link>
     </main>
   );
 }

@@ -71,7 +71,7 @@ async function main() {
     const source = { source: "kubernetes", rights_status: "permitted", evidence_url: "https://github.com/kubernetes/website/blob/main/LICENSE",
       reviewed_at: "2026-01-01T00:00:00Z", expires_at: null, allow_collect: true, allow_process: true, allow_publish: true };
     type Row = Record<string, any>;
-    let rows: Row[] = [], writes = 0, modelCalls = 0, pageCalls = 0;
+    let rows: Row[] = [], writes = 0, modelCalls = 0, pageCalls = 0, runLogs = 0;
     let mode: "normal" | "source-withdrawn" | "article-withdrawn" = "normal";
     const newRow = (id: number): Row => ({ id, source: "kubernetes", source_url: `https://kubernetes.io/blog/item-${id}/`, title: "RSS title",
       status: "pending", domain_id: null, rights_status: "unreviewed", rights_reviewed_at: null, rights_expires_at: null,
@@ -104,6 +104,7 @@ async function main() {
       const table = url.pathname.split("/").pop();
       if (table === "content_source_rights") return Response.json([source]);
       if (table === "domains") return Response.json([{ id: 2, slug: "infra", active: true }]);
+      if (table === "ingest_runs") { runLogs++; return new Response(null, { status: 201 }); }
       assert.equal(table, "articles");
       if (init?.method === "POST") {
         for (const incoming of JSON.parse(String(init.body))) if (!rows.some(r => r.source_url === incoming.source_url)) rows.push({ ...newRow(2), ...incoming });
@@ -129,11 +130,12 @@ async function main() {
     };
     rows = [newRow(1), { ...newRow(3), rights_status: "blocked" }];
     const request = () => new NextRequest("https://app.invalid/api/cron/ingest", { headers: { Authorization: "Bearer auto-test" } });
-    let response = await GET(request());
+    const response = await GET(request());
     assert.equal(response.status, 200);
     let summary = await response.json();
     assert.equal(summary.autoReview.approved, 2, "both new and existing backlog approved automatically");
     assert.equal(summary.classified, 2); assert.equal(summary.queued, 2); assert.equal(modelCalls, 1);
+    assert.equal(runLogs, 1, "each collect run writes one ingest_runs row");
     assert.equal(rows.find(r => r.id === 3)?.rights_status, "blocked");
     for (const row of rows.filter(r => r.id !== 3)) {
       assert.equal(row.status, "pending"); assert.equal(row.domain_id, 2);

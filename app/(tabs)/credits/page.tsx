@@ -14,6 +14,7 @@ const eventLabel: Record<CreditEvent["reason"], string> = {
   article_read: "학습 완료",
   quiz_bonus: "퀴즈 보너스",
   welcome: "첫 학습 축하",
+  streak: "연속 학습 보상",
   purchase: "꾸미기 구매",
   adjustment: "크레딧 조정",
 };
@@ -137,6 +138,12 @@ export default function CreditsPage() {
             snapshot.earningMode === "paused" ? "새 적립이 잠시 멈췄어요. 기존 잔액은 유지돼요." :
             "새로운 글을 처음 완료할 때 크레딧이 쌓여요."}
         </p>
+        {snapshot.earningMode === "active" && snapshot.streak?.enabled && (
+          <p className="mt-2 text-sm text-[#e4dceb]">
+            {snapshot.streak.days > 0 ? `${snapshot.streak.days}일 연속 학습 중 · ` : ""}
+            {snapshot.streak.daysUntilReward}일 더 이어가면 +{snapshot.streak.reward}크레딧
+          </p>
+        )}
         {snapshot.spendingEnabled && <p className="mt-2 text-sm text-[#e4dceb]">
           꾸미기 구매 가능: {snapshot.spendableBalance.toLocaleString("ko-KR")}크레딧
         </p>}

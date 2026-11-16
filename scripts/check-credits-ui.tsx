@@ -41,6 +41,7 @@ async function main() {
   const snapshot = (userId: string, balance: number) => Response.json({
     userId, balance, spendableBalance: balance, policyVersion: 1, earningMode: "active", spendingEnabled: false,
     hasWelcome: true, rules: { article: 10, quizBonusMax: 10, welcome: 100 },
+    streak: { enabled: true, days: 3, reward: 50, blockDays: 7, daysUntilReward: 4 },
   });
   try {
     await render(createElement(CreditSummary, { key: userA, userId: userA, compact: true }));
@@ -63,6 +64,9 @@ async function main() {
     assert.match(container.textContent!, /이번 학습으로 \+118크레딧/);
     assert.match(container.textContent!, /첫 학습 축하 \+100/);
     assert.match(container.querySelector('[aria-label="크레딧 적립 결과"]')?.className ?? "", /motion-safe:animate/);
+    await render(createElement(Result, { articleTitle: "Test", result: {
+      ...base, credits: { ...base.credits, newlyGranted: 168, streakReward: 50 } } }));
+    assert.match(container.textContent!, /연속 학습 보상 \+50/);
     await render(createElement(Result, { articleTitle: "Test", result: {
       ...base, isReview: true, canSave: false,
       credits: { ...base.credits, status: "already_granted", newlyGranted: 0 },
@@ -92,6 +96,7 @@ async function main() {
     await act(async () => { await Promise.resolve(); });
     assert.match(container.textContent!, /118/);
     assert.match(container.textContent!, /테스트 기사/);
+    assert.match(container.textContent!, /3일 연속 학습 중 · 4일 더 이어가면 \+50크레딧/);
     const more = [...container.querySelectorAll("button")].find(button => button.textContent === "더 보기");
     assert.ok(more);
     await act(async () => { more.click(); });

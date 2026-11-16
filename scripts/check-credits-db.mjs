@@ -67,7 +67,11 @@ try {
     'supabase/migrations/20261025160738_cosmetic_shop.sql',
     'supabase/migrations/20261026071437_quiz_only_spending.sql',
     'supabase/migrations/20261026184211_music_shop.sql',
-    'supabase/migrations/20261026191921_expanded_cone_cosmetics.sql']) {
+    'supabase/migrations/20261026192933_expanded_cone_cosmetics.sql',
+    // 운영 적용 순서 그대로 전체 체인을 올린다.
+    'supabase/migrations/20261116090000_ingest_runs.sql',
+    'supabase/migrations/20261116120000_article_bookmarks.sql',
+    'supabase/migrations/20261117010000_streak_reward.sql']) {
     await sql(await readFile(new URL(`../${file}`, import.meta.url), 'utf8'));
   }
 
@@ -262,6 +266,122 @@ try {
   assert.equal((await rows(`select count(*) as count from public.credit_events where user_id='${uid(6)}'`))[0].count,0);
   assert.equal((await rows(`select count(*) as count from public.user_unlocks where user_id='${uid(6)}'`))[0].count,0);
   console.log('PASS transactional rollback, onboarding preservation, legacy-write guard and database privileges');
+  // Streak reward (크레딧정책.md P4). Dates are relative to the container's current KST day.
+  const today = await sql(`select to_char((now() at time zone 'Asia/Seoul')::date, 'YYYY-MM-DD');`);
+  const kstDay = offset => new Date(Date.parse(`${today}T00:00:00Z`) - offset * 86_400_000).toISOString().slice(0, 10);
+  const at = (offset, time = '12:00') => `((date '${today}' - ${offset})::timestamp + time '${time}') at time zone 'Asia/Seoul'`;
+  const seedCompleted = (user, entries) => sql(`set role service_role;
+    select set_config('app.credit_writer', 'v1', false);
+    insert into public.user_article_progress(user_id,article_id,variant_id,status,quiz_score,completed_at)
+      values ${entries.map(([article, offset, time]) => `('${uid(user)}',${article},${article},'completed',1,${at(offset, time)})`).join(',')};`);
+  const startArticles = (user, articles) => sql(`insert into public.user_article_progress(user_id,article_id,variant_id,status)
+    values ${articles.map(article => `('${uid(user)}',${article},${article},'started')`).join(',')};`);
+  const streakEvents = user => rows(`select source_id, amount, policy_version, metadata
+    from public.credit_events where user_id='${uid(user)}' and reason='streak' order by source_id`);
+  const streakState = async user => (await rpc(`public.get_credit_snapshot('${uid(user)}')`)).streak;
+  // Completed articles 10+offset.. on KST days -to..-from (one per day).
+  const days = (from, to, offset = 0) => Array.from({ length: to - from + 1 }, (_, i) => [10 + offset + i, to - i]);
+  await sql(`
+    insert into auth.users(id) values ${Array.from({ length: 6 }, (_, i) => `('${uid(i + 7)}')`).join(',')};
+    insert into public.articles(id,domain_id,source,source_url,original_key,foundation_order,
+      content_kind,editorial_status,reference_links,status,rights_status,rights_evidence_url,rights_reviewed_at,rights_attribution)
+      select n,1,'artice-original',null,'streak-' || n,n,'original','approved',
+        '[{"title":"Reference","url":"https://fixture.invalid/reference"}]'::jsonb,
+        'ready','permitted','https://fixture.invalid/rights',now(),null
+      from generate_series(10,59) n;
+    insert into public.article_variants(id,article_id,level,title,content_html,glossary)
+      select n,n,1,'Streak fixture','<p>Fixture</p>','{}'::jsonb from generate_series(10,59) n;
+    insert into public.quiz_questions(id,variant_id,position,prompt,options,correct_index)
+      select v * 10 + p,v,p,p::text,'["a","b","c","d"]'::jsonb,p-1
+      from generate_series(10,59) v cross join generate_series(1,4) p;
+  `);
+  const migrated = (await rows(`select streak_enabled, streak_counts_from, streak_reward, version from public.credit_policy`))[0];
+  assert.deepEqual([migrated.streak_enabled, migrated.streak_counts_from, migrated.streak_reward], [false, null, 50]);
+
+  // Disabled: six earlier days plus today is a 7-day run, but nothing is granted.
+  await seedCompleted(7, days(1, 6));
+  await startArticles(7, [50]);
+  const disabled = await grade(7, 50);
+  assert.equal(disabled.credits.newlyGranted, 120);
+  assert.equal(disabled.credits.streakReward, 0);
+  assert.equal((await streakEvents(7)).length, 0);
+  assert.deepEqual(await streakState(7), { enabled: false, reward: 50, blockDays: 7, days: 0, lastDay: null });
+
+  // Activation needs a counting start and a policy version bump; the start never moves earlier.
+  await assert.rejects(() => sql(`update public.credit_policy set streak_enabled=true, version=version+1 where id=1;`), /credit_policy_streak_start_check/);
+  await assert.rejects(() => sql(`update public.credit_policy set streak_enabled=true, streak_counts_from=date '${kstDay(20)}' where id=1;`),
+    /streak activation requires a new policy version/);
+  await sql(`update public.credit_policy set streak_enabled=true, streak_counts_from=date '${kstDay(20)}', version=version+1 where id=1;`);
+  const streakVersion = migrated.version + 1;
+  await assert.rejects(() => sql(`update public.credit_policy set streak_counts_from=date '${kstDay(21)}' where id=1;`),
+    /streak count start cannot move earlier/);
+  await assert.rejects(() => sql(`update public.credit_policy set streak_reward=60 where id=1;`),
+    /streak reward change requires a new policy version/);
+  assert.equal(await sql(`select has_function_privilege('authenticated','public.grant_credit_streak(uuid,bigint,timestamptz)','execute');`), 'f');
+  assert.equal(await sql(`select has_function_privilege('authenticated','public.get_credit_streak(uuid)','execute');`), 'f');
+  assert.equal(await sql(`select has_function_privilege('anon','public.credit_streak_runs(uuid,date,date)','execute');`), 'f');
+
+  // Day 7: two completions on one earlier date count once; concurrent first completions
+  // and retries on day 7 grant exactly one block.
+  await seedCompleted(8, [...days(1, 6), [30, 3, '08:00']]);
+  await startArticles(8, [50, 51]);
+  const day7 = await Promise.all([...Array.from({ length: 6 }, () => grade(8, 50)),
+    ...Array.from({ length: 6 }, () => grade(8, 51))]);
+  assert.equal(day7.filter(row => !row.isReview).length, 2);
+  assert.equal(day7.reduce((n, row) => n + row.credits.newlyGranted, 0), 20 + 20 + 100 + 50);
+  const day7Events = await streakEvents(8);
+  assert.deepEqual(day7Events.map(row => [row.source_id, row.amount, row.policy_version, row.metadata.days]),
+    [[`streak:${kstDay(6)}:1`, 50, streakVersion, 7]]);
+  assert.equal((await rpc(`public.get_credit_result('${uid(8)}', ${day7Events[0].metadata.articleId})`)).streakReward, 50);
+  assert.deepEqual(await streakState(8), { enabled: true, reward: 50, blockDays: 7, days: 7, lastDay: today });
+  const spendSnapshot = await rpc(`public.get_credit_snapshot('${uid(8)}')`);
+  assert.equal(spendSnapshot.balance, '190');
+  assert.equal(spendSnapshot.spendableBalance, '140', 'streak credits are not quiz-spendable');
+  console.log('PASS streak off by default, activation guard, day-7 grant once under concurrency, same-day dedupe');
+
+  // Day 14 pays block 2 only (no back-pay of an unpaid block 1), once under retries.
+  await seedCompleted(9, days(1, 13));
+  await startArticles(9, [50]);
+  const day14 = await burst(8, () => grade(9, 50));
+  assert.equal(day14.filter(row => row.credits.newlyGranted > 0).length, 1);
+  assert.deepEqual((await streakEvents(9)).map(row => row.source_id), [`streak:${kstDay(13)}:2`]);
+  assert.equal(await rpc(`public.grant_credit_streak('${uid(9)}', 50, now())`), 0);
+  assert.equal((await streakEvents(9)).length, 1);
+
+  // Reviews add no date: re-grading an old article today keeps the streak at six days.
+  await seedCompleted(10, days(1, 6));
+  const review = await grade(10, 10);
+  assert.equal(review.isReview, true);
+  assert.equal((await streakEvents(10)).length, 0);
+  assert.equal((await streakState(10)).days, 6);
+  await startArticles(10, [50]);
+  assert.equal((await grade(10, 50)).credits.streakReward, 50);
+
+  // A missing day starts a new run: days -8..-7 and -5..today make a 6-day run.
+  await seedCompleted(11, [[10, 8], [11, 7], ...days(1, 5, 2)]);
+  await startArticles(11, [50]);
+  assert.equal((await grade(11, 50)).credits.streakReward, 0);
+  assert.equal((await streakEvents(11)).length, 0);
+  assert.equal((await streakState(11)).days, 6);
+
+  // KST day boundary: 23:30 and 00:30 KST fall on consecutive KST dates but on one UTC date.
+  await seedCompleted(12, [[10, 3, '23:30'], [11, 2, '00:30']]);
+  const boundary = await rows(`select run_start::text, run_end::text, run_days
+    from public.credit_streak_runs('${uid(12)}', date '${kstDay(20)}', date '${today}')`);
+  assert.deepEqual(boundary, [{ run_start: kstDay(3), run_end: kstDay(2), run_days: 2 }]);
+  assert.equal(await sql(`select count(distinct (completed_at at time zone 'UTC')::date) from public.user_article_progress where user_id='${uid(12)}';`), '1');
+
+  // Nothing before streak_counts_from: with the start moved to 3 days ago, days -6..today
+  // form a 4-day counted run and no reward.
+  await sql(`update public.credit_policy set streak_counts_from=date '${kstDay(3)}' where id=1;`);
+  await seedCompleted(12, [[20, 6], [21, 5], [22, 4], [23, 1]]);
+  await startArticles(12, [50]);
+  assert.equal((await grade(12, 50)).credits.streakReward, 0);
+  assert.equal((await streakEvents(12)).length, 0);
+  assert.equal((await streakState(12)).days, 4);
+  await sql(`update public.credit_policy set streak_enabled=false where id=1;`);
+  assert.equal((await streakState(8)).enabled, false);
+  console.log('PASS streak day-14 block, review exclusion, gap reset, KST boundary and counting start');
 } finally {
   await command(['stop', container]).catch(() => {});
 }
