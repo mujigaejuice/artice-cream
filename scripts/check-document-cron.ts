@@ -30,6 +30,7 @@ async function main() {
   let rows = [newRow()];
   let mode = "normal", pageCalls = 0, modelCalls = 0, rightsCalls = 0;
   let allowModel = false, variantCount = 0, quizCount = 0;
+  const runLogs: { route: string; status: string }[] = [];
   const writes: { method: string; body: Record<string, unknown>; query: URLSearchParams }[] = [];
   function matches(row: Record<string, unknown>, params: URLSearchParams) {
     for (const [key, value] of params) {
@@ -75,6 +76,7 @@ async function main() {
     }
     if (table === "quiz_questions") { quizCount += JSON.parse(String(init?.body)).length; return new Response(null, { status: 204 }); }
     if (table === "domain_terms") return new Response(null, { status: 204 });
+    if (table === "ingest_runs") { runLogs.push(JSON.parse(String(init?.body))); return new Response(null, { status: 201 }); }
     assert.equal(table, "articles");
     const selected = rows.filter(row => matches(row, url.searchParams));
     if (method === "GET") {
@@ -112,6 +114,7 @@ async function main() {
     const beforePages = pageCalls;
     summary = await (await GET(request("?documentsOnly=1"))).json();
     assert.equal(summary.documents.skipped, 1); assert.equal(pageCalls, beforePages);
+    assert.deepEqual(runLogs.map(r => [r.route, r.status]), [["collect", "ok"], ["collect-documents", "ok"]]);
     assert.equal(modelCalls, 0);
     // No generic-extractor fallback: tampered approved document never reaches the LLM.
     rows[0].original_text = text + "tampered";
