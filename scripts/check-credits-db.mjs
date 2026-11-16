@@ -67,7 +67,7 @@ try {
     'supabase/migrations/20261025160738_cosmetic_shop.sql',
     'supabase/migrations/20261026071437_quiz_only_spending.sql',
     'supabase/migrations/20261026184211_music_shop.sql',
-    'supabase/migrations/20261026191921_expanded_cone_cosmetics.sql']) {
+    'supabase/migrations/20261026192933_expanded_cone_cosmetics.sql']) {
     await sql(await readFile(new URL(`../${file}`, import.meta.url), 'utf8'));
   }
 

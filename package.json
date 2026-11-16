@@ -42,7 +42,9 @@
     "build:app": "node scripts/build-app.mjs build",
     "app:release": "node scripts/build-app.mjs release",
     "app:dev": "node scripts/build-app.mjs dev",
-    "app:run": "node scripts/build-app.mjs run"
+    "app:run": "node scripts/build-app.mjs run",
+    "test:ci": "npm run -s test:logic && npm run -s test:quota && npm run -s test:credits && npm run -s test:credits-ui && npm run -s test:shop-api && npm run -s test:shop-ui && npm run -s test:reader && npm run -s test:reading-exit && npm run -s test:feed && npm run -s test:auth && npm run -s test:account-delete && npm run -s test:account-delete-ui && npm run -s test:retention && npm run -s test:sign-in-age && npm run -s test:entry && npm run -s test:scoops && npm run -s test:scoop-arrival && npm run -s test:music && npm run -s test:rights && npm run -s test:ingest && npm run -s test:auto-review && npm run -s test:documents && npm run -s test:originals",
+    "test:db": "node scripts/check-quota-db.mjs && node scripts/check-credits-db.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.125.0",
