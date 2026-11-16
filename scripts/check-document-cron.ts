@@ -97,7 +97,7 @@ async function main() {
     const db = createAdminClient(), domains = new Map([["llm", { id: 6 }]]);
     const run = () => syncDocumentCandidates(db, new Map([[source.source, source]]), domains, startDeadline());
     const request = (query = "") => new NextRequest(`https://app.invalid/api/cron/ingest${query}`, { headers: { authorization: "Bearer fixture-cron" } });
-    let response = await GET(request());
+    const response = await GET(request());
     let summary = await response.json();
     assert.equal(response.status, 200); assert.equal(summary.documents.approved, 1);
     assert.equal(summary.classified, 0); assert.equal(modelCalls, 0);

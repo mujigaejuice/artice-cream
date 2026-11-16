@@ -129,7 +129,7 @@ async function main() {
     };
     rows = [newRow(1), { ...newRow(3), rights_status: "blocked" }];
     const request = () => new NextRequest("https://app.invalid/api/cron/ingest", { headers: { Authorization: "Bearer auto-test" } });
-    let response = await GET(request());
+    const response = await GET(request());
     assert.equal(response.status, 200);
     let summary = await response.json();
     assert.equal(summary.autoReview.approved, 2, "both new and existing backlog approved automatically");

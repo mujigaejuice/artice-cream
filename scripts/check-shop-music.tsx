@@ -31,7 +31,7 @@ async function main() {
   let owned = false;
   let equipped: Record<string, string> = {};
   let purchases = 0;
-  let previewEvents: boolean[] = [];
+  const previewEvents: boolean[] = [];
   let equippedEvents = 0;
   class FakeAudio extends dom.window.EventTarget {
     src: string; volume = 1; preload = ""; paused = true;

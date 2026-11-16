@@ -165,12 +165,12 @@ export function Result({
             {saved ? "저장했어요 · 콘으로" : saving ? "저장 중…" : "콘에 올리기 🍦"}
           </button>
         ) : (
-          <a
+          <Link
             href="/"
             className="block w-full rounded-xl bg-stone-900 px-4 py-3 text-center font-medium text-white"
           >
             홈으로
-          </a>
+          </Link>
         )}
         {result.isOriginal && result.variantId && <>
           {onRetry ? <button type="button" onClick={onRetry} className="block w-full rounded-xl bg-stone-100 px-4 py-3 font-medium text-stone-700">퀴즈 다시 풀기</button> :

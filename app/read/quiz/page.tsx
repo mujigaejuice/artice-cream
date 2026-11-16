@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -86,12 +87,12 @@ function NoQuiz() {
       <p className="mt-2 text-sm text-stone-600">
         주소가 잘못됐거나 문항이 아직 준비되지 않았어요.
       </p>
-      <a
+      <Link
         href="/"
         className="mt-6 inline-block rounded-xl bg-stone-900 px-5 py-3 text-sm font-medium text-white"
       >
         오늘의 아티클로
-      </a>
+      </Link>
     </main>
   );
 }
