@@ -31,6 +31,7 @@
     "test:retention": "tsx scripts/check-data-retention.ts",
     "test:sign-in-age": "tsx scripts/check-sign-in-age.tsx",
     "test:entry": "tsx scripts/check-entry.tsx",
+    "test:words": "tsx scripts/check-words.ts && tsx scripts/check-words-ui.tsx",
     "test:scoops": "tsx scripts/check-scoop-history.tsx",
     "test:scoop-arrival": "tsx scripts/check-scoop-arrival.tsx",
     "test:music": "tsx scripts/check-background-music.tsx && tsx scripts/check-background-music.tsx --native && tsx scripts/check-music-selection.tsx",
