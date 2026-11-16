@@ -68,6 +68,9 @@ try {
     'supabase/migrations/20261026071437_quiz_only_spending.sql',
     'supabase/migrations/20261026184211_music_shop.sql',
     'supabase/migrations/20261026192933_expanded_cone_cosmetics.sql',
+    // 운영 적용 순서 그대로 전체 체인을 올린다.
+    'supabase/migrations/20261116090000_ingest_runs.sql',
+    'supabase/migrations/20261116120000_article_bookmarks.sql',
     'supabase/migrations/20261117010000_streak_reward.sql']) {
     await sql(await readFile(new URL(`../${file}`, import.meta.url), 'utf8'));
   }
