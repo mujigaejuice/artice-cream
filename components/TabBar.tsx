@@ -35,6 +35,15 @@ function ConeIcon() {
   );
 }
 
+function WordsIcon() {
+  return (
+    <svg viewBox="0 0 22 22" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M11 6.2C9.4 4.9 7.1 4.4 3.5 4.5v12.6c3.6-.1 5.9.4 7.5 1.7 1.6-1.3 3.9-1.8 7.5-1.7V4.5c-3.6-.1-5.9.4-7.5 1.7z" />
+      <path d="M11 6.2v12.6" />
+    </svg>
+  );
+}
+
 function AccountIcon() {
   return (
     <svg viewBox="0 0 22 22" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -55,6 +64,7 @@ type Tab = {
 const TABS: Tab[] = [
   { href: "/", label: "오늘", Icon: TodayIcon },
   { href: "/cone", label: "내 콘", Icon: ConeIcon },
+  { href: "/words", label: "단어장", Icon: WordsIcon },
   { href: "/account", label: "나", Icon: AccountIcon },
 ];
 
