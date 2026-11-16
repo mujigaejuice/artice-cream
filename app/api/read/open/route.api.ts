@@ -35,7 +35,7 @@ type ReaderResult = {
       domains: { slug: string; name_ko: string } | null;
     };
   };
-  progress: { status: "started" | "completed" | "saved"; quiz_score: number | null };
+  progress: { status: "started" | "completed" | "saved"; quiz_score: number | null; bookmarked?: boolean };
 };
 
 export async function POST(request: Request) {
@@ -113,6 +113,8 @@ export async function POST(request: Request) {
       attribution: article.rights_attribution,
       progressStatus: progress?.status ?? "started",
       quizScore: progress?.quiz_score ?? null,
+      // 북마크 컬럼 전의 RPC는 이 필드가 없다. 그때는 북마크 안 함으로 본다.
+      bookmarked: progress?.bookmarked === true,
     },
   });
 }

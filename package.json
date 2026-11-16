@@ -28,6 +28,8 @@
     "test:feed": "tsx scripts/check-feed-pagination.ts",
     "test:auth": "tsx scripts/check-auth-session.ts && tsx scripts/check-auth-session.ts --native",
     "test:account-delete": "tsx scripts/check-account-deletion.ts",
+    "test:bookmarks": "tsx scripts/check-bookmarks.ts && tsx scripts/check-bookmarks-ui.tsx",
+    "test:bookmarks-db": "node scripts/check-bookmarks-db.mjs",
     "test:account-delete-ui": "tsx scripts/check-account-deletion-ui.tsx",
     "test:retention": "tsx scripts/check-data-retention.ts",
     "test:sign-in-age": "tsx scripts/check-sign-in-age.tsx",
