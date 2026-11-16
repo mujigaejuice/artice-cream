@@ -19,7 +19,7 @@ export async function GET(request: Request) {
     return reply({ ok: true, ...deleted });
   } catch {
     // No vendor errors or user data in the response or application logs.
-    // A partial run is safe to retry: both deletes use fixed age filters.
+    // A partial run is safe to retry: every delete uses a fixed age filter.
     return reply({ error: "cleanup_failed" }, 503);
   }
 }
