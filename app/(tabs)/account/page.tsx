@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { PageError, PageLoading } from "@/components/ScreenState";
 import { CreditSummary } from "@/components/CreditSummary";
+import { BookmarkList } from "@/components/BookmarkList";
 import { createClient, signOutCurrentDevice } from "@/lib/supabase/client";
 
 export default function AccountPage() {
@@ -91,6 +92,8 @@ export default function AccountPage() {
           내 콘 꾸미기
         </Link>
       </div>
+
+      <BookmarkList key={user.id} userId={user.id} />
 
       <section aria-labelledby="account-heading" className="mt-8">
         <h2 id="account-heading" className="text-sm font-semibold text-stone-900">로그인한 계정</h2>
