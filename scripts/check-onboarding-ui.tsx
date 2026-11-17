@@ -49,7 +49,7 @@ async function main() {
   const text = () => container.textContent ?? "";
   const buttons = () => [...container.querySelectorAll<HTMLButtonElement>("button")];
   const button = (label: string) => {
-    const found = buttons().find((item) => item.textContent === label);
+    const found = buttons().find((item) => item.textContent === label || item.getAttribute("aria-label") === label);
     assert.ok(found, `button "${label}" in: ${text().slice(0, 160)}`);
     return found;
   };
@@ -137,19 +137,56 @@ async function main() {
   assert.match(text(), /Lv3/);
   await unmount(root);
 
-  // 3. Existing domains are locked and never asked again, in edit mode too.
+  // 3. Existing domains stay subscribed and are not asked again unless the user chooses to retake them.
   results = [{ domainId: 2, correct: null, level: 2 }];
   root = await mount({ initialLevels: { "1": 3 } });
   const existing = domainBox("클라우드");
   assert.equal(existing.checked, true);
   assert.equal(existing.disabled, true);
   assert.match(text(), /Lv3/);
+  assert.equal(button("클라우드 퀴즈 다시 풀기").getAttribute("aria-pressed"), "false");
   await click(domainBox("데이터"));
   await click(button("다음"));
   assert.match(text(), /데이터 문제 1/);
   assert.doesNotMatch(text(), /클라우드 문제/);
   await click(button("이 분야 건너뛰기"));
   assert.deepEqual(posts[0], { selections: [{ domainId: 2, skipped: true }] }, "the existing domain is not sent");
+  await unmount(root);
+
+  // 3b. Re-onboarding: an existing domain can be quizzed again; its answers go out marked as a retake.
+  results = [{ domainId: 1, correct: 2, level: 1 }];
+  root = await mount({ initialLevels: { "1": 3 } });
+  await click(button("클라우드 퀴즈 다시 풀기"));
+  assert.equal(button("클라우드 퀴즈 다시 풀기").getAttribute("aria-pressed"), "true");
+  await click(button("다음"));
+  assert.match(text(), /클라우드 문제 1/, "the retake quiz starts");
+  assert.match(text(), /1 \/ 1 분야/);
+  await answerAll([0, 0, "idk", "idk", "idk", "idk", "idk", "idk"]);
+  assert.deepEqual(posts, [{ selections: [{ domainId: 1, answers: [0, 0, null, null, null, null, null, null], retake: true }] }]);
+  assert.match(text(), /8문제 중 2개/);
+  assert.match(text(), /Lv1/);
+  await unmount(root);
+
+  // 3c. Skipping a retake keeps the current level: nothing is sent for that domain.
+  results = [{ domainId: 2, correct: 8, level: 3 }];
+  root = await mount({ initialLevels: { "1": 3 } });
+  await click(button("클라우드 퀴즈 다시 풀기"));
+  await click(domainBox("데이터"));
+  await click(button("다음"));
+  assert.match(text(), /클라우드 문제 1/);
+  await click(button("이 분야 건너뛰기"));
+  assert.match(text(), /데이터 문제 1/);
+  await answerAll([0, 0, 0, 0, 0, 0, 0, 0]);
+  assert.deepEqual(posts, [{ selections: [{ domainId: 2, answers: [0, 0, 0, 0, 0, 0, 0, 0] }] }]);
+  await unmount(root);
+
+  // 3d. Turning a retake back off before starting means no quiz for it.
+  root = await mount({ initialLevels: { "1": 3 } });
+  await click(button("클라우드 퀴즈 다시 풀기"));
+  await click(button("클라우드 퀴즈 다시 풀기"));
+  results = [];
+  await click(button("다음"));
+  assert.deepEqual(posts, [{ selections: [] }]);
   await unmount(root);
 
   // 4. A domain without a quiz is saved as skipped, with no questions.

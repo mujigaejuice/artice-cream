@@ -96,7 +96,9 @@ async function checkRoute() {
   ];
   let signedIn = true;
   let rpcStatus = 200;
-  const rpcBodies: { p_user_id: string; p_selections: { domainId: number; level: number }[] }[] = [];
+  /** Before the retake migration the RPC answers without "retaken". */
+  let rpcKnowsRetake = true;
+  const rpcBodies: { p_user_id: string; p_selections: { domainId: number; level: number; retake?: true }[] }[] = [];
   const calls: string[] = [];
   globalThis.fetch = async (input, init) => {
     const url = new URL(input instanceof Request ? input.url : String(input));
@@ -114,7 +116,8 @@ async function checkRoute() {
     const body = JSON.parse(String(init?.body));
     rpcBodies.push(body);
     if (rpcStatus !== 200) return Response.json({ message: "down" }, { status: rpcStatus });
-    return Response.json({ ok: true, added: body.p_selections.length });
+    const retaken = body.p_selections.filter((s: { retake?: true }) => s.retake).length;
+    return Response.json({ ok: true, added: body.p_selections.length - retaken, ...(rpcKnowsRetake ? { retaken } : {}) });
   };
 
   const { GET, POST } = await import("../app/api/onboarding/route.api");
@@ -167,6 +170,22 @@ async function checkRoute() {
     { domainId: 1, correct: null, level: 3 }, { domainId: 2, correct: null, level: 1 },
   ]);
 
+  // Re-onboarding: an existing domain can be quizzed again; only that selection is marked as a retake.
+  response = await POST(request("POST", { selections: [
+    { domainId: 1, answers: Array(8).fill(null), retake: true }, { domainId: 2, answers: right.data },
+  ] }));
+  assert.equal(response.status, 200);
+  assert.deepEqual(rpcBodies.at(-1)!.p_selections, [{ domainId: 1, level: 1, retake: true }, { domainId: 2, level: 3 }]);
+  assert.deepEqual((await response.json()).results, [
+    { domainId: 1, correct: 0, level: 1 }, { domainId: 2, correct: 8, level: 3 },
+  ]);
+  // A database without the retake migration would silently keep the old level; never report that as saved.
+  rpcKnowsRetake = false;
+  assert.equal((await POST(request("POST", { selections: [{ domainId: 1, answers: right.cloud, retake: true }] }))).status, 503);
+  assert.equal((await POST(request("POST", { selections: [{ domainId: 2, answers: right.data }] }))).status, 200,
+    "plain saves still work on the older database");
+  rpcKnowsRetake = true;
+
   // Rejected before anything is saved.
   const writes = rpcBodies.length;
   const bad: unknown[] = [
@@ -179,6 +198,10 @@ async function checkRoute() {
     { selections: [{ domainId: 1 }] },
     { selections: [{ domainId: 1, skipped: false }] },
     { selections: [{ domainId: 1, rareChecked: 5 }] },
+    { selections: [{ domainId: 1, skipped: true, retake: true }] },
+    { selections: [{ domainId: 1, rareChecked: 1, retake: true }] },
+    { selections: [{ domainId: 1, answers: right.cloud, retake: false }] },
+    { selections: [{ domainId: 1, answers: right.cloud, retake: "yes" }] },
     { selections: [{ domainId: 99, skipped: true }] },
     { selections: [{ domainId: 3, answers: Array(8).fill(null) }] },
     { selections: [{ domainId: "1", skipped: true }] },

@@ -26,7 +26,7 @@ type Props = {
   onSignedIn?: () => void;
 };
 
-type Selection = { domainId: number; answers: (number | null)[] } | { domainId: number; skipped: true };
+type Selection = { domainId: number; answers: (number | null)[]; retake?: true } | { domainId: number; skipped: true };
 type Result = { domainId: number; correct: number | null; level: number };
 type Phase = "pick" | "quiz" | "save" | "result";
 
@@ -40,8 +40,10 @@ export function OnboardingFlow({
   onSignedIn,
 }: Props) {
   const router = useRouter();
-  // 이미 레벨이 있는 분야는 잠겨 있고 다시 묻지 않는다. 고르는 건 새 분야뿐이다.
+  // 이미 레벨이 있는 분야는 구독이 잠겨 있다. 고르는 건 새 분야이고, 이미 있는 분야는
+  // "다시 풀기"를 누른 경우에만 퀴즈를 다시 풀어 레벨을 새로 정한다.
   const [picked, setPicked] = useState<Set<number>>(() => new Set());
+  const [retakes, setRetakes] = useState<Set<number>>(() => new Set());
   const [phase, setPhase] = useState<Phase>("pick");
   const [queue, setQueue] = useState<DomainRow[]>([]);
   const [position, setPosition] = useState(0);
@@ -51,10 +53,15 @@ export function OnboardingFlow({
   const [error, setError] = useState<string | null>(null);
 
   const hasExisting = Object.keys(initialLevels).length > 0;
-  const newDomains = domains.filter((d) => picked.has(d.id) && initialLevels[String(d.id)] === undefined);
+  const isExisting = (id: number) => initialLevels[String(id)] !== undefined;
+  const targets = domains.filter((d) => isExisting(d.id) ? retakes.has(d.id) : picked.has(d.id));
 
   function selectionsFor(answers: Record<number, (number | null)[]>): Selection[] {
-    return newDomains.map((d) => (answers[d.id] ? { domainId: d.id, answers: answers[d.id] } : { domainId: d.id, skipped: true }));
+    return targets.flatMap((d): Selection[] => {
+      if (answers[d.id]) return [{ domainId: d.id, answers: answers[d.id], ...(isExisting(d.id) ? { retake: true as const } : {}) }];
+      // 다시 풀기를 건너뛰면 지금 레벨을 그대로 둔다 — 보내지 않는다.
+      return isExisting(d.id) ? [] : [{ domainId: d.id, skipped: true }];
+    });
   }
 
   async function save(selections: Selection[]) {
@@ -78,7 +85,7 @@ export function OnboardingFlow({
   }
 
   function start() {
-    const withQuiz = newDomains.filter((d) => quizzes[String(d.id)]?.length);
+    const withQuiz = targets.filter((d) => quizzes[String(d.id)]?.length);
     setGiven({});
     if (withQuiz.length === 0) {
       void save(selectionsFor({}));
@@ -169,6 +176,11 @@ export function OnboardingFlow({
         받아볼 분야를 고르세요. 고른 분야마다 8문제를 풀면 맞힌 개수로 시작 난이도를
         정해요. 건너뛰어도 되고, 그때는 중간 난이도에서 시작해요.
       </p>
+      {hasExisting && (
+        <p className="mt-2 text-sm text-stone-600">
+          이미 고른 분야도 &lsquo;다시 풀기&rsquo;를 누르면 퀴즈를 다시 풀어 난이도를 새로 정해요.
+        </p>
+      )}
 
       <ul className="mt-6 space-y-3">
         {domains.map((domain) => {
@@ -181,31 +193,51 @@ export function OnboardingFlow({
                 on ? "border-stone-300 bg-white" : "border-stone-200 bg-stone-50"
               }`}
             >
-              <label className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  checked={on}
-                  disabled={existing !== undefined}
-                  onChange={(event) => {
-                    const next = new Set(picked);
-                    if (event.target.checked) next.add(domain.id);
-                    else next.delete(domain.id);
-                    setPicked(next);
-                  }}
-                  className="h-4 w-4 accent-stone-900"
-                />
-                <span
-                  className="inline-block h-3 w-3 rounded-full"
-                  style={{ background: coreColor(domain.slug) }}
-                  aria-hidden="true"
-                />
-                <span className="font-medium text-stone-900">{domain.name_ko}</span>
-                {existing !== undefined && (
-                  <span className="ml-auto text-sm text-stone-600">
-                    {levelShort(existing)} {levelLabel(existing)}
-                  </span>
-                )}
-              </label>
+              <div className="flex items-center gap-3">
+                <label className="flex flex-1 items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={on}
+                    disabled={existing !== undefined}
+                    onChange={(event) => {
+                      const next = new Set(picked);
+                      if (event.target.checked) next.add(domain.id);
+                      else next.delete(domain.id);
+                      setPicked(next);
+                    }}
+                    className="h-4 w-4 accent-stone-900"
+                  />
+                  <span
+                    className="inline-block h-3 w-3 rounded-full"
+                    style={{ background: coreColor(domain.slug) }}
+                    aria-hidden="true"
+                  />
+                  <span className="font-medium text-stone-900">{domain.name_ko}</span>
+                  {existing !== undefined && (
+                    <span className="ml-auto text-sm text-stone-600">
+                      {levelShort(existing)} {levelLabel(existing)}
+                    </span>
+                  )}
+                </label>
+                {existing !== undefined && quizzes[String(domain.id)]?.length ? (
+                  <button
+                    type="button"
+                    aria-pressed={retakes.has(domain.id)}
+                    aria-label={`${domain.name_ko} 퀴즈 다시 풀기`}
+                    onClick={() => {
+                      const next = new Set(retakes);
+                      if (next.has(domain.id)) next.delete(domain.id);
+                      else next.add(domain.id);
+                      setRetakes(next);
+                    }}
+                    className={`shrink-0 rounded-lg border px-3 py-1.5 text-xs font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-800 ${
+                      retakes.has(domain.id) ? "border-stone-900 bg-stone-900 text-white" : "border-stone-300 bg-white text-stone-700 hover:bg-stone-50"
+                    }`}
+                  >
+                    다시 풀기
+                  </button>
+                ) : null}
+              </div>
             </li>
           );
         })}
