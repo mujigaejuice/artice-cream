@@ -1,4 +1,10 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 import { coreColor } from "@/lib/color";
 import type { TodayPick } from "@/lib/feed";
@@ -21,6 +27,8 @@ function publishYearNote(publishedAt: string | null): string | null {
 }
 
 export function ArticleCard({ pick, unlocked }: Props) {
+  const router = useRouter();
+  const [confirming, setConfirming] = useState(false);
   const yearNote = publishYearNote(pick.publishedAt);
 
   const body = (
@@ -88,12 +96,26 @@ export function ArticleCard({ pick, unlocked }: Props) {
     );
   }
 
+  // 처음 여는 글만 묻는다 — 열면 오늘의 읽기 횟수를 쓴다. 이어 읽기·복습은 바로 연다.
+  const isNewOpen = !pick.completedNotSaved && !pick.progressStatus;
+
   return (
+    <>
     <Link
       href={href}
+      onClick={isNewOpen ? (event) => { event.preventDefault(); setConfirming(true); } : undefined}
       className="block rounded-2xl border border-stone-200 bg-white p-4 shadow-sm transition hover:border-stone-300 hover:shadow focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-800"
     >
       {body}
     </Link>
+    {confirming && <ConfirmDialog
+      title="이 기사를 정말 읽을까요?"
+      description="읽기 시작하면 오늘 읽을 수 있는 횟수를 1회 써요."
+      cancelLabel="취소"
+      confirmLabel="읽을게요"
+      onCancel={() => setConfirming(false)}
+      onConfirm={() => { setConfirming(false); router.push(href); }}
+    />}
+    </>
   );
 }

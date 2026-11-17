@@ -10,7 +10,7 @@ import { PROMOTE_AT, levelLabel } from "@/lib/level";
 import { prepareScoopSound } from "@/lib/scoop-sound";
 import type { CreditResult } from "@/lib/credits";
 import type { QuizReviewItem } from "@/lib/supabase/types";
-import { useReadingProgress } from "@/components/ReadingExitNotice";
+import { useLeaveGuard, useReadingProgress } from "@/components/ReadingExitNotice";
 
 /** /api/quiz/grade의 응답 그대로. Quiz가 파싱 없이 넘기므로 모양이 일치해야 한다. */
 export type GradeResult = {
@@ -55,6 +55,9 @@ export function Result({
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   useReadingProgress(false);
+  const canSave = result.canSave ?? !result.isReview;
+  // 저장 전에 나가면 묻는다. 저장하면 꺼지고 콘 화면으로 넘어간다.
+  useLeaveGuard(canSave && !saved);
 
   async function save() {
     prepareScoopSound();
@@ -159,7 +162,7 @@ export function Result({
       )}
 
       <div className="mt-8 space-y-2">
-        {(result.canSave ?? !result.isReview) ? (
+        {canSave ? (
           <button type="button" onClick={save} disabled={saving || saved}
             className="block w-full rounded-xl bg-stone-900 px-4 py-3 text-center font-medium text-white transition hover:bg-stone-800 disabled:opacity-60">
             {saved ? "저장했어요 · 콘으로" : saving ? "저장 중…" : "콘에 올리기 🍦"}
