@@ -1,0 +1,110 @@
+{
+  "key": "data-10",
+  "domain": "data",
+  "order": 10,
+  "title": "쿼리 안의 쿼리, 서브쿼리",
+  "facts": "서브쿼리는 다른 쿼리 안에 들어간 SELECT다. IN은 값이 서브쿼리 결과에 있는지, EXISTS는 결과 행이 하나라도 있는지 확인한다. NOT IN은 서브쿼리 결과에 NULL이 있으면 참이 되지 않아 예상과 다른 결과를 낼 수 있다.",
+  "url": "https://www.postgresql.org/docs/18/functions-subquery.html",
+  "summary": "서브쿼리는 다른 쿼리 안에 들어간 SELECT로, IN은 값이 그 결과에 있는지를, EXISTS는 결과 행이 하나라도 있는지를 확인해요. NOT IN은 서브쿼리 결과에 NULL이 섞이면 참이 되지 않아 예상과 다른 결과를 낼 수 있어요.",
+  "paragraphs": [
+    "독서 모임을 운영하는 도현은 이번 달 감상문을 내지 않은 회원에게 안내 메시지를 보내려고 해요. 회원 명단과 제출 기록은 서로 다른 테이블에 있어서, 제출 기록을 살펴본 결과를 회원 조회의 조건으로 써야 해요.",
+    "이렇게 다른 쿼리 안에 들어간 SELECT를 서브쿼리라고 해요. 괄호로 감싼 서브쿼리의 결과를 바깥 쿼리가 조건으로 사용해요. IN은 왼쪽 값이 서브쿼리 결과 중에 있는지 확인하고, EXISTS는 서브쿼리 결과 행이 하나라도 있는지만 확인해요. EXISTS는 행의 내용보다 행이 있는지에만 관심이 있어서 안쪽을 SELECT 1처럼 적는 경우가 많아요.",
+    "회원 테이블 members에 1번 서아, 2번 태오, 3번 유진이 있고, 제출 테이블 essays의 member_id 열에는 1, 3, 그리고 실수로 비워 둔 NULL이 들어 있다고 해볼게요. SELECT name FROM members WHERE member_id IN (SELECT member_id FROM essays);는 서아와 유진을 돌려줘요. 1과 3이 서브쿼리 결과에 있기 때문이에요.",
+    "도현이 제출하지 않은 회원을 찾으려고 IN을 NOT IN으로 바꾸자 결과가 한 행도 나오지 않았어요. 서아와 유진은 번호가 결과에 있으니 빠지는 게 맞지만, 태오의 2는 1이나 3과 다르다는 것만 알 수 있고 NULL과 같은지는 알 수 없어서 참이 되지 않아요. 서브쿼리 결과에 NULL이 있으면 NOT IN은 참이 되지 않아 예상과 다른 결과를 낼 수 있어요.",
+    "대신 WHERE NOT EXISTS (SELECT 1 FROM essays e WHERE e.member_id = members.member_id)라고 쓰면 회원마다 같은 번호의 제출 행이 있는지 살펴요. 안쪽 쿼리가 바깥 쿼리의 현재 회원 번호를 참조하는 방식이에요. 태오는 맞는 제출 행이 없으므로 태오만 결과에 남아요.",
+    "NOT IN이 잘못된 문법인 것은 아니에요. 서브쿼리 결과에 NULL이 없다면 기대한 대로 동작해요. 다만 열에 NULL이 들어갈 수 있다면 서브쿼리에 WHERE member_id IS NOT NULL을 붙이거나 NOT EXISTS를 쓰는 편이 의도를 지키기 쉬워요."
+  ],
+  "terms": [
+    {
+      "surface": "서브쿼리",
+      "definition": "다른 쿼리 안에 괄호로 감싸 넣은 SELECT예요."
+    },
+    {
+      "surface": "IN",
+      "definition": "왼쪽 값이 서브쿼리 결과 중에 있는지 확인하는 조건이에요."
+    },
+    {
+      "surface": "EXISTS",
+      "definition": "서브쿼리 결과 행이 하나라도 있는지 확인하는 조건이에요."
+    },
+    {
+      "surface": "NOT IN",
+      "definition": "값이 서브쿼리 결과에 없는지 확인하지만 결과에 NULL이 있으면 참이 되지 않는 조건이에요."
+    }
+  ],
+  "questions": [
+    {
+      "prompt": "IN과 EXISTS가 확인하는 내용을 바르게 짝지은 것은 무엇인가요?",
+      "options": [
+        "IN은 NULL이 있는지를, EXISTS는 열 이름이 맞는지를 확인해요.",
+        "IN은 결과 행의 개수를, EXISTS는 값의 크기를 확인해요.",
+        "IN은 테이블이 있는지, EXISTS는 정렬 순서를 확인해요.",
+        "IN은 값이 결과에 있는지, EXISTS는 결과 행이 있는지 확인해요."
+      ],
+      "correct_index": 3,
+      "explanation": "IN은 왼쪽 값이 서브쿼리 결과 중에 있는지, EXISTS는 결과 행이 하나라도 있는지만 확인해요.",
+      "evidence": "IN은 왼쪽 값이 서브쿼리 결과 중에 있는지 확인하고, EXISTS는 서브쿼리 결과 행이 하나라도 있는지만 확인해요."
+    },
+    {
+      "prompt": "예제에서 IN을 쓴 쿼리가 돌려주는 회원은 누구인가요?",
+      "options": [
+        "태오 한 명이에요.",
+        "서아와 유진이에요.",
+        "아무도 나오지 않아요.",
+        "서아, 태오, 유진 세 명이에요."
+      ],
+      "correct_index": 1,
+      "explanation": "서아의 1과 유진의 3이 서브쿼리 결과에 있으므로 두 사람이 결과에 나와요.",
+      "evidence": "1과 3이 서브쿼리 결과에 있기 때문이에요."
+    },
+    {
+      "prompt": "예제에서 IN을 NOT IN으로 바꾼 쿼리의 결과는 어떻게 되나요?",
+      "options": [
+        "한 행도 나오지 않아요.",
+        "서아와 유진이 나와요.",
+        "태오 한 명만 나와요.",
+        "세 회원이 모두 나와요."
+      ],
+      "correct_index": 0,
+      "explanation": "서아와 유진은 번호가 결과에 있어 빠지고, 태오는 NULL과의 비교를 알 수 없어 참이 되지 않으므로 아무 행도 남지 않아요.",
+      "evidence": "IN을 NOT IN으로 바꾸자 결과가 한 행도 나오지 않았어요"
+    },
+    {
+      "prompt": "NOT IN은 언제나 IN과 정반대의 결과를 준다는 설명은 어떻게 봐야 하나요?",
+      "options": [
+        "NOT IN은 NULL을 자동으로 건너뛰므로 맞아요.",
+        "결과에 NULL이 섞이면 참이 되지 않아 틀려요.",
+        "NOT IN은 문법 오류를 내므로 판단할 수 없어요.",
+        "서브쿼리는 NULL을 돌려줄 수 없으므로 맞아요."
+      ],
+      "correct_index": 1,
+      "explanation": "서브쿼리 결과에 NULL이 있으면 NOT IN은 참이 되지 않아, IN에서 빠진 값도 NOT IN 결과에 나오지 않을 수 있어요.",
+      "evidence": "서브쿼리 결과에 NULL이 있으면 NOT IN은 참이 되지 않아 예상과 다른 결과를 낼 수 있어요."
+    }
+  ],
+  "referenceLinks": [
+    {
+      "title": "PostgreSQL: Documentation: 18: 9.24. Subquery Expressions",
+      "url": "https://www.postgresql.org/docs/18/functions-subquery.html",
+      "checkedAt": "2026-11-17T12:48:46.255Z"
+    }
+  ],
+  "revision": 1,
+  "author": "artice cream",
+  "disclosure": "AI의 도움으로 구성·집필하고 사실 근거와 문항을 점검한 기초 콘텐츠입니다.",
+  "generatedAt": "2026-11-17T13:00:23.070Z",
+  "model": "claude-opus-5-5",
+  "review": {
+    "status": "automated_checks_passed",
+    "issues": [],
+    "answers": [
+      3,
+      1,
+      0,
+      1
+    ],
+    "sourceSha256": "dd9a782381a47e48806a3c6bcd501200381e35149e526e40552879533aee5674",
+    "note": "Authored against the brief; facts checked against the cached reference; question evidence, term surfaces and length validated. No human expert review.",
+    "checkedAt": "2026-11-17T13:01:26.773Z"
+  }
+}

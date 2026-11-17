@@ -39,7 +39,7 @@ function excerpt(text:string,key:string) {
   return words[key].map(word=>{const i=text.toLowerCase().indexOf(word.toLowerCase());return i<0?'':text.slice(Math.max(0,i-300),i+4500);}).join('\n\n');
 }
 async function main(){
-  if(!process.argv.includes('--generate')&&!process.argv.includes('--sources-only')) throw new Error('Pass --sources-only or --generate (maximum 64 articles, two concurrent jobs)');
+  if(!process.argv.includes('--generate')&&!process.argv.includes('--sources-only')) throw new Error('Pass --sources-only or --generate (one article per brief, two concurrent jobs)');
   const only=process.argv.find(a=>a.startsWith('--key='))?.slice(6);
   const briefs=ORIGINAL_BRIEFS.filter(b=>!only||b.key===only);
   const urls=[...new Set(briefs.map(b=>b.url))];const sourceErrors:string[]=[];

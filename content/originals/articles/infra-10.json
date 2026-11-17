@@ -1,0 +1,113 @@
+{
+  "key": "infra-10",
+  "domain": "infra",
+  "order": 10,
+  "title": "멈추지 않고 새 버전으로 바꾸기",
+  "facts": "Deployment의 기본 전략인 롤링 업데이트는 이전 파드를 점진적으로 새 파드로 교체한다. maxUnavailable과 maxSurge가 교체 중 사용할 수 없는 파드 수와 추가로 만들 파드 수를 조절한다. 롤아웃 기록으로 이전 리비전으로 되돌릴 수 있다. 롤백은 데이터베이스 스키마 변경까지 되돌리지 않는다.",
+  "url": "https://kubernetes.io/docs/concepts/workloads/controllers/deployment/",
+  "summary": "Deployment의 기본 전략인 롤링 업데이트는 이전 파드를 새 파드로 조금씩 바꾸며, maxUnavailable과 maxSurge로 교체 중 빠지거나 더 생기는 파드 수를 조절해요. 롤아웃 기록으로 이전 리비전으로 되돌릴 수 있지만, 롤백이 데이터베이스 스키마 변경까지 되돌리지는 않아요.",
+  "paragraphs": [
+    "태윤은 도서관 좌석 예약 앱의 새 버전을 평일 오후에 배포해야 해요. 실행 중인 파드를 한꺼번에 내리고 새 파드를 올리면, 그사이 예약 요청을 받을 파드가 하나도 없을 수 있어요. 이용자가 앱을 쓰는 동안에도 멈추지 않고 버전을 바꾸는 방법이 필요해요.",
+    "Deployment는 전략을 따로 정하지 않으면 롤링 업데이트를 기본으로 써요. 롤링 업데이트는 이전 파드를 한 번에 지우지 않고, 새 파드를 조금씩 늘리면서 이전 파드를 조금씩 줄여 점진적으로 교체해요. 이때 maxUnavailable은 교체 중 사용할 수 없는 상태가 되어도 되는 파드의 최대 수이고, maxSurge는 원하는 파드 수보다 추가로 만들 수 있는 파드의 최대 수예요.",
+    "태윤의 앱이 파드 6개로 운영되고, maxUnavailable을 1, maxSurge를 2로 정했다고 해요. 그러면 교체하는 동안에도 사용할 수 있는 파드가 최소 5개로 유지되고, 이전 파드와 새 파드를 합친 수는 최대 8개까지만 늘어나요. 두 값을 크게 잡으면 한 번에 바뀌는 파드가 많아지고, 작게 잡으면 더 천천히 교체돼요.",
+    "새 버전에서 문제가 보이면 롤아웃 기록을 확인하고 이전 리비전으로 되돌릴 수 있어요. 리비전은 파드를 만드는 설계도인 파드 템플릿이 바뀌어 롤아웃이 일어날 때 생기는 버전 기록이에요. 이렇게 이전 리비전으로 되돌리는 작업을 롤백이라고 해요.",
+    "다만 롤백은 Deployment의 파드 템플릿 부분을 되돌릴 뿐이에요. 태윤이 새 버전과 함께 예약 테이블에 열을 추가하는 데이터베이스 스키마(테이블 구조) 변경도 했다면, 롤백한 뒤에도 그 변경은 그대로 남아요. 이전 버전 앱이 바뀐 스키마에서도 동작하는지 미리 확인하고, 스키마를 되돌리는 절차는 따로 준비해야 해요."
+  ],
+  "terms": [
+    {
+      "surface": "롤링 업데이트",
+      "definition": "이전 파드를 한 번에 지우지 않고 새 파드로 점진적으로 교체하는 Deployment의 기본 전략이에요."
+    },
+    {
+      "surface": "maxUnavailable",
+      "definition": "교체 중 사용할 수 없는 상태가 되어도 되는 파드의 최대 수예요."
+    },
+    {
+      "surface": "maxSurge",
+      "definition": "교체 중 원하는 파드 수보다 추가로 만들 수 있는 파드의 최대 수예요."
+    },
+    {
+      "surface": "리비전",
+      "definition": "파드 템플릿이 바뀌어 롤아웃이 일어날 때 생기는 Deployment의 버전 기록이에요."
+    },
+    {
+      "surface": "롤백",
+      "definition": "롤아웃 기록을 이용해 이전 리비전으로 되돌리는 작업이에요."
+    }
+  ],
+  "questions": [
+    {
+      "prompt": "Deployment의 기본 전략인 롤링 업데이트는 파드를 어떻게 바꾸나요?",
+      "options": [
+        "이전 파드를 모두 먼저 지운 뒤 새 파드를 만들어요.",
+        "새 파드를 만들지 않고 이전 파드의 설정만 고쳐요.",
+        "이전 파드는 그대로 두고 새 파드만 계속 추가해요.",
+        "새 파드를 늘리며 이전 파드를 점진적으로 줄여요."
+      ],
+      "correct_index": 3,
+      "explanation": "롤링 업데이트는 새 파드를 조금씩 늘리고 이전 파드를 조금씩 줄여 점진적으로 교체해요.",
+      "evidence": "새 파드를 조금씩 늘리면서 이전 파드를 조금씩 줄여 점진적으로 교체해요"
+    },
+    {
+      "prompt": "태윤의 앱(파드 6개, maxUnavailable 1)을 교체하는 동안 사용할 수 있는 파드는 최소 몇 개인가요?",
+      "options": [
+        "최소 1개가 유지돼요.",
+        "최소 6개가 유지돼요.",
+        "최소 5개가 유지돼요.",
+        "최소 4개가 유지돼요."
+      ],
+      "correct_index": 2,
+      "explanation": "원하는 6개 가운데 사용할 수 없는 파드를 최대 1개까지만 허용하므로 최소 5개가 유지돼요.",
+      "evidence": "사용할 수 있는 파드가 최소 5개로 유지되고"
+    },
+    {
+      "prompt": "같은 앱에서 maxSurge가 2라면 교체 중 이전 파드와 새 파드를 합친 수는 어떻게 되나요?",
+      "options": [
+        "최대 6개를 넘지 않아요.",
+        "최대 8개까지 늘어나요.",
+        "최대 7개까지 늘어나요.",
+        "최대 12개까지 늘어나요."
+      ],
+      "correct_index": 1,
+      "explanation": "원하는 6개보다 최대 2개를 더 만들 수 있으므로 합친 수는 최대 8개예요.",
+      "evidence": "이전 파드와 새 파드를 합친 수는 최대 8개까지만 늘어나요"
+    },
+    {
+      "prompt": "새 버전과 함께 데이터베이스 스키마를 바꾼 뒤 롤백하면 어떻게 되나요?",
+      "options": [
+        "파드 템플릿과 스키마 변경이 함께 되돌아가요.",
+        "롤아웃 기록이 지워져 다시 되돌릴 수 없어요.",
+        "스키마만 되돌아가고 파드 템플릿은 그대로예요.",
+        "파드 템플릿은 되돌아가도 스키마 변경은 남아요."
+      ],
+      "correct_index": 3,
+      "explanation": "롤백은 Deployment의 파드 템플릿 부분만 되돌리므로 데이터베이스 스키마 변경은 남아요.",
+      "evidence": "롤백한 뒤에도 그 변경은 그대로 남아요"
+    }
+  ],
+  "referenceLinks": [
+    {
+      "title": "Deployments | Kubernetes",
+      "url": "https://kubernetes.io/docs/concepts/workloads/controllers/deployment/",
+      "checkedAt": "2026-11-17T12:48:41.704Z"
+    }
+  ],
+  "revision": 1,
+  "author": "artice cream",
+  "disclosure": "AI의 도움으로 구성·집필하고 사실 근거와 문항을 점검한 기초 콘텐츠입니다.",
+  "generatedAt": "2026-11-17T13:00:23.070Z",
+  "model": "claude-opus-5-5",
+  "review": {
+    "status": "automated_checks_passed",
+    "issues": [],
+    "answers": [
+      3,
+      2,
+      1,
+      3
+    ],
+    "sourceSha256": "bcc206709737fc3ba4ea04f6dbdc57856a270e3e4e5e5f15f769f4a8bff9aaa2",
+    "note": "Authored against the brief; facts checked against the cached reference; question evidence, term surfaces and length validated. No human expert review.",
+    "checkedAt": "2026-11-17T13:01:26.773Z"
+  }
+}

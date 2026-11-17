@@ -1,0 +1,109 @@
+{
+  "key": "security-13",
+  "domain": "security",
+  "order": 13,
+  "title": "CORS는 서버를 지키는 벽이 아니다",
+  "facts": "CORS는 다른 출처의 응답을 스크립트가 읽도록 허용할지 서버가 응답 헤더로 브라우저에 알리는 메커니즘이다. 출처는 스킴·호스트·포트의 조합이다. CORS는 브라우저 밖 요청을 막지 않으므로 서버의 인증·인가를 대신하지 않는다. 자격증명을 포함한 요청에는 와일드카드 허용 출처를 쓸 수 없다.",
+  "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS",
+  "summary": "CORS는 다른 출처의 응답을 스크립트가 읽어도 되는지 서버가 응답 헤더로 브라우저에 알리는 메커니즘이고, 출처는 스킴·호스트·포트의 조합이에요. 브라우저 밖 요청은 막지 못하므로 서버의 인증·인가를 대신하지 않으며, 자격증명을 포함한 요청에는 와일드카드 허용 출처를 쓸 수 없어요.",
+  "paragraphs": [
+    "은재는 일정 관리 웹앱을 만들고 있어요. 화면은 https://app.example.com 에서 열리고, 일정 데이터는 https://api.example.com 의 API에서 받아요. 화면의 스크립트가 API 응답을 읽으려 하자 브라우저가 이를 막았고, 은재는 이유를 찾다가 CORS를 알게 됐어요.",
+    "먼저 출처는 스킴, 호스트, 포트의 조합이에요. 스킴은 https 같은 통신 방식, 호스트는 도메인 이름, 포트는 서버의 접속 번호예요. 셋 중 하나만 달라도 다른 출처이고, 주소 뒤의 경로는 출처에 들어가지 않아요. 브라우저는 스크립트가 다른 출처의 응답을 읽는 것을 기본적으로 제한해요. CORS는 서버가 응답 헤더로 어떤 출처의 스크립트가 응답을 읽어도 되는지 브라우저에 알리는 메커니즘이에요.",
+    "은재의 두 주소는 스킴과 포트가 같지만 호스트가 달라 서로 다른 출처예요. 그래서 은재는 API 응답의 Access-Control-Allow-Origin 헤더에 https://app.example.com 을 적었어요. 이 요청은 로그인 쿠키 같은 자격증명을 함께 보내므로, 모든 출처를 뜻하는 와일드카드인 * 기호는 쓸 수 없고 허용할 출처를 정확히 적어야 해요.",
+    "중요한 점은 CORS 규칙을 적용하는 쪽이 브라우저라는 거예요. 터미널 명령이나 다른 서버 프로그램처럼 브라우저 밖에서 보낸 요청은 CORS 설정과 상관없이 API에 도착해요. 브라우저 안에서도 응답 읽기만 막히고 요청 자체는 서버에 닿는 경우가 있어요. 그래서 API는 요청마다 누가 보냈는지 확인하는 인증과, 그 작업을 허용할지 판단하는 인가를 직접 해야 해요.",
+    "흔한 오해는 CORS 허용 목록을 좁히면 서버가 보호된다고 믿는 거예요. CORS는 응답을 읽게 해 줄지 브라우저에 알리는 장치이지 서버 앞을 막는 벽이 아니에요. 허용 출처를 꼼꼼히 정하는 일과 서버의 인증·인가 검사는 서로를 대신하지 않아요."
+  ],
+  "terms": [
+    {
+      "surface": "출처",
+      "definition": "스킴, 호스트, 포트를 묶어 웹 주소의 소속을 나타내는 단위예요."
+    },
+    {
+      "surface": "응답 헤더",
+      "definition": "서버가 응답 본문과 함께 브라우저에 보내는 부가 정보예요."
+    },
+    {
+      "surface": "자격증명",
+      "definition": "로그인 쿠키처럼 요청한 사람을 알아보게 하는 인증 정보예요."
+    },
+    {
+      "surface": "와일드카드",
+      "definition": "특정 값 대신 모든 출처를 뜻하도록 쓰는 * 기호예요."
+    }
+  ],
+  "questions": [
+    {
+      "prompt": "CORS를 바르게 설명한 것은 무엇인가요?",
+      "options": [
+        "다른 출처로 보내는 요청 내용을 암호화해 지켜요.",
+        "요청한 사람이 누구인지 확인해 로그인을 판단해요.",
+        "브라우저 밖에서 온 요청을 서버 앞에서 차단해요.",
+        "다른 출처 응답을 읽어도 되는지 서버가 헤더로 알려요."
+      ],
+      "correct_index": 3,
+      "explanation": "CORS는 서버가 응답 헤더로 어떤 출처의 스크립트가 응답을 읽어도 되는지 브라우저에 알리는 메커니즘이에요.",
+      "evidence": "CORS는 서버가 응답 헤더로 어떤 출처의 스크립트가 응답을 읽어도 되는지 브라우저에 알리는 메커니즘이에요."
+    },
+    {
+      "prompt": "은재의 화면 주소 https://app.example.com 과 같은 출처인 것은 무엇인가요?",
+      "options": [
+        "http://app.example.com",
+        "https://app.example.com:8443",
+        "https://app.example.com/calendar",
+        "https://api.example.com"
+      ],
+      "correct_index": 2,
+      "explanation": "스킴, 호스트, 포트가 모두 같고 경로만 다르며, 경로는 출처에 들어가지 않아요. 나머지는 스킴, 호스트, 포트 중 하나가 달라요.",
+      "evidence": "주소 뒤의 경로는 출처에 들어가지 않아요."
+    },
+    {
+      "prompt": "은재의 API가 로그인 쿠키를 포함한 요청에 응답할 때 허용 출처는 어떻게 적어야 하나요?",
+      "options": [
+        "와일드카드인 * 기호를 적어 모든 출처를 한 번에 허용해요.",
+        "스킴을 빼고 app.example.com 만 짧게 적어요.",
+        "허용 출처 헤더 없이 서버에서 쿠키 확인만 하고 응답해요.",
+        "https://app.example.com 을 정확히 적어요."
+      ],
+      "correct_index": 3,
+      "explanation": "자격증명을 포함한 요청에는 와일드카드를 쓸 수 없고, 스킴까지 포함한 출처를 정확히 적어야 해요.",
+      "evidence": "허용할 출처를 정확히 적어야 해요."
+    },
+    {
+      "prompt": "CORS에 관한 오해에 해당하는 것은 무엇인가요?",
+      "options": [
+        "CORS 규칙은 브라우저가 응답 헤더를 보고 적용해요.",
+        "출처는 스킴, 호스트, 포트의 조합으로 정해져요.",
+        "허용 출처를 좁히면 서버의 인가 검사는 생략해도 돼요.",
+        "브라우저 밖 요청은 CORS 설정과 상관없이 서버에 닿아요."
+      ],
+      "correct_index": 2,
+      "explanation": "CORS는 브라우저 밖 요청을 막지 못하므로 서버의 인증·인가를 대신하지 않아요.",
+      "evidence": "허용 출처를 꼼꼼히 정하는 일과 서버의 인증·인가 검사는 서로를 대신하지 않아요."
+    }
+  ],
+  "referenceLinks": [
+    {
+      "title": "Cross-Origin Resource Sharing (CORS) - HTTP | MDN",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS",
+      "checkedAt": "2026-11-17T12:49:05.321Z"
+    }
+  ],
+  "revision": 1,
+  "author": "artice cream",
+  "disclosure": "AI의 도움으로 구성·집필하고 사실 근거와 문항을 점검한 기초 콘텐츠입니다.",
+  "generatedAt": "2026-11-17T13:00:23.070Z",
+  "model": "claude-opus-5-5",
+  "review": {
+    "status": "automated_checks_passed",
+    "issues": [],
+    "answers": [
+      3,
+      2,
+      3,
+      2
+    ],
+    "sourceSha256": "b37f9bf827425b55a6636d5efe7901793394c54a9cf423948f8d9dbfb0685117",
+    "note": "Authored against the brief; facts checked against the cached reference; question evidence, term surfaces and length validated. No human expert review.",
+    "checkedAt": "2026-11-17T13:01:26.773Z"
+  }
+}

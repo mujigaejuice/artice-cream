@@ -1,0 +1,109 @@
+{
+  "key": "data-13",
+  "domain": "data",
+  "order": 13,
+  "title": "WITH로 긴 쿼리를 단계로 나누기",
+  "facts": "WITH 절의 공통 테이블 식(CTE)은 쿼리 안에서 이름 붙인 임시 결과를 정의해 이후 단계에서 참조하게 한다. 긴 쿼리를 단계별로 읽기 쉽게 만든다. CTE는 그 쿼리 실행 동안만 존재하며 뷰처럼 데이터베이스에 저장되지 않는다. 읽기 쉬워졌다고 성능 향상이 보장되지는 않는다.",
+  "url": "https://www.postgresql.org/docs/18/queries-with.html",
+  "summary": "WITH 절의 공통 테이블 식(CTE)은 쿼리 안에서 이름 붙인 임시 결과를 정의해 이후 단계에서 참조하게 하므로 긴 쿼리를 단계별로 읽기 쉬워져요. CTE는 그 쿼리가 실행되는 동안만 존재해 뷰처럼 저장되지 않고, 읽기 쉬워졌다고 성능 향상이 보장되지는 않아요.",
+  "paragraphs": [
+    "작은 화분 가게의 주문을 정리하는 서준은 수량과 단가를 곱해 주문 금액을 구하고, 그중 2만 원 이상인 주문만 골라 보고 싶어요. 이 계산을 한 문장 안에 모두 넣으면 괄호 안에 괄호가 겹쳐서, 나중에 다시 읽을 때 어느 부분이 무엇을 하는지 찾기 어려워져요.",
+    "WITH 절을 쓰면 쿼리 안에서 이름 붙인 임시 결과를 먼저 정의하고, 이후 단계에서 그 이름으로 참조할 수 있어요. 이렇게 정의한 각 부분을 공통 테이블 식, 줄여서 CTE라고 불러요. 긴 쿼리를 계산 순서대로 나눠 적을 수 있어서 단계별로 읽기 쉬워져요.",
+    "orders 테이블에 가람(수량 2, 단가 8000), 보미(수량 3, 단가 9000), 가람(수량 1, 단가 25000)의 주문 세 건이 있다고 해볼게요. WITH order_totals AS (SELECT customer, qty * price AS total FROM orders), big_orders AS (SELECT customer, total FROM order_totals WHERE total >= 20000) SELECT customer, total FROM big_orders;라고 적을 수 있어요. 첫 단계는 금액 16000, 27000, 25000을 계산하고, 둘째 단계는 그중 2만 원 이상인 두 건을 남겨요. 결과는 보미 27000과 가람 25000이에요.",
+    "order_totals와 big_orders는 이 쿼리가 실행되는 동안만 존재해요. 그래서 다음 쿼리에서 big_orders를 조회하면, 같은 이름의 테이블이 따로 없는 한 그런 이름을 찾을 수 없다는 오류가 나요. 뷰처럼 데이터베이스에 저장되는 객체가 아니므로, 여러 쿼리에서 반복해 쓰려면 매번 WITH 절을 다시 적거나 뷰를 따로 만들어야 해요.",
+    "읽기 쉬워졌다고 실행이 빨라진다는 보장은 없어요. 데이터베이스가 CTE를 바깥 쿼리와 합쳐 처리할지 따로 계산할지는 상황에 따라 달라서, 같은 계산을 한 문장에 적은 쿼리와 속도가 비슷하거나 오히려 느릴 수도 있어요. WITH는 이해하기 쉬운 쿼리를 만드는 도구로 보고, 성능은 데이터베이스가 쿼리를 어떻게 처리할지 정한 실행 계획을 따로 확인하는 편이 좋아요."
+  ],
+  "terms": [
+    {
+      "surface": "WITH 절",
+      "definition": "쿼리 안에서 이름 붙인 임시 결과를 먼저 정의하는 부분이에요."
+    },
+    {
+      "surface": "공통 테이블 식",
+      "definition": "WITH 절에서 이름을 붙여 정의하고 이후 단계에서 참조하는 임시 결과예요."
+    },
+    {
+      "surface": "뷰",
+      "definition": "쿼리에 이름을 붙여 데이터베이스에 저장해 두고 여러 쿼리에서 다시 쓰는 객체예요."
+    },
+    {
+      "surface": "실행 계획",
+      "definition": "데이터베이스가 쿼리를 어떤 방식으로 처리할지 정한 내용이에요."
+    }
+  ],
+  "questions": [
+    {
+      "prompt": "WITH 절로 정의한 CTE를 바르게 설명한 것은 무엇인가요?",
+      "options": [
+        "다른 사용자에게 조회 권한을 주는 명령이에요.",
+        "데이터베이스에 영구히 저장되는 테이블이에요.",
+        "쿼리 안에서 이름 붙인 임시 결과예요.",
+        "쿼리 결과를 자동으로 정렬하는 설정이에요."
+      ],
+      "correct_index": 2,
+      "explanation": "CTE는 WITH 절에서 이름을 붙여 정의하고 같은 쿼리의 이후 단계에서 참조하는 임시 결과예요.",
+      "evidence": "WITH 절을 쓰면 쿼리 안에서 이름 붙인 임시 결과를 먼저 정의하고"
+    },
+    {
+      "prompt": "예제에서 big_orders 단계에 남는 주문은 몇 건인가요?",
+      "options": [
+        "네 건이에요.",
+        "한 건이에요.",
+        "세 건이에요.",
+        "두 건이에요."
+      ],
+      "correct_index": 3,
+      "explanation": "금액 16000, 27000, 25000 가운데 2만 원 이상인 27000과 25000의 두 건만 남아요.",
+      "evidence": "둘째 단계는 그중 2만 원 이상인 두 건을 남겨요"
+    },
+    {
+      "prompt": "같은 이름의 테이블이 따로 없을 때, 예제 쿼리가 끝난 뒤 다음 쿼리에서 big_orders를 조회하면 어떻게 되나요?",
+      "options": [
+        "뷰로 자동 저장되어 계속 조회돼요.",
+        "직전 결과인 두 건이 그대로 나와요.",
+        "order_totals의 세 건이 대신 나와요.",
+        "이름을 찾을 수 없다는 오류가 나요."
+      ],
+      "correct_index": 3,
+      "explanation": "CTE는 그 쿼리가 실행되는 동안만 존재하므로 다음 쿼리에서는 big_orders라는 이름을 찾을 수 없어요.",
+      "evidence": "같은 이름의 테이블이 따로 없는 한 그런 이름을 찾을 수 없다는 오류가 나요"
+    },
+    {
+      "prompt": "WITH로 단계를 나누면 쿼리가 반드시 빨라진다는 설명은 어떻게 봐야 하나요?",
+      "options": [
+        "읽기 쉬워져도 성능 향상은 보장되지 않아 틀려요.",
+        "단계가 많을수록 계산량이 줄어들므로 맞아요.",
+        "WITH가 인덱스를 자동으로 만들어 주므로 맞아요.",
+        "CTE 결과가 미리 저장되어 있으므로 맞아요."
+      ],
+      "correct_index": 0,
+      "explanation": "WITH는 쿼리를 읽기 쉽게 만들지만 처리 방식은 상황에 따라 달라서 속도가 비슷하거나 느릴 수도 있어요.",
+      "evidence": "읽기 쉬워졌다고 실행이 빨라진다는 보장은 없어요."
+    }
+  ],
+  "referenceLinks": [
+    {
+      "title": "PostgreSQL: Documentation: 18: 7.8. WITH Queries (Common Table Expressions)",
+      "url": "https://www.postgresql.org/docs/18/queries-with.html",
+      "checkedAt": "2026-11-17T12:48:46.858Z"
+    }
+  ],
+  "revision": 1,
+  "author": "artice cream",
+  "disclosure": "AI의 도움으로 구성·집필하고 사실 근거와 문항을 점검한 기초 콘텐츠입니다.",
+  "generatedAt": "2026-11-17T13:00:23.070Z",
+  "model": "claude-opus-5-5",
+  "review": {
+    "status": "automated_checks_passed",
+    "issues": [],
+    "answers": [
+      2,
+      3,
+      3,
+      0
+    ],
+    "sourceSha256": "6054be2d115f66c606df7193027847ecb3dfbe155a52ee25e07f9f62225378bc",
+    "note": "Authored against the brief; facts checked against the cached reference; question evidence, term surfaces and length validated. No human expert review.",
+    "checkedAt": "2026-11-17T13:01:26.773Z"
+  }
+}

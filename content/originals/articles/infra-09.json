@@ -1,0 +1,109 @@
+{
+  "key": "infra-09",
+  "domain": "infra",
+  "order": 9,
+  "title": "네임스페이스로 클러스터 나누기",
+  "facts": "네임스페이스는 한 클러스터 안의 리소스 이름 범위를 나눈다. 같은 네임스페이스에서는 이름이 유일해야 하지만 다른 네임스페이스에서는 같은 이름을 쓸 수 있다. 노드나 PersistentVolume 같은 일부 리소스는 네임스페이스에 속하지 않는다. 네임스페이스만으로 강한 보안 격리가 되지는 않으며 권한·네트워크 정책이 필요하다.",
+  "url": "https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/",
+  "summary": "네임스페이스는 한 클러스터 안에서 리소스의 이름 범위를 나누어, 네임스페이스가 다르면 같은 이름을 쓸 수 있게 해요. 노드나 PersistentVolume처럼 네임스페이스에 속하지 않는 리소스도 있고, 네임스페이스만으로는 강한 보안 격리가 되지 않아 권한과 네트워크 정책을 따로 정해야 해요.",
+  "paragraphs": [
+    "지호네 회사에서는 결제팀과 알림팀이 쿠버네티스 클러스터 하나를 함께 써요. 클러스터는 컨테이너 앱을 실행하는 여러 머신의 묶음이에요. 두 팀이 각자 만든 Service 이름을 모두 api로 정하려 하자, 먼저 만든 쪽만 그 이름을 쓸 수 있었어요. 여러 팀이 한 클러스터를 나눠 쓸 때는 이름을 어떻게 구분할지부터 정해야 해요.",
+    "네임스페이스는 한 클러스터 안에서 리소스의 이름 범위를 나누는 구역이에요. 같은 네임스페이스 안에서는 이름이 유일해야 하지만, 네임스페이스가 다르면 같은 이름을 써도 돼요. 파드나 Service, Deployment 같은 리소스는 대부분 네임스페이스 하나에 속해서, 이름도 그 네임스페이스 안에서 구분돼요.",
+    "지호는 payment와 notice라는 네임스페이스 두 개를 만들고, 각 팀의 Service를 자기 네임스페이스에 api라는 이름으로 둬요. 이제 payment의 api와 notice의 api는 이름이 같아도 서로 다른 리소스로 구분돼요. 반면 payment 안에 api라는 Service를 하나 더 만들려 하면 같은 범위에서 이름이 겹치므로 만들 수 없어요.",
+    "모든 리소스가 네임스페이스에 속하는 것은 아니에요. 워크로드를 실행하는 머신인 노드나 클러스터의 저장소 자원인 PersistentVolume 같은 일부 리소스는 어느 네임스페이스에도 속하지 않아요. 그래서 노드를 payment 네임스페이스에 넣어 팀별로 나누는 식으로는 다룰 수 없어요.",
+    "네임스페이스를 나눴다고 두 팀이 안전하게 분리되었다고 보면 안 돼요. 네임스페이스만으로는 강한 보안 격리가 되지 않아요. 누가 어느 네임스페이스에서 어떤 작업을 할 수 있는지는 권한 설정으로, 파드끼리 어떤 통신을 주고받을 수 있는지는 네트워크 정책으로 따로 정해야 해요."
+  ],
+  "terms": [
+    {
+      "surface": "네임스페이스",
+      "definition": "한 클러스터 안에서 리소스의 이름 범위를 나누는 구역이에요."
+    },
+    {
+      "surface": "이름 범위",
+      "definition": "같은 종류의 리소스 이름이 겹치지 않아야 하는 영역이에요."
+    },
+    {
+      "surface": "PersistentVolume",
+      "definition": "클러스터의 저장소 자원으로, 어느 네임스페이스에도 속하지 않는 리소스예요."
+    },
+    {
+      "surface": "네트워크 정책",
+      "definition": "파드끼리 어떤 통신을 주고받을 수 있는지 정하는 규칙이에요."
+    }
+  ],
+  "questions": [
+    {
+      "prompt": "네임스페이스가 하는 일을 알맞게 설명한 것은 무엇인가요?",
+      "options": [
+        "여러 클러스터를 하나로 합쳐 함께 관리해요.",
+        "파드가 쓸 CPU와 메모리의 상한을 정해요.",
+        "한 클러스터 안에서 리소스 이름 범위를 나눠요.",
+        "노드를 팀별로 나눠 다른 팀의 접근을 막아요."
+      ],
+      "correct_index": 2,
+      "explanation": "네임스페이스는 한 클러스터 안에서 리소스의 이름 범위를 나누는 구역이에요.",
+      "evidence": "네임스페이스는 한 클러스터 안에서 리소스의 이름 범위를 나누는 구역이에요."
+    },
+    {
+      "prompt": "지호가 payment와 notice에 각각 api라는 Service를 두면 어떻게 되나요?",
+      "options": [
+        "이름이 겹치므로 둘 중 하나는 만들 수 없어요.",
+        "이름이 같아도 서로 다른 리소스로 구분돼요.",
+        "나중에 만든 Service가 먼저 만든 것을 덮어써요.",
+        "두 Service가 하나로 합쳐져 같은 파드를 가리켜요."
+      ],
+      "correct_index": 1,
+      "explanation": "네임스페이스가 다르면 같은 이름을 써도 되므로 두 Service는 별개의 리소스로 구분돼요.",
+      "evidence": "payment의 api와 notice의 api는 이름이 같아도 서로 다른 리소스로 구분돼요."
+    },
+    {
+      "prompt": "지호가 payment 네임스페이스 안에 api라는 Service를 하나 더 만들려 하면 어떻게 되나요?",
+      "options": [
+        "같은 범위에서 이름이 겹치므로 만들 수 없어요.",
+        "notice 네임스페이스로 자동으로 옮겨져 만들어져요.",
+        "기존 api Service가 지워지고 새 것으로 바뀌어요.",
+        "이름 뒤에 번호가 붙어 api2로 만들어져요."
+      ],
+      "correct_index": 0,
+      "explanation": "같은 네임스페이스 안에서는 이름이 유일해야 하므로 이미 있는 api와 같은 이름으로는 만들 수 없어요.",
+      "evidence": "같은 범위에서 이름이 겹치므로 만들 수 없어요"
+    },
+    {
+      "prompt": "네임스페이스와 보안의 관계를 올바르게 설명한 것은 무엇인가요?",
+      "options": [
+        "강한 격리를 위해 권한과 네트워크 정책을 따로 정해야 해요.",
+        "네임스페이스를 나누면 다른 팀의 접근이 자동으로 막혀요.",
+        "노드를 네임스페이스에 넣으면 팀별로 완전히 분리돼요.",
+        "네임스페이스가 다르면 파드끼리는 통신할 수 없어요."
+      ],
+      "correct_index": 0,
+      "explanation": "네임스페이스는 이름 범위를 나눌 뿐이라, 작업 권한과 파드 간 통신은 권한 설정과 네트워크 정책으로 따로 정해야 해요.",
+      "evidence": "네임스페이스만으로는 강한 보안 격리가 되지 않아요."
+    }
+  ],
+  "referenceLinks": [
+    {
+      "title": "Namespaces | Kubernetes",
+      "url": "https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/",
+      "checkedAt": "2026-11-17T12:48:40.230Z"
+    }
+  ],
+  "revision": 1,
+  "author": "artice cream",
+  "disclosure": "AI의 도움으로 구성·집필하고 사실 근거와 문항을 점검한 기초 콘텐츠입니다.",
+  "generatedAt": "2026-11-17T13:00:23.070Z",
+  "model": "claude-opus-5-5",
+  "review": {
+    "status": "automated_checks_passed",
+    "issues": [],
+    "answers": [
+      2,
+      1,
+      0,
+      0
+    ],
+    "sourceSha256": "4f028c814be632106c64f016c78dc957c22404299875bfa0a95a8bcb66f9ad7c",
+    "note": "Authored against the brief; facts checked against the cached reference; question evidence, term surfaces and length validated. No human expert review.",
+    "checkedAt": "2026-11-17T13:01:26.773Z"
+  }
+}

@@ -1,0 +1,113 @@
+{
+  "key": "data-09",
+  "domain": "data",
+  "order": 9,
+  "title": "UPDATE와 DELETE 전에 WHERE부터",
+  "facts": "UPDATE는 조건에 맞는 행의 값을 바꾸고 DELETE는 행을 지운다. WHERE가 없으면 UPDATE와 DELETE는 테이블의 모든 행에 적용된다. 먼저 같은 조건으로 SELECT해 대상 행을 확인하고 트랜잭션으로 실수에 대비할 수 있다. RETURNING으로 바뀐 행을 돌려받을 수 있다.",
+  "url": "https://www.postgresql.org/docs/18/dml-update.html",
+  "summary": "UPDATE는 조건에 맞는 행의 값을 바꾸고 DELETE는 행을 지우며, WHERE가 없으면 두 명령 모두 테이블의 모든 행에 적용돼요. 같은 조건의 SELECT로 대상을 먼저 확인하고, 트랜잭션과 RETURNING으로 결과를 살피며 실수에 대비할 수 있어요.",
+  "paragraphs": [
+    "온라인 문구점 재고를 관리하는 하린은 더 이상 팔지 않는 볼펜 한 종류의 판매 상태를 바꾸려고 해요. 그런데 대상 조건을 빠뜨린 채 명령을 실행하면 볼펜뿐 아니라 모든 상품의 상태가 한꺼번에 바뀔 수 있어요. 데이터를 고치는 명령은 조회와 달리 결과가 테이블에 남기 때문에 실행 순서를 정해 두는 편이 안전해요.",
+    "UPDATE는 조건에 맞는 행에서 지정한 열의 값을 바꾸고, DELETE는 조건에 맞는 행 자체를 지워요. 어떤 행이 대상인지는 WHERE 절이 정해요. WHERE가 없으면 UPDATE와 DELETE는 테이블의 모든 행에 적용돼요. 조건에 맞는 행이 하나도 없으면 아무 행도 바뀌지 않을 뿐 오류가 나지는 않아요.",
+    "items 테이블에 21번 연필, 22번 볼펜, 23번 공책이 있고 상태는 모두 판매중이라고 해볼게요. 하린은 먼저 SELECT * FROM items WHERE item_id = 22;로 볼펜 한 행만 나오는지 확인해요. 그다음 같은 조건으로 UPDATE items SET status = '단종' WHERE item_id = 22 RETURNING item_id, status;를 실행해요. RETURNING은 바뀐 행을 결과로 돌려받게 해 주므로, 상태가 단종으로 바뀐 22번 행이 바로 표시돼요. DELETE도 마찬가지로 WHERE item_id = 23을 붙이면 공책 한 행만 지우지만, DELETE FROM items;처럼 WHERE를 빼면 세 행이 모두 지워져요.",
+    "실수에 대비하려면 트랜잭션을 쓸 수 있어요. 트랜잭션은 여러 변경을 한 단위로 묶어 COMMIT으로 확정하거나 ROLLBACK으로 취소하게 해 줘요. BEGIN;으로 시작한 뒤 UPDATE를 실행하고, 돌아온 행이 예상과 다르면 ROLLBACK;으로 되돌린 다음 조건을 고칠 수 있어요. 결과가 맞을 때만 COMMIT;으로 확정해요.",
+    "다만 이 순서가 모든 실수를 막지는 않아요. 확인용 SELECT와 실제 UPDATE의 조건을 다르게 적으면 확인한 행과 다른 행이 바뀌어요. 또 PostgreSQL 기본 동작에서는 BEGIN 없이 실행한 문장이 성공하면 그 자리에서 확정되고, 확정한 뒤에는 ROLLBACK으로 취소할 수 없어요. 그래서 WHERE를 먼저 적고 같은 조건을 그대로 옮겨 쓰는 습관이 중요해요."
+  ],
+  "terms": [
+    {
+      "surface": "UPDATE",
+      "definition": "조건에 맞는 행에서 지정한 열의 값을 바꾸는 명령이에요."
+    },
+    {
+      "surface": "DELETE",
+      "definition": "조건에 맞는 행 자체를 테이블에서 지우는 명령이에요."
+    },
+    {
+      "surface": "WHERE 절",
+      "definition": "명령이 적용될 행을 고르는 조건을 적는 부분이에요."
+    },
+    {
+      "surface": "RETURNING",
+      "definition": "명령으로 바뀐 행을 결과로 돌려받게 하는 절이에요."
+    },
+    {
+      "surface": "트랜잭션",
+      "definition": "여러 변경을 한 단위로 묶어 확정하거나 취소할 수 있게 하는 작업 단위예요."
+    }
+  ],
+  "questions": [
+    {
+      "prompt": "WHERE 절 없이 UPDATE를 실행하면 어떤 행이 바뀌나요?",
+      "options": [
+        "가장 최근에 추가한 행만 바뀌어요.",
+        "테이블의 첫 번째 행만 바뀌어요.",
+        "테이블의 모든 행이 바뀌어요.",
+        "오류가 나서 아무 행도 바뀌지 않아요."
+      ],
+      "correct_index": 2,
+      "explanation": "WHERE 절은 대상 행을 고르는 조건이므로, 이것이 없으면 UPDATE는 테이블의 모든 행에 적용돼요.",
+      "evidence": "WHERE가 없으면 UPDATE와 DELETE는 테이블의 모든 행에 적용돼요."
+    },
+    {
+      "prompt": "하린이 item_id = 22 조건에 RETURNING을 붙여 UPDATE를 실행하면 무엇을 돌려받나요?",
+      "options": [
+        "바뀌기 전 상태의 세 행 전체예요.",
+        "테이블 이름과 열 이름 목록이에요.",
+        "상태가 단종으로 바뀐 22번 행이에요.",
+        "바뀌지 않은 21번과 23번 행이에요."
+      ],
+      "correct_index": 2,
+      "explanation": "RETURNING은 명령으로 바뀐 행을 돌려주므로, 조건에 맞아 상태가 바뀐 22번 행이 결과로 나와요.",
+      "evidence": "상태가 단종으로 바뀐 22번 행이 바로 표시돼요"
+    },
+    {
+      "prompt": "예제의 items 테이블에서 DELETE FROM items;를 실행하면 몇 행이 지워지나요?",
+      "options": [
+        "한 행도 지워지지 않아요.",
+        "23번 공책 한 행만 지워져요.",
+        "22번과 23번 두 행이 지워져요.",
+        "세 행이 모두 지워져요."
+      ],
+      "correct_index": 3,
+      "explanation": "WHERE가 없는 DELETE는 테이블의 모든 행에 적용되므로 연필, 볼펜, 공책 세 행이 모두 지워져요.",
+      "evidence": "DELETE FROM items;처럼 WHERE를 빼면 세 행이 모두 지워져요"
+    },
+    {
+      "prompt": "기본 동작에서 BEGIN 없이 실행해 성공한 UPDATE를 나중에 ROLLBACK으로 되돌릴 수 있다는 생각은 어떤가요?",
+      "options": [
+        "WHERE를 적었다면 언제든 되돌릴 수 있어 맞아요.",
+        "성공하면 그 자리에서 확정되므로 틀려요.",
+        "SELECT로 먼저 확인했다면 되돌릴 수 있어 맞아요.",
+        "RETURNING을 붙였다면 되돌릴 수 있어 맞아요."
+      ],
+      "correct_index": 1,
+      "explanation": "PostgreSQL 기본 동작에서는 BEGIN 없이 실행한 문장이 성공하는 즉시 확정되고, 확정된 변경은 ROLLBACK으로 취소할 수 없어요.",
+      "evidence": "BEGIN 없이 실행한 문장이 성공하면 그 자리에서 확정되고, 확정한 뒤에는 ROLLBACK으로 취소할 수 없어요."
+    }
+  ],
+  "referenceLinks": [
+    {
+      "title": "PostgreSQL: Documentation: 18: 6.2. Updating Data",
+      "url": "https://www.postgresql.org/docs/18/dml-update.html",
+      "checkedAt": "2026-11-17T12:48:46.108Z"
+    }
+  ],
+  "revision": 1,
+  "author": "artice cream",
+  "disclosure": "AI의 도움으로 구성·집필하고 사실 근거와 문항을 점검한 기초 콘텐츠입니다.",
+  "generatedAt": "2026-11-17T13:00:23.070Z",
+  "model": "claude-opus-5-5",
+  "review": {
+    "status": "automated_checks_passed",
+    "issues": [],
+    "answers": [
+      2,
+      2,
+      3,
+      1
+    ],
+    "sourceSha256": "6869fe8d61b3f1524ad89f9cc0f14555f79765dbe11e9e4fee8a0ca5dc1295a5",
+    "note": "Authored against the brief; facts checked against the cached reference; question evidence, term surfaces and length validated. No human expert review.",
+    "checkedAt": "2026-11-17T13:01:26.773Z"
+  }
+}
