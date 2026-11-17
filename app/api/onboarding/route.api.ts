@@ -46,27 +46,33 @@ export async function GET(request: Request) {
   });
 }
 
-type Graded = { domainId: number; correct: number | null; level: 1 | 2 | 3 };
+type Graded = { domainId: number; correct: number | null; level: 1 | 2 | 3; retake?: true };
 
 /** 입력 하나 → 시작 레벨. 형식이 틀리면 null. */
 function grade(selection: unknown, slugs: Map<number, string>): Graded | null {
   if (!selection || typeof selection !== "object" || Array.isArray(selection)) return null;
-  const { domainId, answers, skipped, rareChecked } = selection as Record<string, unknown>;
+  const { domainId, answers, skipped, rareChecked, retake } = selection as Record<string, unknown>;
   const slug = typeof domainId === "number" ? slugs.get(domainId) : undefined;
   if (typeof domainId !== "number" || !Number.isSafeInteger(domainId) || slug === undefined) return null;
 
   const given = [answers !== undefined, skipped !== undefined, rareChecked !== undefined].filter(Boolean).length;
   if (given !== 1) return null;
+  // 다시 하기에서 이미 있는 분야를 다시 푼 경우. 퀴즈를 끝까지 푼 답에만 붙는다.
+  if (retake !== undefined && (retake !== true || answers === undefined)) return null;
   if (skipped !== undefined) return skipped === true ? { domainId, correct: null, level: 2 } : null;
   if (rareChecked !== undefined) {
     return Number.isSafeInteger(rareChecked) && (rareChecked as number) >= 0 && (rareChecked as number) <= 4
       ? { domainId, correct: null, level: levelFromTermCheck(rareChecked as number) } : null;
   }
   const correct = countCorrect(slug, answers);
-  return correct === null ? null : { domainId, correct, level: levelFromQuizScore(correct) };
+  if (correct === null) return null;
+  return { domainId, correct, level: levelFromQuizScore(correct), ...(retake === true ? { retake: true as const } : {}) };
 }
 
-/** Existing proficiency is retained; only newly selected domains receive a starting level. */
+/**
+ * Existing proficiency is retained unless the user retakes that domain's quiz from
+ * "온보딩 다시 하기"; then the quiz result replaces the level (see the retake migration).
+ */
 export async function POST(request: Request) {
   const { user, supabase } = await getRequestContext(request);
   if (!user) return apiError(request, "unauthenticated", 401);
@@ -91,14 +97,16 @@ export async function POST(request: Request) {
   try {
     const { data, error } = await createAdminClient().rpc("save_onboarding_preferences", {
       p_user_id: user.id,
-      p_selections: results.map(({ domainId, level }) => ({ domainId, level })),
+      p_selections: results.map(({ domainId, level, retake }) => ({ domainId, level, ...(retake ? { retake } : {}) })),
     });
     if (error || !data || typeof data !== "object") throw error ?? new Error("Invalid preferences result");
     if (typeof data.error === "string") {
       return apiError(request, data.error, data.error === "invalid body" ? 400 : 503);
     }
     if (data.ok !== true) throw new Error("Invalid preferences result");
-    return json(request, { ...data, results });
+    // 재응시 마이그레이션 전의 DB는 retake를 모른 채 기존 레벨을 그대로 둔다. 저장됐다고 답하지 않는다.
+    if (results.some((r) => r.retake) && typeof data.retaken !== "number") throw new Error("Retake not supported");
+    return json(request, { ...data, results: results.map(({ domainId, correct, level }) => ({ domainId, correct, level })) });
   } catch {
     return apiError(request, "preferences temporarily unavailable", 503);
   }

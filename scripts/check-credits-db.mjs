@@ -72,7 +72,8 @@ try {
     'supabase/migrations/20261116090000_ingest_runs.sql',
     'supabase/migrations/20261116120000_article_bookmarks.sql',
     'supabase/migrations/20261117010000_streak_reward.sql',
-    'supabase/migrations/20261117120000_onboarding_quiz_level.sql']) {
+    'supabase/migrations/20261117120000_onboarding_quiz_level.sql',
+    'supabase/migrations/20261118090000_onboarding_retake.sql']) {
     await sql(await readFile(new URL(`../${file}`, import.meta.url), 'utf8'));
   }
 
@@ -188,6 +189,24 @@ try {
   assert.equal((await rows(`select level from public.user_domain_levels where user_id='${uid(7)}' and domain_id=1`))[0].level,3);
   for (const bad of ['{"domainId":1,"level":0}', '{"domainId":1,"level":4}', '{"domainId":1,"level":"2"}',
     '{"domainId":1,"level":2,"rareChecked":1}', '{"domainId":1}']) {
+    assert.equal((await rpc(`public.save_onboarding_preferences('${uid(7)}', '[${bad}]'::jsonb)`)).error,'invalid body',bad);
+  }
+  // Re-onboarding retake: only an explicit retake overwrites a level, and it restarts the recent-score window.
+  await sql(`set role service_role; select set_config('app.credit_writer','v1',false);
+    update public.user_domain_levels set recent_scores='{0.25,0.5}', rolling_accuracy=0.4, quizzes_taken=6
+      where user_id='${uid(7)}' and domain_id=1;`);
+  const retake = await rpc(`public.save_onboarding_preferences('${uid(7)}', '[{"domainId":1,"level":1,"retake":true},{"domainId":2,"level":3}]'::jsonb)`);
+  assert.equal(retake.ok,true);
+  assert.equal(retake.added,0);
+  assert.equal(retake.retaken,1);
+  const retakenLevels = await rows(`select domain_id,level,recent_scores,rolling_accuracy,quizzes_taken from public.user_domain_levels
+    where user_id='${uid(7)}' order by domain_id`);
+  assert.deepEqual(retakenLevels.map(row => row.level),[1,1],'retake overwrites; a plain save still does not');
+  assert.deepEqual(retakenLevels[0].recent_scores,[]);
+  assert.equal(retakenLevels[0].rolling_accuracy,0);
+  assert.equal(retakenLevels[0].quizzes_taken,6,'reading history count is kept');
+  for (const bad of ['{"domainId":1,"rareChecked":1,"retake":true}', '{"domainId":1,"level":2,"retake":false}',
+    '{"domainId":1,"level":2,"retake":"yes"}']) {
     assert.equal((await rpc(`public.save_onboarding_preferences('${uid(7)}', '[${bad}]'::jsonb)`)).error,'invalid body',bad);
   }
   await sql(`delete from auth.users where id='${uid(7)}';`);
