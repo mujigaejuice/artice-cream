@@ -64,4 +64,7 @@ begin
 end;
 $$;
 
+revoke all on function public.save_onboarding_preferences(uuid, jsonb) from public, anon, authenticated;
+grant execute on function public.save_onboarding_preferences(uuid, jsonb) to service_role;
+
 commit;
