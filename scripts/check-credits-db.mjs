@@ -71,7 +71,8 @@ try {
     // 운영 적용 순서 그대로 전체 체인을 올린다.
     'supabase/migrations/20261116090000_ingest_runs.sql',
     'supabase/migrations/20261116120000_article_bookmarks.sql',
-    'supabase/migrations/20261117010000_streak_reward.sql']) {
+    'supabase/migrations/20261117010000_streak_reward.sql',
+    'supabase/migrations/20261117120000_onboarding_quiz_level.sql']) {
     await sql(await readFile(new URL(`../${file}`, import.meta.url), 'utf8'));
   }
 
@@ -177,6 +178,19 @@ try {
   assert.equal(levels[0].quizzes_taken,5);
   assert.deepEqual(levels[0].recent_scores,[1]);
   assert.equal(levels[1].level,1);
+  // Onboarding quiz: the server sends the level it graded; rareChecked stays for older app builds.
+  await sql(`insert into auth.users(id) values ('${uid(7)}');`);
+  const quiz = await rpc(`public.save_onboarding_preferences('${uid(7)}', '[{"domainId":1,"level":3},{"domainId":2,"level":1}]'::jsonb)`);
+  assert.equal(quiz.added,2);
+  const quizLevels = await rows(`select domain_id,level from public.user_domain_levels where user_id='${uid(7)}' order by domain_id`);
+  assert.deepEqual(quizLevels.map(row => row.level),[3,1]);
+  assert.equal((await rpc(`public.save_onboarding_preferences('${uid(7)}', '[{"domainId":1,"level":1}]'::jsonb)`)).added,0);
+  assert.equal((await rows(`select level from public.user_domain_levels where user_id='${uid(7)}' and domain_id=1`))[0].level,3);
+  for (const bad of ['{"domainId":1,"level":0}', '{"domainId":1,"level":4}', '{"domainId":1,"level":"2"}',
+    '{"domainId":1,"level":2,"rareChecked":1}', '{"domainId":1}']) {
+    assert.equal((await rpc(`public.save_onboarding_preferences('${uid(7)}', '[${bad}]'::jsonb)`)).error,'invalid body',bad);
+  }
+  await sql(`delete from auth.users where id='${uid(7)}';`);
   await assert.rejects(() => sql(`update public.user_article_progress set status='completed' where user_id='${uid(5)}' and article_id=3;`), /credit write contract required/);
   await assert.rejects(() => sql(`update public.user_domain_levels set level=1 where user_id='${uid(5)}' and domain_id=1;`), /credit write contract required/);
   await assert.rejects(() => sql(`select set_config('app.credit_writer','v1',false);
