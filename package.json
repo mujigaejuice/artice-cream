@@ -23,7 +23,7 @@
     "test:shop-api": "tsx scripts/check-shop-api.ts",
     "test:shop-ui": "tsx scripts/check-shop-ui.tsx && tsx scripts/check-shop-interaction.tsx && tsx scripts/check-shop-music.tsx && tsx scripts/check-scoop-colors.tsx",
     "test:reader": "tsx scripts/check-reader.ts && tsx scripts/check-reader-ui.tsx",
-    "test:reading-exit": "tsx scripts/check-reading-exit.tsx",
+    "test:reading-exit": "tsx scripts/check-reading-exit.tsx && tsx scripts/check-read-confirm.tsx",
     "test:feed": "tsx scripts/check-feed-pagination.ts",
     "test:auth": "tsx scripts/check-auth-session.ts && tsx scripts/check-auth-session.ts --native",
     "test:account-delete": "tsx scripts/check-account-deletion.ts",
