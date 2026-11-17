@@ -29,7 +29,7 @@ async function main() {
       onboardingLoads++;
       assert.equal(new Headers(init?.headers).get("authorization"), "Bearer test-access-token");
       return onboardingStatus !== 200 ? Response.json({ error: "설정을 불러오지 못했어요" }, { status: onboardingStatus }) :
-        Response.json({ domains: [{ id: 1, slug: "cloud", name_ko: "클라우드" }], levels: existingLevels, domainTerms: {}, isSignedIn: true });
+        Response.json({ domains: [{ id: 1, slug: "cloud", name_ko: "클라우드" }], levels: existingLevels, quizzes: {}, isSignedIn: true });
     }
     assert.equal(url.origin, "https://age-test.invalid");
     if (url.pathname === "/auth/v1/verify") {
@@ -61,7 +61,7 @@ async function main() {
   const root = createRoot(container);
   try {
     await act(async () => { root.render(createElement(AppRouterContext.Provider, { value: router },
-      createElement(OnboardingFlow, { domains: [], initialLevels: {}, domainTerms: {}, isSignedIn: false }))); });
+      createElement(OnboardingFlow, { domains: [], initialLevels: {}, quizzes: {}, isSignedIn: false }))); });
     const button = (label: string) => {
       const found = [...container.querySelectorAll<HTMLButtonElement>("button")].find((item) => item.textContent === label);
       assert.ok(found, `button: ${label}`);
@@ -105,8 +105,10 @@ async function main() {
     assert.match(title(), /모르는 말/);
     await swipe(-100, 0);
     assert.match(title(), /나만의 콘/);
-    const scoop = container.querySelector<SVGElement>('svg [role="button"]')!;
-    await act(async () => { scoop.dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true })); });
+    // 화면구성.md §7 — 스쿱은 그림 옆 숨김 버튼 목록으로 고른다.
+    const scoop = [...container.querySelectorAll<HTMLButtonElement>('ul.sr-only button')].find((b) => b.textContent?.startsWith("클라우드"))!;
+    await act(async () => { scoop.click(); });
+    assert.equal(scoop.getAttribute("aria-pressed"), "true");
     assert.match(container.querySelector('[role="status"]')!.textContent!, /클라우드/);
     await act(async () => { panel.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true })); });
     assert.equal(loginHidden(), false);
@@ -199,14 +201,14 @@ async function main() {
     assert.ok(container.querySelector('[role="status"]'), JSON.stringify({ receivedEmails, text: container.textContent }));
     assert.match(container.querySelector('[role="status"]')!.textContent!, /corrected@example.test/);
     await act(async () => { root.render(createElement(AppRouterContext.Provider, { value: router },
-      createElement(OnboardingFlow, { key: "failed", domains: [], initialLevels: {}, domainTerms: {}, isSignedIn: false, authFailed: true }))); });
+      createElement(OnboardingFlow, { key: "failed", domains: [], initialLevels: {}, quizzes: {}, isSignedIn: false, authFailed: true }))); });
     assert.equal(loginHidden(), false, "failed auth returns directly to login");
     assert.match(container.querySelector('[role="alert"]')!.textContent!, /다시 시도/);
     await act(async () => { root.render(createElement(AppRouterContext.Provider, { value: router },
-      createElement(OnboardingFlow, { key: "direct", domains: [], initialLevels: {}, domainTerms: {}, isSignedIn: false, startAtLogin: true }))); });
+      createElement(OnboardingFlow, { key: "direct", domains: [], initialLevels: {}, quizzes: {}, isSignedIn: false, startAtLogin: true }))); });
     assert.equal(loginHidden(), false, "privacy return link opens login directly");
     await act(async () => { root.render(createElement(AppRouterContext.Provider, { value: router },
-      createElement(OnboardingFlow, { domains: [], initialLevels: {}, domainTerms: {}, isSignedIn: true }))); });
+      createElement(OnboardingFlow, { domains: [], initialLevels: {}, quizzes: {}, isSignedIn: true }))); });
     assert.match(title(), /어떤 뉴스를/);
     assert.equal(container.querySelector('[aria-label="서비스 소개"]'), null);
     const { default: OnboardingPage } = await import("../app/onboarding/page");
@@ -263,7 +265,7 @@ async function main() {
     assert.match(title(), /어떤 뉴스를/, "OTP completes in the requesting page");
     assert.equal(onboardingLoads, 1, "fetch authenticated onboarding data once after verification");
     assert.ok((await auth.getSession()).data.session);
-    assert.equal(container.querySelector<HTMLInputElement>('input[type="checkbox"]')?.checked, true, "new domains initialize after login");
+    assert.equal(container.querySelector<HTMLInputElement>('input[type="checkbox"]')?.checked, false, "no domain is preselected after login (spec: choose first, then take the quiz)");
     assert.equal(navigations, 0, "no callback navigation or page refresh required");
     // Existing users take the same real OTP path, but skip completed onboarding.
     existingLevels = { "1": 3 };

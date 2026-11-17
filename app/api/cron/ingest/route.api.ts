@@ -20,6 +20,7 @@ import type { DomainRow } from "@/lib/supabase/types";
 import { articleAllows, getSourceRights, sourceAllows, type ArticleRights } from "@/lib/content-rights";
 import { reviewPendingArticles } from "@/lib/news/review-queue";
 import { DOCUMENT_SOURCE_IDS, syncDocumentCandidates } from "@/lib/news/document-ingest";
+import { recordIngestRun } from "@/lib/news/ingest-runs";
 
 /**
  * 인제스트 1단계 — 수집과 분류 (소스분류.md §3).
@@ -60,9 +61,14 @@ export async function GET(request: NextRequest) {
   if (!authorizeCron(request)) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-
-  const startedAt = Date.now();
   const runId = crypto.randomUUID();
+  const route = request.nextUrl.searchParams.get("documentsOnly") === "1" ? "collect-documents" : "collect";
+  // One ingest_runs row per run, written best-effort after the response is built.
+  return recordIngestRun({ runId, route, category: null }, () => collect(request, runId));
+}
+
+async function collect(request: NextRequest, runId: string): Promise<Response> {
+  const startedAt = Date.now();
   const clock = startDeadline(startedAt);
   const admin = createAdminClient();
   const rights = await getSourceRights(admin);
@@ -71,7 +77,7 @@ export async function GET(request: NextRequest) {
   const processingSources = [...rights.values()].filter((source) => sourceAllows(source, "process"))
     .map((source) => ({ id: source.source, kind: SOURCES.find(s => s.id === source.source)?.kind ?? "blog" as const }));
   if (allowedSources.length === 0 && processingSources.length === 0 && allowedDocumentSources.length === 0) {
-    return NextResponse.json({ ok: true, stage: "collect", stoppedBy: "rights", queued: 0,
+    return NextResponse.json({ ok: true, stage: "collect", runId, stoppedBy: "rights", queued: 0,
       classified: 0, allowedSources: 0, processingSources: 0, blockedSources: SOURCES.length },
     { headers: { "Cache-Control": "no-store" } });
   }
@@ -86,7 +92,7 @@ export async function GET(request: NextRequest) {
   if (request.nextUrl.searchParams.get("documentsOnly") === "1") {
     try {
       const documents = await syncDocumentCandidates(admin, rights, domainBySlug, clock);
-      return NextResponse.json({ ok: true, stage: "documents", documents }, { headers: { "Cache-Control": "no-store" } });
+      return NextResponse.json({ ok: true, stage: "documents", runId, documents }, { headers: { "Cache-Control": "no-store" } });
     } catch (cause) {
       console.error("[ingest:documents]", cause);
       return NextResponse.json({ error: "document_sync_unavailable" }, { status: 503 });

@@ -5,6 +5,8 @@ export type CreditResult = {
   newlyGranted: number;
   articleReward: { base: number; bonus: number; total: number };
   welcomeReward: number;
+  /** 이 완료로 받은 스트릭 보상. 스트릭 도입 전 서버 응답에는 없다. */
+  streakReward?: number;
   balance: number;
   policyVersion: number;
 };
@@ -18,15 +20,25 @@ export type CreditSnapshot = {
   spendingEnabled: boolean;
   hasWelcome: boolean;
   rules: { article: number; quizBonusMax: number; welcome: number };
+  /** 크레딧정책.md P4. days는 오늘·어제(KST)까지 이어진 연속 학습일이다. */
+  streak: CreditStreak;
   ownedItems?: string[];
   equipped?: Equipped;
   scoopColors?: ScoopColors;
 };
 
+export type CreditStreak = {
+  enabled: boolean;
+  days: number;
+  reward: number;
+  blockDays: number;
+  daysUntilReward: number;
+};
+
 export type CreditEvent = {
   id: string;
   amount: number;
-  reason: "article_read" | "quiz_bonus" | "welcome" | "purchase" | "adjustment";
+  reason: "article_read" | "quiz_bonus" | "welcome" | "streak" | "purchase" | "adjustment";
   createdAt: string;
   articleId: string | null;
   articleTitle: string | null;

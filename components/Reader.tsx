@@ -8,6 +8,7 @@ import { levelShort } from "@/lib/level";
 import { quizHref } from "@/lib/routes";
 import type { Attribution, ReferenceLink } from "@/lib/content-rights";
 import { useLeaveGuard, useReadingProgress } from "@/components/ReadingExitNotice";
+import { BookmarkButton } from "@/components/BookmarkButton";
 
 type GlossaryMap = Record<string, { term: string; definition: string }>;
 
@@ -31,6 +32,8 @@ export type ReaderProps = {
   progressStatus: "started" | "completed" | "saved";
   /** progressStatus가 completed·saved일 때의 점수. */
   quizScore: number | null;
+  /** 북마크 여부. 없으면(미리보기) 토글을 그리지 않는다. */
+  bookmarked?: boolean;
 };
 
 /** 용어를 누르면 같은 줄 안에 뜻을 펼친다(행간 펼치기) — 별도 시트를 띄우지 않는다. */
@@ -106,15 +109,20 @@ export function Reader(props: ReaderProps) {
           <Link href="/" className="text-sm text-stone-500 hover:text-stone-700">
             ← 홈
           </Link>
-          {/* 정책.md §8 — 원문으로 가는 문은 리더 어디서든 보여야 한다(헤더 + 하단). */}
-          {props.sourceUrl && !props.isOriginal && <a
-            href={props.sourceUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="shrink-0 text-sm font-medium text-stone-600 underline-offset-2 hover:text-stone-900 hover:underline"
-          >
-            원문 읽기 ↗
-          </a>}
+          <div className="flex shrink-0 items-center gap-3">
+            {props.bookmarked !== undefined && (
+              <BookmarkButton key={`${props.articleId}:${props.bookmarked}`} articleId={props.articleId} initialBookmarked={props.bookmarked} />
+            )}
+            {/* 정책.md §8 — 원문으로 가는 문은 리더 어디서든 보여야 한다(헤더 + 하단). */}
+            {props.sourceUrl && !props.isOriginal && <a
+              href={props.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0 text-sm font-medium text-stone-600 underline-offset-2 hover:text-stone-900 hover:underline"
+            >
+              원문 읽기 ↗
+            </a>}
+          </div>
         </div>
 
         <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">

@@ -359,6 +359,7 @@ Kubernetes·DuckDB·Rust는 공식 사이트맵의 날짜가 있는 블로그 UR
 읽기 전용 진단은 다음 순서로 실행한다. 결과는 Git에서 제외한 `spike-out/`에 저장된다.
 
 ```bash
+npm run report:ingest                                         # 최근 cron 런(ingest_runs)과 분류별 24h/7d 성공률
 node --env-file=.env.local --import=tsx scripts/audit-ingest.ts # DB 상태·날짜별 가공 수
 node --import=tsx scripts/probe-ingest.ts                     # 원문 표본 재검사
 node --import=tsx scripts/audit-source-candidates.ts           # 후보 피드·권리 근거·표본 검사, DB/LLM 호출 없음

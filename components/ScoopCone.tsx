@@ -131,13 +131,21 @@ export function ScoopCone({ scoops, selectedId, justAddedId, onSelect, onArrival
   </g>;
   const coneInFront = gelato && n > 0;
 
+  // 화면구성.md §7 — 스크린리더·키보드는 SVG 대신 옆의 실제 버튼 목록을 쓴다.
+  // SVG 안 <g role="button">은 그림 역할과 충돌하므로 그림은 통째로 숨기고,
+  // 버튼에 포커스가 가면 그림 위 같은 스쿱에 점선 링을 그려 위치를 보여 준다.
+  // 최신(맨 위) 스쿱부터 읽는다.
+  const listed = interactive ? [...ordered].reverse() : [];
+
   return (
+    <>
     <svg
       className="ac-svg"
       viewBox={previewCrop && n === 1 ? "80 35 100 110" : `0 0 ${VB_W} ${H}`}
       preserveAspectRatio="xMidYMax meet"
-      role="group"
-      aria-label={`아이스크림 콘, 스쿱 ${n}개`}
+      {...(interactive
+        ? { "aria-hidden": true, focusable: "false" }
+        : { role: "img", "aria-label": `아이스크림 콘, 스쿱 ${n}개` })}
     >
       <defs>
         <pattern id={patternId} width="16" height="16" patternUnits="userSpaceOnUse">
@@ -186,27 +194,15 @@ export function ScoopCone({ scoops, selectedId, justAddedId, onSelect, onArrival
             transform={`translate(${x} ${cy}) scale(${scale})`}
           >
             <g
-              className={`ac-scoop${s.id === justAddedId && arrival.waiting ? " ac-scoop-waiting" : ""}${s.id === justAddedId && arrival.falling ? " ac-plop" : ""}`}
+              className={`ac-scoop${s.id === focusedId ? " ac-scoop-focus" : ""}${s.id === justAddedId && arrival.waiting ? " ac-scoop-waiting" : ""}${s.id === justAddedId && arrival.falling ? " ac-plop" : ""}`}
               style={s.id === justAddedId && arrival.falling ? { animationPlayState: arrival.paused ? "paused" : "running" } : undefined}
               onAnimationEnd={(event) => {
                 if (event.target !== event.currentTarget || s.id !== justAddedId) return;
                 if (event.animationName === "ac-plop") arrival.land();
                 if (event.animationName === "ac-settle") arrival.complete();
               }}
-              role={interactive ? "button" : undefined}
-              tabIndex={interactive && !(s.id === justAddedId && arrival.waiting) ? 0 : -1}
-              aria-hidden={s.id === justAddedId && arrival.waiting ? true : undefined}
-              aria-pressed={isSel}
-              aria-label={`${s.domainLabel} · ${formatDate(s.date)} · ${s.title}`}
-              onClick={() => onSelect?.(s)}
-              onFocus={() => setFocusedId(s.id)}
-              onBlur={() => setFocusedId(null)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  onSelect?.(s);
-                }
-              }}
+              data-scoop-id={s.id}
+              onClick={interactive ? () => onSelect?.(s) : undefined}
             >
               {gelato && <defs><linearGradient id={`${gelatoShadeId}-${s.id}`} x1="12%" y1="0%" x2="80%" y2="100%">
                 <stop offset="0%" stopColor={glow} />
@@ -388,5 +384,27 @@ export function ScoopCone({ scoops, selectedId, justAddedId, onSelect, onArrival
       })}
       {coneInFront && coneArt}
     </svg>
+    {interactive && (
+      <ul className="sr-only" aria-label={`아이스크림 콘, 스쿱 ${n}개`}>
+        {listed.map((s) => {
+          const waiting = s.id === justAddedId && arrival.waiting;
+          if (waiting) return null;
+          return (
+            <li key={s.id}>
+              <button
+                type="button"
+                aria-pressed={s.id === selectedId}
+                onClick={() => onSelect?.(s)}
+                onFocus={() => setFocusedId(s.id)}
+                onBlur={() => setFocusedId(null)}
+              >
+                {`${s.domainLabel} · ${formatDate(s.date)} · ${s.title}`}
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    )}
+    </>
   );
 }

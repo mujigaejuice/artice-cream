@@ -13,6 +13,7 @@ import { extractArticle } from "@/lib/news/extract";
 import { DOCUMENT_SOURCE_IDS, extractStoredDocument } from "@/lib/news/document-ingest";
 import { SOURCES } from "@/lib/news/feeds";
 import { authorizeCron, startDeadline } from "@/lib/news/ingest";
+import { recordIngestRun } from "@/lib/news/ingest-runs";
 import { ARTICLE_CONCURRENCY, ARTICLE_START_SECONDS, ARTICLE_TIMEOUT_SECONDS,
   articleTimeoutMs, processQueue } from "@/lib/news/process-queue";
 import { ARTICLES_PER_CATEGORY, INGEST_BUDGET_PER_CATEGORY_USD } from "@/lib/policy";
@@ -63,10 +64,15 @@ export async function GET(request: NextRequest, { params }: Params) {
     return NextResponse.json({ error: `unknown category ${category}` }, { status: 404 });
   }
 
+  const runId = crypto.randomUUID();
+  // One ingest_runs row per run, written best-effort after the response is built.
+  return recordIngestRun({ runId, route: "process", category }, () => processCategory(category, runId));
+}
+
+async function processCategory(category: string, runId: string): Promise<Response> {
   const startedAt = Date.now();
   const clock = startDeadline(startedAt);
   const admin = createAdminClient();
-  const runId = crypto.randomUUID();
   const configured = { runId, category, articleCap: ARTICLES_PER_CATEGORY,
     articleConcurrency: ARTICLE_CONCURRENCY, llmConcurrency: LLM_CONCURRENCY,
     articleStartSeconds: ARTICLE_START_SECONDS,
@@ -113,6 +119,7 @@ export async function GET(request: NextRequest, { params }: Params) {
   > & ArticleRights)[];
 
   const meter = newMeter();
+  let extractedCount = 0;
   let extractFailed = 0;
   let retryLater = 0;
   let failed = 0;
@@ -172,6 +179,7 @@ export async function GET(request: NextRequest, { params }: Params) {
         return false;
       }
 
+      extractedCount += 1;
       try {
         await buildArticle(admin, row.id, extracted, meter, articleSignal, runId);
         console.log("[ingest:article:ready]", JSON.stringify({ ...articleLog,
@@ -218,6 +226,7 @@ export async function GET(request: NextRequest, { params }: Params) {
     allowedSources: allowedSources.length,
     skippedSource,
     processed,
+    extracted: extractedCount,
     extractFailed,
     retryLater,
     failed,

@@ -114,8 +114,8 @@ async function main() {
   }));
   const colors = (scoops: Scoop[], selectedId?: number) => {
     const svg = JSDOM.fragment(renderToStaticMarkup(createElement(ScoopCone, { scoops, selectedId })));
-    return new Map([...svg.querySelectorAll('.ac-scoop[role="button"]')].map(scoop =>
-      [scoop.getAttribute("aria-label"), scoop.querySelector("path")!.getAttribute("fill")]));
+    return new Map([...svg.querySelectorAll('.ac-scoop[data-scoop-id]')].map(scoop =>
+      [scoop.querySelector("title")!.textContent, scoop.querySelector("path")!.getAttribute("fill")]));
   };
   const initialColors = colors(cloudScoops);
   assert.equal(new Set(initialColors.values()).size, 3, "same-day cloud scoops render different article tones");
@@ -167,8 +167,13 @@ async function main() {
     assert.equal(calls.at(-1), "2026-09");
     assert.match(container.textContent!, /스쿱 1개/);
     assert.equal(new URL(dom.window.location.href).searchParams.get("month"), "2026-09");
-    const scoop = container.querySelector<SVGElement>('.ac-scoop[role="button"]')!;
+    const scoop = container.querySelector<SVGElement>('.ac-scoop[data-scoop-id]')!;
     assert.ok(scoop);
+    // 화면구성.md §7 — 그림은 숨기고 스쿱마다 실제 버튼을 둔다.
+    assert.equal(container.querySelector("svg.ac-svg")!.getAttribute("aria-hidden"), "true");
+    const scoopButtons = [...container.querySelectorAll<HTMLButtonElement>("ul.sr-only button")];
+    assert.equal(scoopButtons.length, 1, "each scoop has a real button");
+    assert.equal(scoopButtons[0].getAttribute("aria-pressed"), "false");
     await act(async () => { scoop.dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true })); });
     assert.equal(new URL(dom.window.location.href).searchParams.get("month"), "2026-09", "selecting a scoop preserves month");
     assert.match(container.textContent!, /현재 열람 불가/);

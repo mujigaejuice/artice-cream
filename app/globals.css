@@ -96,7 +96,8 @@ body {
 }
 
 .ac-scoop:hover,
-.ac-scoop:focus-visible {
+.ac-scoop:focus-visible,
+.ac-scoop.ac-scoop-focus {
   transform: translateY(-5px);
 }
 
