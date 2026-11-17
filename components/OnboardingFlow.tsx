@@ -4,20 +4,21 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { EmailCodeForm } from "@/components/EmailCodeForm";
-import { TermCheck } from "@/components/TermCheck";
+import { OnboardingQuiz } from "@/components/OnboardingQuiz";
 import { WelcomeTutorial } from "@/components/WelcomeTutorial";
 import { coreColor } from "@/lib/color";
 import { apiJson } from "@/lib/client-api";
+import { levelLabel, levelShort } from "@/lib/level";
 import { authRedirectUrl, openExternal } from "@/lib/native";
+import type { PublicQuizQuestion } from "@/lib/onboarding-quiz";
 import { createClient } from "@/lib/supabase/client";
 import type { DomainRow } from "@/lib/supabase/types";
-import type { DomainTerms } from "@/lib/terms";
 
 type Props = {
   domains: DomainRow[];
   initialLevels: Record<string, number>;
-  /** 정책.md §15 — 분야별 용어 체크 목록. 비어 있으면 그 분야는 체크를 건너뛴다. */
-  domainTerms: Record<string, DomainTerms>;
+  /** 분야 id → 레벨 퀴즈 문항(정답 없음). 없는 분야는 퀴즈 없이 Lv2로 시작한다. */
+  quizzes: Record<string, PublicQuizQuestion[]>;
   isSignedIn: boolean;
   /** 딥링크·웹 콜백에서 로그인이 실패해 돌아온 경우. */
   authFailed?: boolean;
@@ -25,56 +26,75 @@ type Props = {
   onSignedIn?: () => void;
 };
 
+type Selection = { domainId: number; answers: (number | null)[] } | { domainId: number; skipped: true };
+type Result = { domainId: number; correct: number | null; level: number };
+type Phase = "pick" | "quiz" | "save" | "result";
+
 export function OnboardingFlow({
   domains,
   initialLevels,
-  domainTerms,
+  quizzes,
   isSignedIn,
   authFailed = false,
   startAtLogin = false,
   onSignedIn,
 }: Props) {
   const router = useRouter();
-  const [selected, setSelected] = useState<Set<number>>(
-    () =>
-      new Set(
-        Object.keys(initialLevels).length > 0
-          ? Object.keys(initialLevels).map(Number)
-          : domains.map((d) => d.id),
-      ),
-  );
-  // 용어 체크 결과. 아무것도 고르지 않으면 Lv2에서 시작한다(정책.md §15).
-  const [checkedEasy, setCheckedEasy] = useState<Record<number, Set<string>>>({});
-  const [checkedRare, setCheckedRare] = useState<Record<number, Set<string>>>({});
-  const [busy, setBusy] = useState(false);
+  // 이미 레벨이 있는 분야는 잠겨 있고 다시 묻지 않는다. 고르는 건 새 분야뿐이다.
+  const [picked, setPicked] = useState<Set<number>>(() => new Set());
+  const [phase, setPhase] = useState<Phase>("pick");
+  const [queue, setQueue] = useState<DomainRow[]>([]);
+  const [position, setPosition] = useState(0);
+  const [given, setGiven] = useState<Record<number, (number | null)[]>>({});
+  const [pending, setPending] = useState<Selection[]>([]);
+  const [results, setResults] = useState<Result[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  function toggleTerm(domainId: number, term: string, tier: "easy" | "rare") {
-    const setState = tier === "easy" ? setCheckedEasy : setCheckedRare;
-    setState((prev) => {
-      const next = new Set(prev[domainId] ?? []);
-      if (next.has(term)) next.delete(term);
-      else next.add(term);
-      return { ...prev, [domainId]: next };
-    });
+  const hasExisting = Object.keys(initialLevels).length > 0;
+  const newDomains = domains.filter((d) => picked.has(d.id) && initialLevels[String(d.id)] === undefined);
+
+  function selectionsFor(answers: Record<number, (number | null)[]>): Selection[] {
+    return newDomains.map((d) => (answers[d.id] ? { domainId: d.id, answers: answers[d.id] } : { domainId: d.id, skipped: true }));
   }
 
-  async function saveAndContinue() {
-    setBusy(true);
+  async function save(selections: Selection[]) {
+    setPending(selections);
+    setPhase("save");
     setError(null);
-
     try {
-      await apiJson("/api/onboarding", {
+      const data = await apiJson<{ results?: Result[] }>("/api/onboarding", {
         method: "POST",
-        body: JSON.stringify({ selections: [...selected].map((domainId) => ({
-          domainId, rareChecked: checkedRare[domainId]?.size ?? 0,
-        })) }),
+        body: JSON.stringify({ selections }),
       });
-      router.push("/");
+      if (!data.results || data.results.length === 0) {
+        router.push("/");
+        return;
+      }
+      setResults(data.results);
+      setPhase("result");
     } catch {
       setError("저장하지 못했어요. 다시 시도해 주세요.");
-      setBusy(false);
     }
+  }
+
+  function start() {
+    const withQuiz = newDomains.filter((d) => quizzes[String(d.id)]?.length);
+    setGiven({});
+    if (withQuiz.length === 0) {
+      void save(selectionsFor({}));
+      return;
+    }
+    setQueue(withQuiz);
+    setPosition(0);
+    setPhase("quiz");
+  }
+
+  function finishDomain(answers: (number | null)[] | null) {
+    const domain = queue[position];
+    const all = answers ? { ...given, [domain.id]: answers } : given;
+    setGiven(all);
+    if (position + 1 < queue.length) setPosition(position + 1);
+    else void save(selectionsFor(all));
   }
 
   if (!isSignedIn) return (
@@ -83,19 +103,77 @@ export function OnboardingFlow({
     </WelcomeTutorial>
   );
 
+  if (phase === "quiz") {
+    const domain = queue[position];
+    return (
+      <OnboardingQuiz key={domain.id} domain={domain} questions={quizzes[String(domain.id)]}
+        position={{ index: position, total: queue.length }}
+        onDone={finishDomain} onSkip={() => finishDomain(null)} />
+    );
+  }
+
+  if (phase === "save") {
+    return (
+      <main>
+        {error ? (
+          <>
+            <p role="alert" className="text-sm text-red-700">{error}</p>
+            <button type="button" onClick={() => void save(pending)}
+              className="mt-4 w-full rounded-xl bg-stone-900 px-4 py-3 font-medium text-white transition hover:bg-stone-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-800">
+              다시 시도
+            </button>
+          </>
+        ) : (
+          <p role="status" className="text-sm text-stone-600">저장 중…</p>
+        )}
+      </main>
+    );
+  }
+
+  if (phase === "result") {
+    return (
+      <main>
+        <h1 className="text-xl font-bold tracking-tight text-stone-900">시작 난이도를 정했어요</h1>
+        <p className="mt-2 text-sm text-stone-600">읽고 퀴즈를 풀면 그때부터 알아서 맞춰져요.</p>
+        <ul className="mt-6 space-y-3">
+          {results.map((result) => {
+            const domain = domains.find((d) => d.id === result.domainId);
+            if (!domain) return null;
+            return (
+              <li key={result.domainId} className="flex items-center gap-3 rounded-2xl border border-stone-300 bg-white p-4">
+                <span className="inline-block h-3 w-3 rounded-full" style={{ background: coreColor(domain.slug) }} aria-hidden="true" />
+                <span className="font-medium text-stone-900">{domain.name_ko}</span>
+                <span className="ml-auto text-right text-sm text-stone-600">
+                  {result.correct === null ? "건너뜀" : `8문제 중 ${result.correct}개`}
+                  {" · "}{levelShort(result.level)} {levelLabel(result.level)}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+        <button type="button" onClick={() => router.push("/")}
+          className="mt-6 w-full rounded-xl bg-stone-900 px-4 py-3 font-medium text-white transition hover:bg-stone-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-800">
+          시작하기
+        </button>
+      </main>
+    );
+  }
+
+  const canContinue = picked.size > 0 || hasExisting;
   return (
     <main>
       <h1 className="text-xl font-bold tracking-tight text-stone-900">
         어떤 뉴스를 읽을까요?
       </h1>
       <p className="mt-2 text-sm text-stone-600">
-        관심 분야를 고르고, 아는 용어를 체크해 주세요. 시작 난이도만 가늠하는
-        것이라 안 골라도 되고, 퀴즈를 풀면 그때부터 알아서 맞춰져요.
+        받아볼 분야를 고르세요. 고른 분야마다 8문제를 풀면 맞힌 개수로 시작 난이도를
+        정해요. 건너뛰어도 되고, 그때는 중간 난이도에서 시작해요.
       </p>
 
       <ul className="mt-6 space-y-3">
         {domains.map((domain) => {
-          const on = selected.has(domain.id);
+          const existing = initialLevels[String(domain.id)];
+          const on = existing !== undefined || picked.has(domain.id);
           return (
             <li
               key={domain.id}
@@ -107,11 +185,12 @@ export function OnboardingFlow({
                 <input
                   type="checkbox"
                   checked={on}
+                  disabled={existing !== undefined}
                   onChange={(event) => {
-                    const next = new Set(selected);
+                    const next = new Set(picked);
                     if (event.target.checked) next.add(domain.id);
                     else next.delete(domain.id);
-                    setSelected(next);
+                    setPicked(next);
                   }}
                   className="h-4 w-4 accent-stone-900"
                 />
@@ -121,36 +200,24 @@ export function OnboardingFlow({
                   aria-hidden="true"
                 />
                 <span className="font-medium text-stone-900">{domain.name_ko}</span>
+                {existing !== undefined && (
+                  <span className="ml-auto text-sm text-stone-600">
+                    {levelShort(existing)} {levelLabel(existing)}
+                  </span>
+                )}
               </label>
-
-              {on && domainTerms[String(domain.id)] && (
-                <div className="mt-3 pl-7">
-                  <TermCheck
-                    terms={domainTerms[String(domain.id)]}
-                    checkedEasy={checkedEasy[domain.id] ?? new Set()}
-                    checkedRare={checkedRare[domain.id] ?? new Set()}
-                    onToggle={(term, tier) => toggleTerm(domain.id, term, tier)}
-                  />
-                </div>
-              )}
             </li>
           );
         })}
       </ul>
 
-      {error && (
-        <p role="alert" className="mt-4 text-sm text-red-700">
-          {error}
-        </p>
-      )}
-
       <button
         type="button"
-        onClick={saveAndContinue}
-        disabled={busy || selected.size === 0}
+        onClick={start}
+        disabled={!canContinue}
         className="mt-6 w-full rounded-xl bg-stone-900 px-4 py-3 font-medium text-white transition hover:bg-stone-800 disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-800"
       >
-        {busy ? "저장 중…" : selected.size === 0 ? "한 개 이상 골라 주세요" : "시작하기"}
+        {canContinue ? "다음" : "한 개 이상 골라 주세요"}
       </button>
     </main>
   );
