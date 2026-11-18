@@ -43,7 +43,7 @@ async function main() {
     await act(async () => root.render(createElement(StrictMode, null,
       createElement(AppRouterContext.Provider, { value: router },
         createElement(PathnameContext.Provider, { value: path.split("?")[0] },
-          createElement(ReadingExitNotice, { children: child }))))));
+          createElement(ReadingExitNotice, null, child))))));
   };
   const dialog = () => container.querySelector('[role="alertdialog"]');
   const button = (label: string) => {
