@@ -1,0 +1,109 @@
+{
+  "key": "infra-13",
+  "domain": "infra",
+  "order": 13,
+  "title": "부하에 따라 파드 수 바꾸기",
+  "facts": "HorizontalPodAutoscaler는 CPU 사용률 같은 메트릭을 보고 워크로드의 파드 수를 조정한다. CPU 사용률 기준을 쓰려면 파드에 CPU 요청량이 설정돼 있어야 한다. 최소·최대 복제본을 정한다. HPA는 노드를 추가하지 않으며 파드 수를 늘려도 공유 병목은 남을 수 있다.",
+  "url": "https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/",
+  "summary": "HorizontalPodAutoscaler는 CPU 사용률 같은 메트릭을 보고, 정해 둔 최소·최대 복제본 범위 안에서 워크로드의 파드 수를 조정해요. CPU 사용률을 기준으로 쓰려면 파드에 CPU 요청량이 있어야 하고, HPA는 노드를 추가하지 않으며 공유 병목은 남을 수 있어요.",
+  "paragraphs": [
+    "서준은 학교 축제 동안 쓰는 부스 예약 앱을 운영해요. 점심시간마다 예약이 몰려 응답이 느려지고, 저녁에는 요청이 거의 없어요. 시간대마다 사람이 파드 수를 바꾸기는 번거로워서, 부하에 맞춰 파드 수가 저절로 조절되면 좋겠다고 생각해요.",
+    "HorizontalPodAutoscaler, 줄여서 HPA는 CPU 사용률 같은 메트릭을 주기적으로 확인하고 Deployment 같은 워크로드의 파드 수를 조정해요. 부하가 늘면 파드를 더 두고, 부하가 줄면 파드를 줄여요. 파드 수가 움직일 범위는 최소 복제본 수와 최대 복제본 수로 정해요. 복제본은 같은 설정으로 실행되는 파드 하나하나를 말해요.",
+    "CPU 사용률은 파드에 설정한 CPU 요청량에 비해 실제로 얼마나 쓰는지를 백분율로 나타낸 값이에요. 그래서 CPU 사용률을 기준으로 삼으려면 파드에 CPU 요청량이 설정돼 있어야 해요. 요청량이 없으면 사용률을 계산할 수 없어서, HPA가 이 기준으로는 파드 수를 조정하지 않아요.",
+    "서준은 파드의 CPU 요청량을 0.25코어, 즉 CPU 코어 하나의 4분의 1로 정하고, 목표 평균 CPU 사용률을 50%, 복제본을 최소 3개·최대 7개로 설정해요. 점심시간에 파드들이 평균 0.2코어를 쓰면 사용률은 80%로 목표보다 높아서 HPA가 파드를 늘려요. 하지만 요청이 계속 몰려도 7개를 넘기지 않고, 저녁에 한가해져도 3개 밑으로는 줄이지 않아요.",
+    "다만 HPA는 파드 수만 바꿀 뿐 노드를 추가하지 않아요. 노드에 남은 자원이 부족하면 새로 늘린 파드가 실행될 자리를 찾지 못할 수 있으니, 노드 수는 따로 살펴야 해요. 또 모든 파드가 데이터베이스 하나를 함께 쓴다면, 파드를 늘려도 그 데이터베이스처럼 함께 쓰는 곳의 병목은 그대로 남을 수 있어요."
+  ],
+  "terms": [
+    {
+      "surface": "HorizontalPodAutoscaler",
+      "definition": "메트릭을 보고 워크로드의 파드 수를 자동으로 조정하는 쿠버네티스 리소스예요."
+    },
+    {
+      "surface": "CPU 요청량",
+      "definition": "파드에 설정하는 CPU 자원 요청 값으로, CPU 사용률을 계산하는 기준이 돼요."
+    },
+    {
+      "surface": "복제본",
+      "definition": "같은 설정으로 실행되는 파드 하나하나를 가리켜요."
+    },
+    {
+      "surface": "병목",
+      "definition": "여러 요청이 한곳에 몰려 전체 처리 속도를 늦추는 지점이에요."
+    }
+  ],
+  "questions": [
+    {
+      "prompt": "HPA가 하는 일을 알맞게 설명한 것은 무엇인가요?",
+      "options": [
+        "느려진 데이터베이스를 찾아 대신 응답해 줘요.",
+        "부하에 맞춰 클러스터에 새 노드를 추가해요.",
+        "각 파드의 CPU 요청량을 자동으로 키워 줘요.",
+        "메트릭을 보고 워크로드의 파드 수를 조정해요."
+      ],
+      "correct_index": 3,
+      "explanation": "HPA는 CPU 사용률 같은 메트릭을 확인해 워크로드의 파드 수를 조정해요.",
+      "evidence": "CPU 사용률 같은 메트릭을 주기적으로 확인하고 Deployment 같은 워크로드의 파드 수를 조정해요"
+    },
+    {
+      "prompt": "서준의 설정에서 점심시간에 파드들이 평균 0.2코어를 쓰면 어떻게 되나요?",
+      "options": [
+        "요청량이 없어 사용률을 계산하지 못해요.",
+        "사용률이 80%로 목표보다 높아 파드를 늘려요.",
+        "사용률이 50%로 목표와 같아 그대로 둬요.",
+        "사용률이 20%로 목표보다 낮아 파드를 줄여요."
+      ],
+      "correct_index": 1,
+      "explanation": "요청량 0.25코어 중 0.2코어를 쓰면 사용률은 80%이고, 목표 50%보다 높아 파드를 늘려요.",
+      "evidence": "사용률은 80%로 목표보다 높아서 HPA가 파드를 늘려요"
+    },
+    {
+      "prompt": "점심시간 내내 요청이 계속 몰리면 서준의 파드 수는 어떻게 되나요?",
+      "options": [
+        "최소 복제본 수인 3개로 고정돼요.",
+        "늘어나더라도 최대 7개를 넘지 않아요.",
+        "노드가 추가되면서 파드도 두 배로 늘어요.",
+        "요청이 줄 때까지 제한 없이 계속 늘어나요."
+      ],
+      "correct_index": 1,
+      "explanation": "최대 복제본 수를 7개로 정했으므로 요청이 계속 몰려도 7개를 넘기지 않아요.",
+      "evidence": "요청이 계속 몰려도 7개를 넘기지 않고"
+    },
+    {
+      "prompt": "HPA에 관한 설명으로 맞는 것은 무엇인가요?",
+      "options": [
+        "CPU 요청량이 없어도 CPU 사용률로 파드를 조정해요.",
+        "파드를 늘리면 공유 데이터베이스 병목도 함께 사라져요.",
+        "노드 자원이 부족하면 HPA가 노드를 직접 추가해요.",
+        "노드를 추가하지 않으며 공유 병목은 남을 수 있어요."
+      ],
+      "correct_index": 3,
+      "explanation": "HPA는 파드 수만 바꾸고 노드는 추가하지 않으며, 함께 쓰는 데이터베이스 같은 병목은 남을 수 있어요.",
+      "evidence": "HPA는 파드 수만 바꿀 뿐 노드를 추가하지 않아요"
+    }
+  ],
+  "referenceLinks": [
+    {
+      "title": "Horizontal Pod Autoscaling | Kubernetes",
+      "url": "https://kubernetes.io/docs/concepts/workloads/autoscaling/horizontal-pod-autoscale/",
+      "checkedAt": "2026-11-17T12:48:44.510Z"
+    }
+  ],
+  "revision": 1,
+  "author": "artice cream",
+  "disclosure": "AI의 도움으로 구성·집필하고 사실 근거와 문항을 점검한 기초 콘텐츠입니다.",
+  "generatedAt": "2026-11-17T13:00:23.070Z",
+  "model": "claude-opus-5-5",
+  "review": {
+    "status": "automated_checks_passed",
+    "issues": [],
+    "answers": [
+      3,
+      1,
+      1,
+      3
+    ],
+    "sourceSha256": "295e0d2514466efc70151088718a97803c4a7af098b8d250ac5d4550869179a3",
+    "note": "Authored against the brief; facts checked against the cached reference; question evidence, term surfaces and length validated. No human expert review.",
+    "checkedAt": "2026-11-17T13:01:26.773Z"
+  }
+}

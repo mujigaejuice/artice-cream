@@ -1,0 +1,109 @@
+{
+  "key": "data-11",
+  "domain": "data",
+  "order": 11,
+  "title": "행을 남기고 계산하는 윈도 함수",
+  "facts": "윈도 함수는 현재 행과 관련된 행 집합에 대해 계산하면서 각 행을 그대로 남긴다. GROUP BY 집계는 그룹마다 한 행으로 줄인다. OVER 안의 PARTITION BY는 계산 묶음을, ORDER BY는 순서를 정한다. rank는 같은 정렬 값에 같은 순위를 준다.",
+  "url": "https://www.postgresql.org/docs/18/tutorial-window.html",
+  "summary": "윈도 함수는 현재 행과 관련된 행 집합을 계산하면서 각 행을 그대로 남기고, GROUP BY 집계는 그룹마다 한 행으로 줄여요. OVER 안의 PARTITION BY는 계산 묶음을, ORDER BY는 순서를 정하며 rank는 같은 정렬 값에 같은 순위를 줘요.",
+  "paragraphs": [
+    "사내 걷기 행사를 맡은 유나는 참가자마다 하루 걸음 수를 보여 주면서, 같은 팀의 합계와 팀 안 순위도 한 화면에 나란히 놓고 싶어요. 팀별 합계만 구하면 참가자 이름이 사라지고, 참가자 목록만 보면 팀 합계를 따로 계산해야 해서 불편해요.",
+    "GROUP BY로 집계하면 그룹마다 한 행으로 줄어들어요. 반면 윈도 함수는 현재 행과 관련된 행 집합을 대상으로 계산하면서도 각 행을 그대로 남겨요. 함수 바로 뒤에 붙는 OVER 절이 그 행 집합을 정해요. OVER 안의 PARTITION BY는 어떤 행끼리 묶어 계산할지, ORDER BY는 묶음 안에서 어떤 순서로 볼지 정해요.",
+    "walks 테이블에 A팀 시우 9000, 하람 7000, 라온 9000과 B팀 다온 6000, 은호 8000의 걸음 수가 있다고 해볼게요. SELECT team, SUM(steps) FROM walks GROUP BY team;은 A팀 25000, B팀 14000의 두 행만 돌려줘요. 같은 합계를 SELECT name, steps, SUM(steps) OVER (PARTITION BY team) FROM walks;로 구하면 다섯 행이 모두 남고, A팀 세 사람 옆에는 25000, B팀 두 사람 옆에는 14000이 붙어요.",
+    "팀 안 순위는 rank() OVER (PARTITION BY team ORDER BY steps DESC)로 구할 수 있어요. 걸음 수가 많은 순서로 정렬하므로 A팀에서는 9000인 시우와 라온이 둘 다 1위가 되고, 하람은 3위가 돼요. rank는 정렬 값이 같은 행에 같은 순위를 주고, 같은 순위를 받은 수만큼 다음 순위를 건너뛰기 때문이에요. B팀에서는 은호가 1위, 다온이 2위예요.",
+    "윈도 함수를 쓴다고 행 수가 줄어들지는 않으므로, 팀마다 한 줄씩만 보고 싶다면 GROUP BY가 맞는 도구예요. 또 OVER 안에서 PARTITION BY를 빼면 전체 행이 하나의 묶음이 되어 팀 구분 없이 계산해요. 동점자에게도 서로 다른 번호가 필요하다면 rank가 아니라 row_number처럼 행마다 다른 번호를 매기는 함수를 골라야 해요."
+  ],
+  "terms": [
+    {
+      "surface": "윈도 함수",
+      "definition": "현재 행과 관련된 행 집합을 대상으로 계산하면서 각 행을 그대로 남기는 함수예요."
+    },
+    {
+      "surface": "OVER 절",
+      "definition": "윈도 함수가 계산에 쓸 행 집합과 순서를 정하는 부분이에요."
+    },
+    {
+      "surface": "PARTITION BY",
+      "definition": "OVER 안에서 어떤 행끼리 묶어 계산할지 정하는 절이에요."
+    },
+    {
+      "surface": "rank",
+      "definition": "정렬 값이 같은 행에 같은 순위를 주는 윈도 함수예요."
+    }
+  ],
+  "questions": [
+    {
+      "prompt": "윈도 함수와 GROUP BY 집계의 차이를 바르게 설명한 것은 무엇인가요?",
+      "options": [
+        "윈도 함수는 각 행을 남기고 GROUP BY는 그룹마다 한 행으로 줄여요.",
+        "윈도 함수는 그룹마다 한 행으로 줄이고 GROUP BY는 각 행을 그대로 남겨요.",
+        "윈도 함수는 행을 정렬만 하고 값은 계산하지 않아요.",
+        "둘 다 그룹마다 한 행으로 줄여서 결과 행 수가 같아요."
+      ],
+      "correct_index": 0,
+      "explanation": "GROUP BY 집계는 그룹마다 한 행으로 줄이지만, 윈도 함수는 관련 행 집합을 계산하면서 각 행을 그대로 남겨요.",
+      "evidence": "윈도 함수는 현재 행과 관련된 행 집합을 대상으로 계산하면서도 각 행을 그대로 남겨요."
+    },
+    {
+      "prompt": "예제에서 SUM(steps) OVER (PARTITION BY team)을 쓴 쿼리는 몇 행을 돌려주나요?",
+      "options": [
+        "다섯 행이에요.",
+        "한 행이에요.",
+        "열 행이에요.",
+        "두 행이에요."
+      ],
+      "correct_index": 0,
+      "explanation": "윈도 함수는 행을 줄이지 않으므로 walks 테이블의 다섯 행이 모두 남고 각 행 옆에 팀 합계가 붙어요.",
+      "evidence": "다섯 행이 모두 남고"
+    },
+    {
+      "prompt": "예제의 A팀에서 걸음 수 내림차순으로 rank를 매기면 하람은 몇 위인가요?",
+      "options": [
+        "1위예요.",
+        "3위예요.",
+        "4위예요.",
+        "2위예요."
+      ],
+      "correct_index": 1,
+      "explanation": "9000인 시우와 라온이 같은 1위를 받고, rank는 그만큼 다음 순위를 건너뛰므로 7000인 하람은 3위예요.",
+      "evidence": "하람은 3위가 돼요"
+    },
+    {
+      "prompt": "OVER 안에서 PARTITION BY를 빼도 팀별로 나눠 계산된다는 생각은 어떤가요?",
+      "options": [
+        "ORDER BY가 팀을 대신 나눠 주므로 맞아요.",
+        "GROUP BY가 자동으로 추가되므로 맞아요.",
+        "윈도 함수가 팀 열을 찾아 나누므로 맞아요.",
+        "전체 행이 하나의 묶음이 되므로 틀려요."
+      ],
+      "correct_index": 3,
+      "explanation": "PARTITION BY가 없으면 모든 행이 한 묶음이 되어 팀 구분 없이 계산해요.",
+      "evidence": "PARTITION BY를 빼면 전체 행이 하나의 묶음이 되어 팀 구분 없이 계산해요."
+    }
+  ],
+  "referenceLinks": [
+    {
+      "title": "PostgreSQL: Documentation: 18: 3.5. Window Functions",
+      "url": "https://www.postgresql.org/docs/18/tutorial-window.html",
+      "checkedAt": "2026-11-17T12:49:40.859Z"
+    }
+  ],
+  "revision": 1,
+  "author": "artice cream",
+  "disclosure": "AI의 도움으로 구성·집필하고 사실 근거와 문항을 점검한 기초 콘텐츠입니다.",
+  "generatedAt": "2026-11-17T13:00:23.070Z",
+  "model": "claude-opus-5-5",
+  "review": {
+    "status": "automated_checks_passed",
+    "issues": [],
+    "answers": [
+      0,
+      0,
+      1,
+      3
+    ],
+    "sourceSha256": "9ca72cbffebde377198fa4794beb3b598745141e56018be54687a803c802d3f2",
+    "note": "Authored against the brief; facts checked against the cached reference; question evidence, term surfaces and length validated. No human expert review.",
+    "checkedAt": "2026-11-17T13:01:26.773Z"
+  }
+}

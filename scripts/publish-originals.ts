@@ -29,8 +29,8 @@ async function main(){
     assert.equal(Object.keys(marked.glossary).length,item.terms.length);
     return {...item,...marked,bodySha256:createHash('sha256').update(JSON.stringify({title:item.title,summary:item.summary,paragraphs:item.paragraphs,terms:item.terms,questions:item.questions})).digest('hex')};
   });
-  assert.equal(articles.length,64);assert.equal(new Set(articles.map(a=>a.key)).size,64);assert.equal(new Set(articles.map(a=>a.title)).size,64);
-  console.log(JSON.stringify({validated:articles.length,questions:articles.length*4,domains:8}));
+  const total=ORIGINAL_BRIEFS.length;assert.equal(articles.length,total);assert.equal(new Set(articles.map(a=>a.key)).size,total);assert.equal(new Set(articles.map(a=>a.title)).size,total);
+  console.log(JSON.stringify({validated:articles.length,questions:articles.length*4,domains:new Set(articles.map(a=>a.domain)).size}));
   if(!process.argv.includes('--stage')&&!publish)return;
   if(publish){
     const response=await fetch('https://artice-cream.vercel.app/originals/',{cache:'no-store',signal:AbortSignal.timeout(30_000)});
@@ -82,12 +82,12 @@ async function main(){
     must(await db.from('articles').update({editorial_status:'approved',rights_status:'permitted',rights_reviewed_at:now,published_at:now})
       .in('id',ids).eq('source','artice-original').eq('editorial_status','draft').eq('rights_status','restricted'));
     const ready=must(await db.from('articles').select('id,editorial_status,rights_status').in('id',ids));
-    assert.ok(ready);assert.equal(ready.length,64);
-    assert.ok(ready.every(r=>r.editorial_status==='approved'&&r.rights_status==='permitted'),'All 64 originals must be approved before enabling publication');
+    assert.ok(ready);assert.equal(ready.length,total);
+    assert.ok(ready.every(r=>r.editorial_status==='approved'&&r.rights_status==='permitted'),`All ${total} originals must be approved before enabling publication`);
     must(await db.from('content_source_rights').update({allow_publish:true,reviewed_at:now})
       .eq('source','artice-original').eq('rights_status','permitted'));
     for(const id of ids)assert.equal(must(await db.rpc('content_article_allows',{article_key:id,action_name:'publish'})),true);
-    console.log(JSON.stringify({published:64,questions:256}));
+    console.log(JSON.stringify({published:total,questions:total*4}));
   }
 }
 main().catch(e=>{console.error(e);process.exitCode=1;});

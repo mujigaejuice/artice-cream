@@ -1,0 +1,112 @@
+{
+  "key": "ai-security-13",
+  "domain": "ai-security",
+  "order": 13,
+  "title": "AI 위험을 관리하는 네 가지 기능",
+  "facts": "NIST AI RMF는 AI 위험 관리를 Govern·Map·Measure·Manage 네 기능으로 설명한다. Govern은 조직의 책임과 문화, Map은 맥락과 위험 파악, Measure는 분석·평가, Manage는 우선순위에 따른 대응이다. 자발적 프레임워크이며 일회성 점검이 아니라 수명 주기 전반에서 반복한다. 프레임워크를 따른다고 위험이 0이 되지는 않는다.",
+  "url": "https://airc.nist.gov/airmf-resources/airmf/5-sec-core/",
+  "summary": "NIST AI RMF는 AI 위험 관리를 조직의 책임과 문화를 다루는 Govern, 맥락과 위험을 파악하는 Map, 분석·평가하는 Measure, 우선순위에 따라 대응하는 Manage 네 기능으로 설명해요. 자발적 프레임워크로서 일회성 점검이 아니라 수명 주기 전반에서 반복하며, 따른다고 해서 위험이 0이 되지는 않아요.",
+  "paragraphs": [
+    "태오는 구립 도서관에 AI 도서 추천 서비스를 들이는 일을 맡았어요. 출시 전에 점검표 한 장만 채우면 위험 관리가 끝난다고 생각했는데, 막상 운영을 앞두니 누가 책임지고 무엇을 언제 다시 살필지가 정해져 있지 않았어요.",
+    "미국 국립표준기술연구소인 NIST가 만든 AI 위험 관리 프레임워크, 줄여서 AI RMF는 이 일을 Govern, Map, Measure, Manage 네 기능으로 설명해요. Govern은 위험 관리의 책임을 정하고 조직 문화를 만드는 기능이에요. Map은 AI가 쓰이는 맥락을 이해하고 위험을 파악해요. Measure는 파악한 위험을 분석하고 평가하며, Manage는 우선순위에 따라 위험에 대응해요. AI RMF는 조직이 스스로 선택해 활용하는 자발적 프레임워크예요.",
+    "태오의 도서관에 대입해 볼게요. Govern으로 담당자 2명과 분기마다 여는 검토 회의를 정해요. Map에서는 이용자가 어린이부터 어르신까지 다양하고 추천이 특정 장르에 쏠릴 수 있다는 위험을 적어요. Measure에서는 한 달 동안의 추천 기록 300건을 분석해 쏠림 정도를 평가해요. Manage에서는 평가 결과 가장 시급한 쏠림 문제부터 추천 규칙을 고쳐요.",
+    "네 기능은 출시 전에 한 번 하고 끝내는 일회성 점검이 아니에요. 서비스를 기획하고 만들고 운영하는 수명 주기 전반에서 반복해요. 장서나 이용자층이 바뀌면 다시 맥락을 살피고 평가해야 해요. 또 프레임워크를 따른다고 위험이 0이 되지는 않아요. 위험을 알아차리고 줄이는 과정을 갖추는 것이지, 문제가 생기지 않는다는 보증은 아니에요."
+  ],
+  "terms": [
+    {
+      "surface": "AI RMF",
+      "definition": "NIST가 만든 AI 위험 관리 프레임워크로, 위험 관리를 네 기능으로 설명해요."
+    },
+    {
+      "surface": "Govern",
+      "definition": "위험 관리의 책임을 정하고 조직 문화를 만드는 기능이에요."
+    },
+    {
+      "surface": "Manage",
+      "definition": "분석한 위험에 우선순위를 두고 대응하는 기능이에요."
+    },
+    {
+      "surface": "자발적 프레임워크",
+      "definition": "조직이 스스로 선택해 활용하는 지침 체계예요."
+    },
+    {
+      "surface": "수명 주기",
+      "definition": "AI 서비스를 기획하고 만들고 운영하는 전체 기간이에요."
+    }
+  ],
+  "questions": [
+    {
+      "prompt": "AI RMF의 네 기능 가운데 Measure가 하는 일은 무엇인가요?",
+      "options": [
+        "우선순위를 정해 가장 시급한 위험에 대응해요.",
+        "위험 관리의 책임을 정하고 조직 문화를 만들어요.",
+        "AI가 쓰이는 맥락을 이해하고 위험을 파악해요.",
+        "파악한 위험을 분석하고 그 정도를 평가해요."
+      ],
+      "correct_index": 3,
+      "explanation": "Measure는 Map에서 파악한 위험을 분석하고 평가하는 기능이에요.",
+      "evidence": "Measure는 파악한 위험을 분석하고 평가하며"
+    },
+    {
+      "prompt": "태오가 담당자 2명과 분기마다 여는 검토 회의를 정한 일은 어느 기능에 해당하나요?",
+      "options": [
+        "위험을 분석·평가하는 Measure예요.",
+        "맥락과 위험을 파악하는 Map이에요.",
+        "우선순위에 따라 대응하는 Manage예요.",
+        "책임과 조직 문화를 다루는 Govern이에요."
+      ],
+      "correct_index": 3,
+      "explanation": "담당자와 검토 회의를 정하는 일은 위험 관리의 책임을 정하는 Govern에 해당해요.",
+      "evidence": "Govern으로 담당자 2명과 분기마다 여는 검토 회의를 정해요"
+    },
+    {
+      "prompt": "추천 기록 300건을 분석해 쏠림이 가장 시급한 문제로 확인된 뒤, 태오가 Manage에서 하는 일은 무엇인가요?",
+      "options": [
+        "추천 기록 300건을 모두 삭제해요.",
+        "담당자를 새로 정하고 회의를 늘려요.",
+        "이용자층을 처음부터 다시 조사해요.",
+        "쏠림 문제부터 추천 규칙을 고쳐요."
+      ],
+      "correct_index": 3,
+      "explanation": "Manage는 우선순위에 따라 대응하는 기능이라, 태오는 가장 시급한 쏠림 문제부터 추천 규칙을 고쳐요.",
+      "evidence": "Manage에서는 평가 결과 가장 시급한 쏠림 문제부터 추천 규칙을 고쳐요"
+    },
+    {
+      "prompt": "AI RMF의 네 기능을 운영하는 방식으로 맞는 것은 무엇인가요?",
+      "options": [
+        "빠짐없이 따르기만 하면 위험이 완전히 사라져요.",
+        "모든 조직이 법에 따라 반드시 지켜야 하는 기준이에요.",
+        "수명 주기 전반에서 되풀이하며 이어 가는 활동이에요.",
+        "출시 전에 한 번 수행하면 위험 관리가 모두 끝나요."
+      ],
+      "correct_index": 2,
+      "explanation": "네 기능은 일회성 점검이 아니라 수명 주기 전반에서 반복하며, 따른다고 해서 위험이 0이 되지는 않아요.",
+      "evidence": "수명 주기 전반에서 반복해요"
+    }
+  ],
+  "referenceLinks": [
+    {
+      "title": "AI RMF Core - AIRC",
+      "url": "https://airc.nist.gov/airmf-resources/airmf/5-sec-core/",
+      "checkedAt": "2026-11-17T12:49:04.050Z"
+    }
+  ],
+  "revision": 1,
+  "author": "artice cream",
+  "disclosure": "AI의 도움으로 구성·집필하고 사실 근거와 문항을 점검한 기초 콘텐츠입니다.",
+  "generatedAt": "2026-11-17T13:00:23.070Z",
+  "model": "claude-opus-5-5",
+  "review": {
+    "status": "automated_checks_passed",
+    "issues": [],
+    "answers": [
+      3,
+      3,
+      3,
+      2
+    ],
+    "sourceSha256": "afb3a82c92664d410579a89cdc0471ed3a9d225872f402aa9a1f2bbfd1a19a47",
+    "note": "Authored against the brief; facts checked against the cached reference; question evidence, term surfaces and length validated. No human expert review.",
+    "checkedAt": "2026-11-17T13:01:26.773Z"
+  }
+}

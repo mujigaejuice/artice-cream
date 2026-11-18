@@ -1,0 +1,109 @@
+{
+  "key": "cloud-13",
+  "domain": "cloud",
+  "order": 13,
+  "title": "복구 목표부터 정하는 재해 복구",
+  "facts": "RTO는 서비스 중단을 감내할 수 있는 최대 시간, RPO는 잃어도 되는 데이터의 최대 기간이다. 목표가 짧을수록 비용과 복잡도가 대체로 커진다. 백업이 있어도 복구 절차를 시험하지 않으면 목표 달성을 확신할 수 없다.",
+  "url": "https://docs.cloud.google.com/architecture/dr-scenarios-planning-guide",
+  "summary": "RTO는 서비스 중단을 감내할 수 있는 최대 시간이고, RPO는 잃어도 되는 데이터의 최대 기간이에요. 목표를 짧게 잡을수록 비용과 복잡도가 대체로 커지며, 백업이 있어도 복구 절차를 시험하지 않으면 목표를 지킬 수 있다고 확신할 수 없어요.",
+  "paragraphs": [
+    "도윤은 동네 축구 리그의 경기 결과를 기록하는 서비스를 운영해요. 어느 날 큰 장애가 나면 서비스가 얼마 동안 멈춰도 되는지, 결과 기록은 어디까지 잃어도 되는지 한 번도 정해 둔 적이 없다는 걸 깨달았어요.",
+    "재해 복구는 큰 사고로 서비스가 멈췄을 때 다시 돌려놓는 일이고, 계획은 보통 두 목표를 정하는 데서 시작해요. RTO는 서비스 중단을 감내할 수 있는 최대 시간이에요. RPO는 사고로 잃어도 되는 데이터의 최대 기간이에요. RPO가 1시간이라면 사고 직전 최대 1시간 동안 쌓인 기록은 잃을 수 있다고 받아들인다는 뜻이에요.",
+    "도윤은 RTO를 4시간, RPO를 1시간으로 정했어요. 오후 2시에 서비스가 멈췄다면 늦어도 오후 6시에는 다시 돌아가야 해요. 기록을 1시간보다 긴 간격으로 백업하면 RPO를 맞추기 어려워요. 예를 들어 하루 한 번만 백업하면 최악의 경우 거의 하루치 경기 결과를 잃을 수 있어요.",
+    "목표를 짧게 잡을수록 비용과 복잡도는 대체로 커져요. RPO를 몇 분으로 줄이려면 훨씬 자주 백업하거나 데이터를 다른 곳에 계속 복제하는 구성이 필요할 수 있고, 그만큼 관리할 일도 늘어요. 그래서 목표는 기록이 얼마나 중요한지에 맞춰 정해요.",
+    "백업 파일이 쌓여 있다고 목표를 지킬 수 있다고 확신할 수는 없어요. 복구 절차를 실제로 시험해 보지 않으면 백업을 되살리는 데 얼마나 걸리는지, 빠진 단계는 없는지 알 수 없어요. 도윤이 연습 삼아 복구해 보니 6시간이 걸렸다면, 지금 절차로는 RTO 4시간을 아직 지킬 수 없는 셈이에요."
+  ],
+  "terms": [
+    {
+      "surface": "재해 복구",
+      "definition": "큰 사고로 멈춘 서비스를 다시 돌려놓는 일이에요."
+    },
+    {
+      "surface": "RTO",
+      "definition": "서비스 중단을 감내할 수 있는 최대 시간이에요."
+    },
+    {
+      "surface": "RPO",
+      "definition": "사고로 잃어도 되는 데이터의 최대 기간이에요."
+    },
+    {
+      "surface": "복구 절차",
+      "definition": "백업 등을 이용해 서비스를 다시 돌려놓는 단계들이에요."
+    }
+  ],
+  "questions": [
+    {
+      "prompt": "RTO와 RPO를 알맞게 설명한 것은 무엇인가요?",
+      "options": [
+        "RTO는 잃어도 되는 데이터 기간, RPO는 최대 중단 시간이에요.",
+        "RTO는 보관할 백업 개수, RPO는 복구에 쓸 서버 대수예요.",
+        "RTO는 감내할 최대 중단 시간, RPO는 잃어도 되는 데이터 기간이에요.",
+        "RTO와 RPO는 모두 백업 파일을 만드는 데 걸리는 시간이에요."
+      ],
+      "correct_index": 2,
+      "explanation": "RTO는 서비스 중단을 감내할 수 있는 최대 시간이고, RPO는 잃어도 되는 데이터의 최대 기간이에요.",
+      "evidence": "RTO는 서비스 중단을 감내할 수 있는 최대 시간이에요"
+    },
+    {
+      "prompt": "도윤의 RPO가 1시간일 때 본문에 맞는 판단은 무엇인가요?",
+      "options": [
+        "RPO가 1시간이면 경기 결과를 전혀 잃지 않아요.",
+        "백업 간격이 1시간보다 길면 RPO를 맞추기 어려워요.",
+        "하루 한 번 백업해도 RPO를 충분히 지킬 수 있어요.",
+        "RPO는 중단 시간이라 백업 간격과는 관계가 없어요."
+      ],
+      "correct_index": 1,
+      "explanation": "RPO가 1시간이면 잃어도 되는 기록이 최대 1시간치라서 백업 간격이 그보다 길면 맞추기 어려워요.",
+      "evidence": "기록을 1시간보다 긴 간격으로 백업하면 RPO를 맞추기 어려워요"
+    },
+    {
+      "prompt": "도윤이 복구 연습을 해 보니 6시간이 걸렸다면 어떻게 판단해야 하나요?",
+      "options": [
+        "백업이 있으니 RTO 4시간은 이미 지켜진 셈이에요.",
+        "RPO를 6시간으로 바꾸면 이 문제가 해결돼요.",
+        "연습 결과와 관계없이 목표는 그대로 달성돼요.",
+        "지금 절차로는 RTO 4시간을 아직 지킬 수 없어요."
+      ],
+      "correct_index": 3,
+      "explanation": "복구에 6시간이 걸린다면 최대 중단 시간 4시간이라는 RTO를 넘기므로 아직 목표를 지킬 수 없어요.",
+      "evidence": "지금 절차로는 RTO 4시간을 아직 지킬 수 없는 셈이에요"
+    },
+    {
+      "prompt": "복구 목표와 비용에 관한 설명으로 옳은 것은 무엇인가요?",
+      "options": [
+        "백업만 있으면 목표와 상관없이 비용이 같아요.",
+        "목표를 짧게 잡을수록 관리할 일이 저절로 줄어요.",
+        "목표를 짧게 잡을수록 대체로 비용과 복잡도가 커져요.",
+        "목표의 길이와 운영 비용은 서로 관계가 없어요."
+      ],
+      "correct_index": 2,
+      "explanation": "RTO와 RPO를 짧게 잡을수록 더 잦은 백업이나 복제가 필요해 비용과 복잡도가 대체로 커져요.",
+      "evidence": "목표를 짧게 잡을수록 비용과 복잡도는 대체로 커져요"
+    }
+  ],
+  "referenceLinks": [
+    {
+      "title": "Disaster recovery planning guide  |  Cloud Architecture Center  |  Google Cloud Documentation",
+      "url": "https://docs.cloud.google.com/architecture/dr-scenarios-planning-guide",
+      "checkedAt": "2026-11-17T12:48:36.942Z"
+    }
+  ],
+  "revision": 1,
+  "author": "artice cream",
+  "disclosure": "AI의 도움으로 구성·집필하고 사실 근거와 문항을 점검한 기초 콘텐츠입니다.",
+  "generatedAt": "2026-11-17T13:00:23.070Z",
+  "model": "claude-opus-5-5",
+  "review": {
+    "status": "automated_checks_passed",
+    "issues": [],
+    "answers": [
+      2,
+      1,
+      3,
+      2
+    ],
+    "sourceSha256": "2083b976f88cf0a8e40f04eec792b22213d7ad441ec631e95364c01eb8dbdd6f",
+    "note": "Authored against the brief; facts checked against the cached reference; question evidence, term surfaces and length validated. No human expert review.",
+    "checkedAt": "2026-11-17T13:01:26.773Z"
+  }
+}

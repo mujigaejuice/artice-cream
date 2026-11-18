@@ -1,0 +1,109 @@
+{
+  "key": "infra-12",
+  "domain": "infra",
+  "order": 12,
+  "title": "파드가 사라져도 남는 저장소",
+  "facts": "컨테이너 파일시스템의 변경은 컨테이너가 다시 시작되면 사라질 수 있다. PersistentVolume은 클러스터의 저장소 자원이고 PersistentVolumeClaim은 사용자의 저장소 요청이다. 파드는 PVC를 통해 볼륨을 사용한다. 영구 볼륨이 백업을 대신하지 않으며 회수 정책에 따라 데이터가 삭제될 수 있다.",
+  "url": "https://kubernetes.io/docs/concepts/storage/persistent-volumes/",
+  "summary": "컨테이너 파일시스템의 변경은 컨테이너가 다시 시작되면 사라질 수 있어서, 남겨야 할 데이터는 PersistentVolumeClaim으로 요청한 PersistentVolume에 둬요. 다만 영구 볼륨이 백업을 대신하지는 않으며 회수 정책에 따라 데이터가 삭제될 수 있어요.",
+  "paragraphs": [
+    "도현은 독서 모임의 방명록 앱을 컨테이너로 운영해요. 방명록 글을 컨테이너 안의 파일에 저장해 왔는데, 컨테이너가 다시 시작된 뒤 그동안 쌓인 글 12개가 보이지 않았어요. 컨테이너 파일시스템에 생긴 변경은 컨테이너가 다시 시작되면 사라질 수 있기 때문이에요.",
+    "그래서 오래 남겨야 할 데이터는 컨테이너 밖의 저장소에 둬요. PersistentVolume(영구 볼륨)은 클러스터가 가진 저장소 자원이고, PersistentVolumeClaim은 사용자가 필요한 크기 등을 적어 내는 저장소 요청이에요. 줄여서 PV와 PVC라고 불러요. PV는 그것을 쓰는 개별 파드와 따로 수명을 가져서, 파드가 사라져도 남을 수 있어요.",
+    "파드는 PV를 바로 가리키지 않고 PVC를 볼륨으로 지정해 저장소를 써요. 볼륨은 컨테이너가 파일을 읽고 쓸 수 있도록 연결한 저장 공간이에요. 클러스터는 PVC에 연결된 PV를 찾아 파드에 붙여 줘요.",
+    "도현은 방명록용 PVC를 하나 만들고, 방명록 파드가 이 PVC를 볼륨으로 쓰도록 바꿔요. 글 파일도 그 볼륨에 저장하게 해요. 이제 컨테이너가 다시 시작되거나 파드가 새로 만들어져도, 같은 PVC를 연결하면 저장해 둔 글을 이어서 볼 수 있어요.",
+    "다만 영구 볼륨이 백업을 대신하지는 않아요. 누군가 실수로 글을 지우면 그 삭제도 볼륨에 그대로 반영돼요. 또 PVC를 지웠을 때 PV를 어떻게 처리할지는 회수 정책이 정해요. 회수 정책이 Delete이면 PV와 실제 저장소가 함께 삭제될 수 있고, Retain이면 PV가 남아 관리자가 직접 정리해요. 데이터를 지키려면 회수 정책을 확인하고 백업도 따로 해 두어야 해요."
+  ],
+  "terms": [
+    {
+      "surface": "컨테이너 파일시스템",
+      "definition": "컨테이너 안에서 파일이 저장되는 공간으로, 그 변경은 컨테이너가 다시 시작되면 사라질 수 있어요."
+    },
+    {
+      "surface": "PersistentVolume",
+      "definition": "클러스터가 가진 저장소 자원으로, 개별 파드와 따로 수명을 가져요."
+    },
+    {
+      "surface": "PersistentVolumeClaim",
+      "definition": "사용자가 필요한 크기 등을 적어 내는 저장소 요청이에요."
+    },
+    {
+      "surface": "회수 정책",
+      "definition": "PVC가 지워진 뒤 PV와 실제 저장소를 어떻게 처리할지 정하는 설정이에요."
+    }
+  ],
+  "questions": [
+    {
+      "prompt": "PersistentVolume과 PersistentVolumeClaim의 관계로 맞는 것은 무엇인가요?",
+      "options": [
+        "PV와 PVC는 모두 컨테이너 안에 만들어지는 파일이에요.",
+        "PVC는 클러스터의 저장소 자원이고 PV는 저장소 요청이에요.",
+        "PV는 파드를 만들고 PVC는 그 파드의 수명을 정해요.",
+        "PV는 클러스터의 저장소 자원이고 PVC는 저장소 요청이에요."
+      ],
+      "correct_index": 3,
+      "explanation": "PV는 클러스터가 가진 저장소 자원이고, PVC는 사용자가 저장소를 요청하는 리소스예요.",
+      "evidence": "PersistentVolumeClaim은 사용자가 필요한 크기 등을 적어 내는 저장소 요청이에요"
+    },
+    {
+      "prompt": "도현의 방명록 글 12개가 보이지 않게 된 이유로 알맞은 것은 무엇인가요?",
+      "options": [
+        "볼륨에 저장한 글을 다른 파드가 지웠기 때문이에요.",
+        "컨테이너 파일시스템에 저장한 변경이 사라졌기 때문이에요.",
+        "PVC를 지워서 회수 정책이 실행되었기 때문이에요.",
+        "PV의 수명이 파드보다 짧게 정해졌기 때문이에요."
+      ],
+      "correct_index": 1,
+      "explanation": "도현은 글을 컨테이너 안의 파일에 저장했고, 그 변경은 컨테이너가 다시 시작되면 사라질 수 있어요.",
+      "evidence": "컨테이너 파일시스템에 생긴 변경은 컨테이너가 다시 시작되면 사라질 수 있기 때문이에요"
+    },
+    {
+      "prompt": "도현이 방명록 파드에 저장소를 연결하는 방법으로 본문에 맞는 것은 무엇인가요?",
+      "options": [
+        "컨테이너가 다시 시작되지 않도록 재시작을 막아요.",
+        "컨테이너 이미지 안에 글 파일을 함께 넣어 둬요.",
+        "PVC를 만들고 파드가 그 PVC를 볼륨으로 쓰게 해요.",
+        "파드 이름을 PV 이름과 똑같이 바꿔 연결해요."
+      ],
+      "correct_index": 2,
+      "explanation": "파드는 PVC를 볼륨으로 지정해 저장소를 쓰고, 클러스터가 연결된 PV를 찾아 붙여 줘요.",
+      "evidence": "방명록 파드가 이 PVC를 볼륨으로 쓰도록 바꿔요"
+    },
+    {
+      "prompt": "영구 볼륨에 관한 설명으로 맞는 것은 무엇인가요?",
+      "options": [
+        "영구 볼륨에 저장하면 따로 백업할 필요가 없어요.",
+        "실수로 지운 글은 영구 볼륨에서 자동으로 복구돼요.",
+        "회수 정책에 따라 삭제될 수 있어 백업이 따로 필요해요.",
+        "회수 정책과 관계없이 데이터는 항상 남아 있어요."
+      ],
+      "correct_index": 2,
+      "explanation": "영구 볼륨은 백업을 대신하지 않고, 회수 정책이 Delete이면 PV와 실제 저장소가 함께 삭제될 수 있어요.",
+      "evidence": "다만 영구 볼륨이 백업을 대신하지는 않아요."
+    }
+  ],
+  "referenceLinks": [
+    {
+      "title": "Persistent Volumes | Kubernetes",
+      "url": "https://kubernetes.io/docs/concepts/storage/persistent-volumes/",
+      "checkedAt": "2026-11-17T12:48:43.435Z"
+    }
+  ],
+  "revision": 1,
+  "author": "artice cream",
+  "disclosure": "AI의 도움으로 구성·집필하고 사실 근거와 문항을 점검한 기초 콘텐츠입니다.",
+  "generatedAt": "2026-11-17T13:00:23.070Z",
+  "model": "claude-opus-5-5",
+  "review": {
+    "status": "automated_checks_passed",
+    "issues": [],
+    "answers": [
+      3,
+      1,
+      2,
+      2
+    ],
+    "sourceSha256": "da8d7d07309d2d63e1f698fa5b10d8199d13ec6a99dab0490a0841d1a29c0819",
+    "note": "Authored against the brief; facts checked against the cached reference; question evidence, term surfaces and length validated. No human expert review.",
+    "checkedAt": "2026-11-17T13:01:26.773Z"
+  }
+}
