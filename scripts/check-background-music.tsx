@@ -7,9 +7,11 @@ async function main() {
   const native = process.argv.includes("--native");
   const dom = new JSDOM('<div id="root"></div>', { url: "https://music.invalid", pretendToBeVisual: true });
   for (const [key, value] of Object.entries({ window: dom.window, document: dom.window.document,
-    navigator: dom.window.navigator, IS_REACT_ACT_ENVIRONMENT: true })) {
+    navigator: dom.window.navigator, IS_REACT_ACT_ENVIRONMENT: true, BroadcastChannel: undefined })) {
     Object.defineProperty(globalThis, key, { configurable: true, value });
   }
+  // CI처럼 env가 있을 때와 같은 경로를 탄다. Node BroadcastChannel은 프로세스 종료를 막으므로 위에서 비운다.
+  Object.assign(process.env, { NEXT_PUBLIC_SUPABASE_URL: "https://music-auth.invalid", NEXT_PUBLIC_SUPABASE_ANON_KEY: "fixture" });
   let hidden = false;
   Object.defineProperty(document, "hidden", { get: () => hidden });
   const nativeHandlers = new Map<string, Set<(state?: { isActive: boolean }) => void>>();
@@ -184,6 +186,11 @@ async function main() {
     }
     assert.ok(players.every(p => p.paused), "no abandoned player keeps playing");
     console.log(`Background music ${native ? "native" : "web"}: autoplay, persistence, lifecycle, retry, races and cleanup passed.`);
-  } finally { await act(async () => root.unmount()); dom.window.close(); }
+  } finally {
+    await act(async () => root.unmount());
+    const { createClient } = await import("../lib/supabase/client");
+    await createClient().auth.stopAutoRefresh();
+    dom.window.close();
+  }
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });
