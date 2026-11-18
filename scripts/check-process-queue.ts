@@ -32,6 +32,23 @@ async function main() {
     cap: 4, concurrency: 2, canStart: () => null, process: async () => true,
   });
   assert.equal(defaultLimit.processed, 2, "unspecified per-source cap remains one");
-  console.log("Processing queue: publisher diversity first, same-publisher fallback, per-source serialization and default cap passed.");
+
+  // Gateway mode used to price tokens at $0, so the daily budget never stopped a run.
+  Object.assign(process.env, { BASE_URL: "https://llm.invalid", API_KEY: "fixture" });
+  delete process.env.LLM_PRICE_PER_MTOK;
+  const { addMeter, estimateCost, newMeter, PRICE_SOURCE } = await import("../lib/ai/pipeline");
+  assert.equal(PRICE_SOURCE, "gateway-estimate-haiku");
+  let meter = newMeter();
+  const perArticle = { ...newMeter(), input: 20_000, output: 9_000, calls: 9 };
+  const budget = 0.1;
+  const spent = await processQueue(["a", "b", "c", "d"].map((source, id) => ({ source, id })), {
+    cap: 4, maxPerSource: 1, concurrency: 1,
+    canStart: () => (estimateCost(meter) >= budget ? "budget" : null),
+    process: async () => { meter = addMeter(meter, perArticle); return true; },
+  });
+  assert.ok(estimateCost(perArticle) > 0, "gateway usage must cost something");
+  assert.equal(spent.processed, 2, "start articles only while the estimate is under budget");
+  assert.equal(spent.stoppedBy, "budget");
+  console.log("Processing queue: publisher diversity first, same-publisher fallback, per-source serialization, default cap and gateway budget stop passed.");
 }
 main().catch(error=>{console.error(error);process.exitCode=1;});

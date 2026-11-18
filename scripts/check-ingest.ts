@@ -224,6 +224,10 @@ async function main() {
     assert.equal(summary.failed, 1);
     assert.equal(summary.skippedSource, 1);
     assert.ok(summary.usage.calls > 36, "failed generations must count toward usage");
+    // Gateway mode must still price tokens; otherwise INGEST_DAILY_BUDGET_USD never stops a run.
+    assert.equal(summary.priceSource, "gateway-estimate-haiku");
+    assert.ok(summary.estimatedCostUsd > 0, "gateway usage must have a non-zero cost estimate");
+    assert.ok(summary.budgetUsd > 0);
     assert.ok(peak >= 3 && peak <= 6, "LLM concurrency must stay bounded across both articles");
     assert.equal(active, 0);
     assert.equal(writes.filter((w) => w.table === "article_variants" && w.method === "POST").length, 12);

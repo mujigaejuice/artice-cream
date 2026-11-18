@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import {
   CONTENT_MODEL,
+  PRICE_SOURCE,
   estimateCost,
   newMeter,
   processArticleLevels,
@@ -76,7 +77,8 @@ async function processCategory(category: string, runId: string): Promise<Respons
   const configured = { runId, category, articleCap: ARTICLES_PER_CATEGORY,
     articleConcurrency: ARTICLE_CONCURRENCY, llmConcurrency: LLM_CONCURRENCY,
     articleStartSeconds: ARTICLE_START_SECONDS,
-    articleTimeoutSeconds: ARTICLE_TIMEOUT_SECONDS, model: CONTENT_MODEL };
+    articleTimeoutSeconds: ARTICLE_TIMEOUT_SECONDS, model: CONTENT_MODEL,
+    budgetUsd: INGEST_BUDGET_PER_CATEGORY_USD, priceSource: PRICE_SOURCE };
   console.log("[ingest:process:start]", JSON.stringify(configured));
   const rights = await getSourceRights(admin);
   const allowedSources = [...rights.values()].filter((source) => sourceAllows(source, "process"));
@@ -218,6 +220,8 @@ async function processCategory(category: string, runId: string): Promise<Respons
     articleStartSeconds: ARTICLE_START_SECONDS,
     articleTimeoutSeconds: ARTICLE_TIMEOUT_SECONDS,
     model: CONTENT_MODEL,
+    budgetUsd: INGEST_BUDGET_PER_CATEGORY_USD,
+    priceSource: PRICE_SOURCE,
     seconds: clock.elapsedSeconds(),
     stoppedBy,
     queueDepth: count ?? pending.length,
