@@ -72,6 +72,8 @@ async function main() {
     if (table === "domains") return Response.json([{ id: 6, slug: "llm", active: true }]);
     if (table === "article_variants") {
       if (method === "POST") return Response.json({ id: ++variantCount });
+      // Documents processed today: one level-1 variant per article (three levels each here).
+      if (method === "HEAD") return new Response(null, { status: 200, headers: { "content-range": `*/${Math.floor(variantCount / 3)}` } });
       return method === "GET" ? Response.json([]) : new Response(null, { status: 204 });
     }
     if (table === "quiz_questions") { quizCount += JSON.parse(String(init?.body)).length; return new Response(null, { status: 204 }); }
@@ -127,6 +129,11 @@ async function main() {
     assert.equal(summary.processed, 1); assert.equal(rows[0].status, "ready"); assert.equal(rows[0].original_text, null);
     assert.equal(variantCount, 3); assert.equal(quizCount, 12); assert.equal(pageCalls, beforePages);
     assert.ok(modelCalls > 0); allowModel = false; modelCalls = 0;
+    // One document per domain per day: a second queued document waits for tomorrow.
+    Object.assign(rows[0], { status: "pending", original_text: text });
+    summary = await (await processCategory(request(), { params: Promise.resolve({ category: "llm" }) })).json();
+    assert.equal(summary.processed, 0); assert.equal(summary.documentsHeld, 1); assert.equal(modelCalls, 0);
+    assert.equal(rows[0].status, "pending", "held document stays queued");
     for (const status of ["restricted", "blocked"]) {
       rows = [newRow(status)]; const calls = pageCalls;
       assert.equal((await run()).approved, 0); assert.equal(pageCalls, calls); assert.equal(rows[0].rights_status, status);
