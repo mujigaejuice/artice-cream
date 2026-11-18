@@ -60,10 +60,36 @@ export const CONTENT_MODEL =
 /* 토큰/비용 계측 (spec §10 단위 경제성 게이트)                           */
 /* ------------------------------------------------------------------ */
 
+export type TokenPrice = { input: number; output: number; cacheWrite: number; cacheRead: number };
+export type PriceSource = "configured" | "anthropic-haiku" | "gateway-estimate-haiku" | "invalid-config-haiku";
+
 /** Haiku 4.5 기준 100만 토큰당 달러. 모델을 바꾸면 여기도 바꾼다. */
-const PRICE = USE_GATEWAY
-  ? { input: 0, output: 0, cacheWrite: 0, cacheRead: 0 }
-  : { input: 1, output: 5, cacheWrite: 1.25, cacheRead: 0.1 };
+const HAIKU_PRICE: TokenPrice = { input: 1, output: 5, cacheWrite: 1.25, cacheRead: 0.1 };
+
+/**
+ * 비용 계측에 쓸 단가(USD / 100만 토큰).
+ *
+ * `LLM_PRICE_PER_MTOK="input,output"` 또는 `"input,output,cacheWrite,cacheRead"`로 지정한다.
+ * 지정이 없으면 Haiku 단가로 추정한다. 게이트웨이도 마찬가지다 — 예전에는 게이트웨이 단가를
+ * 0으로 두어서 추정 비용이 늘 $0이었고, 그 때문에 INGEST_DAILY_BUDGET_USD가 가공을
+ * 한 번도 멈추지 못했다. 게이트웨이 단가를 모르면 Haiku 환산 달러로라도 상한이 걸리게 한다.
+ * 값이 잘못돼도 0으로 떨어지지 않고 Haiku 단가를 쓴다. 일부러 끄려면 "0,0"을 적는다.
+ */
+export function resolveTokenPrice(config: string | undefined, gateway: boolean): { price: TokenPrice; source: PriceSource } {
+  if (config !== undefined && config.trim() !== "") {
+    const parts = config.split(",").map((part) => part.trim() === "" ? Number.NaN : Number(part));
+    if ((parts.length === 2 || parts.length === 4) && parts.every((n) => Number.isFinite(n) && n >= 0)) {
+      const [input, output, cacheWrite = input, cacheRead = input] = parts;
+      return { price: { input, output, cacheWrite, cacheRead }, source: "configured" };
+    }
+    return { price: HAIKU_PRICE, source: "invalid-config-haiku" };
+  }
+  return { price: HAIKU_PRICE, source: gateway ? "gateway-estimate-haiku" : "anthropic-haiku" };
+}
+
+const { price: PRICE, source: PRICE_SOURCE } = resolveTokenPrice(process.env.LLM_PRICE_PER_MTOK, USE_GATEWAY);
+/** 비용 추정이 어떤 단가를 썼는지. 실행 로그에 남겨 예산 판단의 근거를 보이게 한다. */
+export { PRICE_SOURCE };
 
 export interface UsageMeter {
   input: number;

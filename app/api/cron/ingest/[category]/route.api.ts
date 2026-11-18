@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import {
   CONTENT_MODEL,
+  PRICE_SOURCE,
   estimateCost,
   newMeter,
   processArticleLevels,
@@ -15,7 +16,7 @@ import { SOURCES } from "@/lib/news/feeds";
 import { authorizeCron, startDeadline } from "@/lib/news/ingest";
 import { recordIngestRun } from "@/lib/news/ingest-runs";
 import { ARTICLE_CONCURRENCY, ARTICLE_START_SECONDS, ARTICLE_TIMEOUT_SECONDS,
-  articleTimeoutMs, processQueue } from "@/lib/news/process-queue";
+  articleTimeoutMs, processQueue, startGate } from "@/lib/news/process-queue";
 import { ARTICLES_PER_CATEGORY, INGEST_BUDGET_PER_CATEGORY_USD } from "@/lib/policy";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { ArticleRow, DomainRow } from "@/lib/supabase/types";
@@ -76,7 +77,8 @@ async function processCategory(category: string, runId: string): Promise<Respons
   const configured = { runId, category, articleCap: ARTICLES_PER_CATEGORY,
     articleConcurrency: ARTICLE_CONCURRENCY, llmConcurrency: LLM_CONCURRENCY,
     articleStartSeconds: ARTICLE_START_SECONDS,
-    articleTimeoutSeconds: ARTICLE_TIMEOUT_SECONDS, model: CONTENT_MODEL };
+    articleTimeoutSeconds: ARTICLE_TIMEOUT_SECONDS, model: CONTENT_MODEL,
+    budgetUsd: INGEST_BUDGET_PER_CATEGORY_USD, priceSource: PRICE_SOURCE };
   console.log("[ingest:process:start]", JSON.stringify(configured));
   const rights = await getSourceRights(admin);
   const allowedSources = [...rights.values()].filter((source) => sourceAllows(source, "process"));
@@ -129,11 +131,10 @@ async function processCategory(category: string, runId: string): Promise<Respons
     cap: ARTICLES_PER_CATEGORY,
     maxPerSource: ARTICLES_PER_CATEGORY,
     concurrency: ARTICLE_CONCURRENCY,
-    canStart: () => {
-      if (estimateCost(meter) >= INGEST_BUDGET_PER_CATEGORY_USD) return "budget";
-      if (clock.remainingSeconds() < SECONDS_PER_ARTICLE) return "time";
-      return null;
-    },
+    canStart: startGate({
+      overBudget: () => estimateCost(meter) >= INGEST_BUDGET_PER_CATEGORY_USD,
+      outOfTime: () => clock.remainingSeconds() < SECONDS_PER_ARTICLE,
+    }),
     process: async (row) => {
       const { data: current, error: rightsError } = await admin.from("articles")
         .select(`${ARTICLE_RIGHTS_COLUMNS},source_url,original_text,rights_review_note`).eq("id", row.id).maybeSingle();
@@ -218,6 +219,8 @@ async function processCategory(category: string, runId: string): Promise<Respons
     articleStartSeconds: ARTICLE_START_SECONDS,
     articleTimeoutSeconds: ARTICLE_TIMEOUT_SECONDS,
     model: CONTENT_MODEL,
+    budgetUsd: INGEST_BUDGET_PER_CATEGORY_USD,
+    priceSource: PRICE_SOURCE,
     seconds: clock.elapsedSeconds(),
     stoppedBy,
     queueDepth: count ?? pending.length,

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { processQueue } from "../lib/news/process-queue";
+import { processQueue, startGate } from "../lib/news/process-queue";
 
 async function main() {
   const candidates = ["a", "a", "a", "a", "b"].map((source, id) => ({ source, id }));
@@ -32,6 +32,37 @@ async function main() {
     cap: 4, concurrency: 2, canStart: () => null, process: async () => true,
   });
   assert.equal(defaultLimit.processed, 2, "unspecified per-source cap remains one");
-  console.log("Processing queue: publisher diversity first, same-publisher fallback, per-source serialization and default cap passed.");
+
+  // Gateway mode used to price tokens at $0, so the daily budget never stopped a run.
+  Object.assign(process.env, { BASE_URL: "https://llm.invalid", API_KEY: "fixture" });
+  delete process.env.LLM_PRICE_PER_MTOK;
+  const { addMeter, estimateCost, newMeter, PRICE_SOURCE } = await import("../lib/ai/pipeline");
+  assert.equal(PRICE_SOURCE, "gateway-estimate-haiku");
+  let meter = newMeter();
+  const perArticle = { ...newMeter(), input: 20_000, output: 9_000, calls: 9 };
+  const budget = 0.1;
+  const spent = await processQueue(["a", "b", "c", "d"].map((source, id) => ({ source, id })), {
+    cap: 4, maxPerSource: 1, concurrency: 1,
+    canStart: () => (estimateCost(meter) >= budget ? "budget" : null),
+    process: async () => { meter = addMeter(meter, perArticle); return true; },
+  });
+  assert.ok(estimateCost(perArticle) > 0, "gateway usage must cost something");
+  assert.equal(spent.processed, 2, "start articles only while the estimate is under budget");
+  assert.equal(spent.stoppedBy, "budget");
+  // The first article of a run starts even when the budget is already spent, so a domain with
+  // queued articles still gets one per run (four per day).
+  const broke = await processQueue(["a", "b", "c"].map((source, id) => ({ source, id })), {
+    cap: 4, maxPerSource: 1, concurrency: 2,
+    canStart: startGate({ overBudget: () => true, outOfTime: () => false }), process: async () => true,
+  });
+  assert.equal(broke.processed, 1, "one article per run regardless of budget");
+  assert.equal(broke.stoppedBy, "budget");
+  const late = await processQueue(["a", "b"].map((source, id) => ({ source, id })), {
+    cap: 4, maxPerSource: 1, concurrency: 1,
+    canStart: startGate({ overBudget: () => false, outOfTime: () => true }), process: async () => true,
+  });
+  assert.equal(late.processed, 0, "the time limit still applies to the first article");
+  assert.equal(late.stoppedBy, "time");
+  console.log("Processing queue: publisher diversity first, same-publisher fallback, per-source serialization, default cap, gateway budget stop and one-article-per-run minimum passed.");
 }
 main().catch(error=>{console.error(error);process.exitCode=1;});

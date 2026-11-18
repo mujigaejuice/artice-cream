@@ -8,7 +8,7 @@
 import assert from "node:assert";
 import { readFileSync } from "node:fs";
 
-import { markTerms } from "../lib/ai/pipeline";
+import { markTerms, resolveTokenPrice } from "../lib/ai/pipeline";
 import {
   LIFT_ABOVE,
   PUSH_BELOW,
@@ -396,5 +396,19 @@ assert.ok(
   assert.deepEqual(parseAuthDeepLink(`${AUTH_DEEP_LINK}?code=abc`), { code: "abc", next: "/" });
 }
 console.log("native ok");
+
+// 비용 단가 — 게이트웨이도 0이 되면 일일 예산이 가공을 멈추지 못한다.
+{
+  const haiku = { input: 1, output: 5, cacheWrite: 1.25, cacheRead: 0.1 };
+  assert.deepEqual(resolveTokenPrice(undefined, true), { price: haiku, source: "gateway-estimate-haiku" });
+  assert.deepEqual(resolveTokenPrice("", false), { price: haiku, source: "anthropic-haiku" });
+  assert.deepEqual(resolveTokenPrice("0.5, 2", true).price, { input: 0.5, output: 2, cacheWrite: 0.5, cacheRead: 0.5 });
+  assert.deepEqual(resolveTokenPrice("3,15,3.75,0.3", true), { price: { input: 3, output: 15, cacheWrite: 3.75, cacheRead: 0.3 }, source: "configured" });
+  assert.deepEqual(resolveTokenPrice("0,0", true).price, { input: 0, output: 0, cacheWrite: 0, cacheRead: 0 }, "explicit zero is an opt-out");
+  for (const bad of ["abc", "1", "1,2,3", "-1,2", "1,,2,3", "1,Infinity"]) {
+    assert.deepEqual(resolveTokenPrice(bad, true), { price: haiku, source: "invalid-config-haiku" }, `bad price ${bad} falls back, never to zero`);
+  }
+}
+console.log("price ok");
 
 console.log("\nall checks passed");
