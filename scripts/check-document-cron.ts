@@ -15,6 +15,10 @@ async function main() {
   const candidate = DOCUMENT_CANDIDATES.find(c => c.key === "google-ml-language-models")!;
   const approvals = DOCUMENT_APPROVALS as Record<string, typeof DOCUMENT_APPROVALS[string]>;
   const originalApproval = approvals[candidate.key];
+  // Keep this test about one document: other inventory entries in the same source/domain sit out.
+  const siblings = DOCUMENT_CANDIDATES.filter(c => c.key !== candidate.key && c.source === candidate.source && c.domain === candidate.domain)
+    .map(c => [c.key, approvals[c.key]] as const);
+  for (const [key] of siblings) delete approvals[key];
   const originalFetch = globalThis.fetch;
   const notice = 'Except as otherwise noted, the content of this page is licensed under the Creative Commons Attribution 4.0 License. <a href="https://creativecommons.org/licenses/by/4.0/">License</a>';
   const html = `<html lang="en"><body><h1>Lesson</h1><div class="devsite-article-body"><h2 id="what_is_a_language_model">Language models</h2><p>${"Tokens form a sequence and the model estimates probabilities. ".repeat(16)}</p><p>Examples use <code>orange is ripe</code>.</p><pre>you are very nice</pre><table><tr><td>cook soup</td><td>9.4%</td></tr></table><h2 id="context">Unselected</h2></div><footer>${notice}</footer></body></html>`;
@@ -162,6 +166,9 @@ async function main() {
     assert.equal(timed.stoppedBy, "time"); assert.equal(pageCalls, callCount);
     assert.equal((await GET(new NextRequest("https://app.invalid/api/cron/ingest?documentsOnly=1"))).status, 401);
     console.log("Document cron: discovery, aliases, reviewed scopes, license/content changes, withdrawal, TTL, revalidation, tampered processing, rights, auth and time bounds passed.");
-  } finally { globalThis.fetch = originalFetch; approvals[candidate.key] = originalApproval; }
+  } finally {
+    globalThis.fetch = originalFetch; approvals[candidate.key] = originalApproval;
+    for (const [key, approval] of siblings) if (approval) approvals[key] = approval;
+  }
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });
