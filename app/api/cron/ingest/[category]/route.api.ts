@@ -17,7 +17,8 @@ import { authorizeCron, startDeadline } from "@/lib/news/ingest";
 import { recordIngestRun } from "@/lib/news/ingest-runs";
 import { ARTICLE_CONCURRENCY, ARTICLE_START_SECONDS, ARTICLE_TIMEOUT_SECONDS,
   articleTimeoutMs, processQueue, startGate } from "@/lib/news/process-queue";
-import { ARTICLES_PER_CATEGORY, INGEST_BUDGET_PER_CATEGORY_USD } from "@/lib/policy";
+import { ARTICLES_PER_CATEGORY, DOCUMENTS_PER_DOMAIN_PER_DAY, INGEST_BUDGET_PER_CATEGORY_USD } from "@/lib/policy";
+import { dayKey, dayRangeUtc } from "@/lib/day";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { ArticleRow, DomainRow } from "@/lib/supabase/types";
 import { refreshDomainTerms } from "@/lib/terms";
@@ -115,10 +116,29 @@ async function processCategory(category: string, runId: string): Promise<Respons
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const pending = (queue ?? []) as (Pick<
+  const queued = (queue ?? []) as (Pick<
     ArticleRow,
     "id" | "source" | "source_url" | "title" | "published_at"
   > & ArticleRights)[];
+
+  // 공식 문서는 분야별로 하루 DOCUMENTS_PER_DOMAIN_PER_DAY편까지만 꺼낸다(policy.ts). 오늘(KST)
+  // 이미 가공한 문서 수는 수준 1 본문이 만들어진 수로 센다 — 실패한 시도는 세지 않는다.
+  let documentAllowance = 0;
+  if (queued.some((row) => DOCUMENT_SOURCE_IDS.has(row.source ?? ""))) {
+    const [todayStart] = dayRangeUtc(dayKey());
+    const { count: documentsToday, error: documentCountError } = await admin
+      .from("article_variants")
+      .select("article_id, articles!inner(source, domain_id)", { count: "exact", head: true })
+      .eq("level", 1)
+      .gte("created_at", todayStart)
+      .eq("articles.domain_id", (domain as DomainRow).id)
+      .in("articles.source", [...DOCUMENT_SOURCE_IDS]);
+    if (documentCountError) return NextResponse.json({ error: documentCountError.message }, { status: 500 });
+    documentAllowance = Math.max(0, DOCUMENTS_PER_DOMAIN_PER_DAY - (documentsToday ?? 0));
+  }
+  let documentsTaken = 0;
+  const pending = queued.filter((row) => !DOCUMENT_SOURCE_IDS.has(row.source ?? "") || documentsTaken++ < documentAllowance);
+  const documentsHeld = queued.length - pending.length;
 
   const meter = newMeter();
   let extractedCount = 0;
@@ -221,6 +241,7 @@ async function processCategory(category: string, runId: string): Promise<Respons
     model: CONTENT_MODEL,
     budgetUsd: INGEST_BUDGET_PER_CATEGORY_USD,
     priceSource: PRICE_SOURCE,
+    documentsHeld,
     seconds: clock.elapsedSeconds(),
     stoppedBy,
     queueDepth: count ?? pending.length,

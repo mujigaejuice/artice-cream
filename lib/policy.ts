@@ -51,6 +51,14 @@ export const INGEST_DAILY_BUDGET_USD = Number(
  */
 export const CATEGORY_COUNT = 8;
 
+/**
+ * 공식 문서 소스(lib/news/document-candidates.ts)를 분야별로 하루에 몇 편까지 가공할지.
+ *
+ * 문서 목록은 사람이 고른 유한한 묶음이라, 회차마다 다 쓰면 며칠 만에 바닥난다. 피드가
+ * 거의 없는 분야도 매일 새 글이 생기도록 하루 한 편씩 나눠 쓴다. 피드 기사에는 적용하지 않는다.
+ */
+export const DOCUMENTS_PER_DOMAIN_PER_DAY = Math.max(0, Number(process.env.DOCUMENTS_PER_DOMAIN_PER_DAY ?? 1) || 0);
+
 /** vercel.json schedules four collection/processing rounds per day. */
 export const INGEST_RUNS_PER_DAY = 4;
 export const COLLECT_CANDIDATES_PER_SOURCE = 20;

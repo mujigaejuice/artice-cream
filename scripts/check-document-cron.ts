@@ -15,6 +15,10 @@ async function main() {
   const candidate = DOCUMENT_CANDIDATES.find(c => c.key === "google-ml-language-models")!;
   const approvals = DOCUMENT_APPROVALS as Record<string, typeof DOCUMENT_APPROVALS[string]>;
   const originalApproval = approvals[candidate.key];
+  // Keep this test about one document: other inventory entries in the same source/domain sit out.
+  const siblings = DOCUMENT_CANDIDATES.filter(c => c.key !== candidate.key && c.source === candidate.source && c.domain === candidate.domain)
+    .map(c => [c.key, approvals[c.key]] as const);
+  for (const [key] of siblings) delete approvals[key];
   const originalFetch = globalThis.fetch;
   const notice = 'Except as otherwise noted, the content of this page is licensed under the Creative Commons Attribution 4.0 License. <a href="https://creativecommons.org/licenses/by/4.0/">License</a>';
   const html = `<html lang="en"><body><h1>Lesson</h1><div class="devsite-article-body"><h2 id="what_is_a_language_model">Language models</h2><p>${"Tokens form a sequence and the model estimates probabilities. ".repeat(16)}</p><p>Examples use <code>orange is ripe</code>.</p><pre>you are very nice</pre><table><tr><td>cook soup</td><td>9.4%</td></tr></table><h2 id="context">Unselected</h2></div><footer>${notice}</footer></body></html>`;
@@ -72,6 +76,8 @@ async function main() {
     if (table === "domains") return Response.json([{ id: 6, slug: "llm", active: true }]);
     if (table === "article_variants") {
       if (method === "POST") return Response.json({ id: ++variantCount });
+      // Documents processed today: one level-1 variant per article (three levels each here).
+      if (method === "HEAD") return new Response(null, { status: 200, headers: { "content-range": `*/${Math.floor(variantCount / 3)}` } });
       return method === "GET" ? Response.json([]) : new Response(null, { status: 204 });
     }
     if (table === "quiz_questions") { quizCount += JSON.parse(String(init?.body)).length; return new Response(null, { status: 204 }); }
@@ -127,6 +133,11 @@ async function main() {
     assert.equal(summary.processed, 1); assert.equal(rows[0].status, "ready"); assert.equal(rows[0].original_text, null);
     assert.equal(variantCount, 3); assert.equal(quizCount, 12); assert.equal(pageCalls, beforePages);
     assert.ok(modelCalls > 0); allowModel = false; modelCalls = 0;
+    // One document per domain per day: a second queued document waits for tomorrow.
+    Object.assign(rows[0], { status: "pending", original_text: text });
+    summary = await (await processCategory(request(), { params: Promise.resolve({ category: "llm" }) })).json();
+    assert.equal(summary.processed, 0); assert.equal(summary.documentsHeld, 1); assert.equal(modelCalls, 0);
+    assert.equal(rows[0].status, "pending", "held document stays queued");
     for (const status of ["restricted", "blocked"]) {
       rows = [newRow(status)]; const calls = pageCalls;
       assert.equal((await run()).approved, 0); assert.equal(pageCalls, calls); assert.equal(rows[0].rights_status, status);
@@ -155,6 +166,9 @@ async function main() {
     assert.equal(timed.stoppedBy, "time"); assert.equal(pageCalls, callCount);
     assert.equal((await GET(new NextRequest("https://app.invalid/api/cron/ingest?documentsOnly=1"))).status, 401);
     console.log("Document cron: discovery, aliases, reviewed scopes, license/content changes, withdrawal, TTL, revalidation, tampered processing, rights, auth and time bounds passed.");
-  } finally { globalThis.fetch = originalFetch; approvals[candidate.key] = originalApproval; }
+  } finally {
+    globalThis.fetch = originalFetch; approvals[candidate.key] = originalApproval;
+    for (const [key, approval] of siblings) if (approval) approvals[key] = approval;
+  }
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });

@@ -65,6 +65,7 @@ npm run dev
 | `INGEST_ARTICLES_PER_DOMAIN` | 분야별 한 번 가공에서 성공시킬 최대 편수 (기본 4) |
 | `INGEST_DAILY_BUDGET_USD` | 하루 LLM 예산(기본 4). 8분야 × 4회로 나눠서, 넘으면 그 회차는 새 기사를 시작하지 않는다. 회차의 첫 기사는 예산과 상관없이 시작한다 |
 | `LLM_PRICE_PER_MTOK` | 비용 추정 단가(USD/100만 토큰, `input,output[,cacheWrite,cacheRead]`). 비우면 Haiku 단가로 추정한다(게이트웨이 포함) |
+| `DOCUMENTS_PER_DOMAIN_PER_DAY` | 공식 문서 목록(`lib/news/document-candidates.ts`)을 분야별로 하루 몇 편까지 가공할지(기본 1). 피드 글에는 적용하지 않는다 |
 
 ### Supabase 준비
 
