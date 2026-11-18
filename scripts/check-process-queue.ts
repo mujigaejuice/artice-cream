@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { processQueue } from "../lib/news/process-queue";
+import { processQueue, startGate } from "../lib/news/process-queue";
 
 async function main() {
   const candidates = ["a", "a", "a", "a", "b"].map((source, id) => ({ source, id }));
@@ -49,6 +49,20 @@ async function main() {
   assert.ok(estimateCost(perArticle) > 0, "gateway usage must cost something");
   assert.equal(spent.processed, 2, "start articles only while the estimate is under budget");
   assert.equal(spent.stoppedBy, "budget");
-  console.log("Processing queue: publisher diversity first, same-publisher fallback, per-source serialization, default cap and gateway budget stop passed.");
+  // The first article of a run starts even when the budget is already spent, so a domain with
+  // queued articles still gets one per run (four per day).
+  const broke = await processQueue(["a", "b", "c"].map((source, id) => ({ source, id })), {
+    cap: 4, maxPerSource: 1, concurrency: 2,
+    canStart: startGate({ overBudget: () => true, outOfTime: () => false }), process: async () => true,
+  });
+  assert.equal(broke.processed, 1, "one article per run regardless of budget");
+  assert.equal(broke.stoppedBy, "budget");
+  const late = await processQueue(["a", "b"].map((source, id) => ({ source, id })), {
+    cap: 4, maxPerSource: 1, concurrency: 1,
+    canStart: startGate({ overBudget: () => false, outOfTime: () => true }), process: async () => true,
+  });
+  assert.equal(late.processed, 0, "the time limit still applies to the first article");
+  assert.equal(late.stoppedBy, "time");
+  console.log("Processing queue: publisher diversity first, same-publisher fallback, per-source serialization, default cap, gateway budget stop and one-article-per-run minimum passed.");
 }
 main().catch(error=>{console.error(error);process.exitCode=1;});

@@ -35,9 +35,13 @@ export const CONE_PERIOD = "month" as const;
 /** 정책.md §10 하루·한 달의 경계를 정하는 타임존. */
 export const APP_TIMEZONE = "Asia/Seoul";
 
-/** 소스분류.md §3 일일 수집 예산(USD). 넘으면 그 런을 처리한 만큼만 남기고 중단한다. */
+/**
+ * 소스분류.md §3 일일 가공 예산(USD). 분야 × 회차로 나눠 쓰고, 넘으면 그 회차는 새 기사를
+ * 시작하지 않는다. 회차의 첫 기사는 예산과 상관없이 시작한다(process-queue.ts `startGate`).
+ * 2026-11-18 운영 결정으로 기본값 $4(회차당 약 $0.125).
+ */
 export const INGEST_DAILY_BUDGET_USD = Number(
-  process.env.INGEST_DAILY_BUDGET_USD ?? 1.0,
+  process.env.INGEST_DAILY_BUDGET_USD ?? 4,
 );
 
 /**

@@ -63,7 +63,7 @@ npm run dev
 | `CRON_SECRET` | cron 호출 인증. 프로덕션에서는 필수 |
 | `AD_REWARD_SECRET` | 광고 보상 검증 서명 키 |
 | `INGEST_ARTICLES_PER_DOMAIN` | 분야별 한 번 가공에서 성공시킬 최대 편수 (기본 4) |
-| `INGEST_DAILY_BUDGET_USD` | 하루 LLM 예산. 8분야 × 4회로 나눠서, 넘으면 그 회차는 새 기사를 시작하지 않는다 |
+| `INGEST_DAILY_BUDGET_USD` | 하루 LLM 예산(기본 4). 8분야 × 4회로 나눠서, 넘으면 그 회차는 새 기사를 시작하지 않는다. 회차의 첫 기사는 예산과 상관없이 시작한다 |
 | `LLM_PRICE_PER_MTOK` | 비용 추정 단가(USD/100만 토큰, `input,output[,cacheWrite,cacheRead]`). 비우면 Haiku 단가로 추정한다(게이트웨이 포함) |
 
 ### Supabase 준비

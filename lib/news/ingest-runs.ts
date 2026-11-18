@@ -156,7 +156,8 @@ export function buildIngestRunRow(meta: IngestRunMeta, startedAt: Date, finished
     row.failed = extractFailed + retryLater + buildFailed;
     row.status = row.failed === 0 ? "ok" : row.processed > 0 ? "partial" : "failed";
     row.details = pick(body, ["queueDepth", "scanned", "blockedRights", "allowedSources", "skippedSource",
-      "extractFailed", "retryLater", "failed", "articleCap", "model", "estimatedCostUsd", "seconds"]);
+      "extractFailed", "retryLater", "failed", "articleCap", "model", "estimatedCostUsd", "seconds",
+      "budgetUsd", "priceSource"]);
   } else if (body.stage === "documents") {
     const documents = isObject(body.documents) ? body.documents : {};
     row.collected = int(documents.discovered);

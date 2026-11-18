@@ -11,6 +11,24 @@ export function articleTimeoutMs(remainingSeconds: number): number {
 
 export type ProcessStop = "done" | "cap" | "time" | "budget";
 
+/**
+ * 다음 기사를 시작해도 되는지 정한다. 회차의 첫 기사는 예산과 상관없이 시작한다.
+ *
+ * 분야마다 하루 네 번 회차가 돌므로, 대기 글이 있는 분야는 예산이 작아도 하루 최소 4편이
+ * 가공된다. 예산은 두 번째 기사부터 막는다. 시간 제한은 첫 기사에도 적용한다 —
+ * 시작했다가 함수 상한에 걸리면 반쪽 기사가 남기 때문이다.
+ * processQueue는 이 함수가 null을 돌려준 직후에만 기사를 시작하므로, 여기서 센다.
+ */
+export function startGate(options: { overBudget: () => boolean; outOfTime: () => boolean }): () => "time" | "budget" | null {
+  let started = 0;
+  return () => {
+    if (options.outOfTime()) return "time";
+    if (started > 0 && options.overBudget()) return "budget";
+    started += 1;
+    return null;
+  };
+}
+
 export async function processQueue<T extends { source: string | null }>(
   candidates: T[],
   options: {
