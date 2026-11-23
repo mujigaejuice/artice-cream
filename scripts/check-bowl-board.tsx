@@ -72,6 +72,8 @@ async function main() {
     assert.equal(slotOf(1).getAttribute("opacity"), ".45", "other scoops fade back");
 
     await act(async () => { button(4).click(); });
+    await tick();
+    assert.equal(new URL(window.location.href).searchParams.get("scoop"), "4", "switching scoops keeps the selection open");
     assert.match(slotOf(4).getAttribute("transform")!, new RegExp(`translate\\(${STAGE.x - BOWL_SHIFT_X} ${STAGE.y}\\)`));
     const p3 = layout.placements.find(p => p.id === 3)!;
     assert.equal(slotOf(3).getAttribute("transform"), `translate(${p3.x} ${p3.y}) scale(${layout.scale})`, "previous scoop returns to its spot");

@@ -99,7 +99,8 @@ export function useScoopSelection(scoops: Scoop[], initialScoopId: number | null
     (event: React.MouseEvent<HTMLElement>) => {
       if (selectedId == null) return;
       const target = event.target as Element;
-      if (target.closest(".ac-scoop") || target.closest(".ac-panel")) return;
+      // 스크린리더 목록 버튼도 장면 안에 있다 — 그 클릭은 고르기로만 처리하고 닫지 않는다.
+      if (target.closest(".ac-scoop, .ac-panel, button, a")) return;
       close();
     },
     [selectedId, close],
