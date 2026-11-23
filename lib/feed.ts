@@ -26,6 +26,8 @@ export type Scoop = {
   /** 주문서 카드의 첫 문장과 같은 자리에서 쓰는 요약 첫 문장(화면구성.md §4-2). */
   summaryFirstLine: string | null;
   score: number;
+  /** 콘에 올린 시각(ISO). 보울에 떨어뜨리는 순서에만 쓴다 — 정렬·월 구분은 completed_at 그대로. */
+  savedAt?: string | null;
 };
 
 export type TodayPick = {
@@ -91,7 +93,7 @@ export async function getScoops(
     supabase
       .from("user_article_progress")
       .select(
-        `id, variant_id, article_id, quiz_score, completed_at, article_variants(title, summary, articles(${ARTICLE_RIGHTS_COLUMNS}, domains(slug, name_ko)))`,
+        `id, variant_id, article_id, quiz_score, completed_at, saved_at, article_variants(title, summary, articles(${ARTICLE_RIGHTS_COLUMNS}, domains(slug, name_ko)))`,
       )
       .eq("user_id", userId)
       .eq("status", "saved")
@@ -108,6 +110,7 @@ export async function getScoops(
       article_id: number;
       quiz_score: number | null;
       completed_at: string | null;
+      saved_at: string | null;
       article_variants: {
         title: string;
         summary: string | null;
@@ -131,6 +134,7 @@ export async function getScoops(
         title: readable ? r.article_variants?.title ?? "제목 없음" : "현재 열람 불가",
         summaryFirstLine: readable ? firstSentence(r.article_variants?.summary ?? null) : null,
         score: r.quiz_score ?? 0,
+        savedAt: r.saved_at ?? null,
       },
     ];
   });

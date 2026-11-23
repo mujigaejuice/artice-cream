@@ -18,7 +18,7 @@ async function main() {
     rights_reviewed_at: past, rights_expires_at: null, domains: domain,
     rights_attribution: { author: "Author", originalTitle: "Original", licenseLabel: "CC BY", licenseUrl: "https://publisher.invalid/license", changes: "Translated", notices: "" } };
   function record(id: number, userId: string, date: string, rights = "blocked", status = "saved") {
-    return { id, user_id: userId, article_id: id + 100, variant_id: id + 200, status, completed_at: date, quiz_score: 0.75,
+    return { id, user_id: userId, article_id: id + 100, variant_id: id + 200, status, completed_at: date, saved_at: date, quiz_score: 0.75,
       article_variants: { title: `Private title ${id}`, summary: `Private summary ${id}.`, articles: { ...article, rights_status: rights } } };
   }
   const records = [record(1, uid, "2026-09-30T14:59:59Z"), record(2, uid, "2026-09-30T15:00:00Z"),
@@ -45,6 +45,7 @@ async function main() {
     assert.equal(table, "user_article_progress");
     assert.equal(url.searchParams.get("user_id"), `eq.${uid}`, "verified owner filter is mandatory");
     assert.equal(url.searchParams.get("status"), "eq.saved");
+    assert.match(url.searchParams.get("select")!, /saved_at/, "bowl drop order needs the save time");
     assert.doesNotMatch(url.searchParams.get("select")!, /content_html|original_text|quiz_answers|correct_index|rights_review_note/);
     if (historyFails) return Response.json({ code: "XX000", message: "private database detail" }, { status: 503 });
     const bounds = url.searchParams.getAll("completed_at");
@@ -75,7 +76,7 @@ async function main() {
     assert.deepEqual(october.months, ["2026-10", "2026-09"]);
     assert.deepEqual(october.scoops.map(s => s.id), [2, 3]);
     assert.deepEqual(october.scoops[0], { id: 2, articleId: 102, variantId: null, domain: domain.slug,
-      domainLabel: domain.name_ko, date: "2026-10-01", title: "현재 열람 불가", summaryFirstLine: null, score: 0.75 });
+      domainLabel: domain.name_ko, date: "2026-10-01", title: "현재 열람 불가", summaryFirstLine: null, score: 0.75, savedAt: "2026-09-30T15:00:00Z" });
     assert.equal(october.scoops[1].title, "Private title 3");
     assert.equal(october.scoops[1].variantId, 203);
     assert.doesNotMatch(JSON.stringify(october), /Private (title|summary) [1245]|rights_attribution|user_id/);
