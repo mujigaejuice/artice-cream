@@ -1,5 +1,8 @@
 /** Bowl drop-stack geometry: pure functions, no DOM. */
 import assert from "node:assert/strict";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { BowlBackdrop } from "../components/BowlBackdrop";
 import {
   BOWL_CX, COLLIDE, CROWN_CLEARANCE, INNER_RX, TOP_MARGIN,
   bowlPaths, dropOrder, innerFloorY, layoutBowl, seededUnit,
@@ -52,4 +55,10 @@ assert.match(back, /^M /);
 assert.match(front, /A /);
 assert.match(front, /Z$/);
 
+for (const key of ["night-sky", "pink-parlor", "turkish-stand", "evening-street"])
+  assert.match(renderToStaticMarkup(createElement(BowlBackdrop, { scene: key })), /viewBox="0 0 600 400"/, key);
+assert.equal(renderToStaticMarkup(createElement(BowlBackdrop, { scene: "unknown" })), "");
+assert.equal(renderToStaticMarkup(createElement(BowlBackdrop, { scene: undefined })), "");
+
+console.log("Bowl backdrops: four landscape scenes and unknown keys passed.");
 console.log("Bowl layout: drop order, seeded x, determinism, rim/floor bounds, no deep overlap, top scoop, stability and shrink passed.");
