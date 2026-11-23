@@ -18,6 +18,7 @@ async function main() {
   const { AppRouterContext } = await import("next/dist/shared/lib/app-router-context.shared-runtime");
   const { Quiz } = await import("../components/Quiz");
   const { OnboardingQuiz } = await import("../components/OnboardingQuiz");
+  const { Result } = await import("../components/Result");
   const { createClient } = await import("../lib/supabase/client");
   const container = document.getElementById("root")!;
   const root = createRoot(container);
@@ -36,9 +37,11 @@ async function main() {
   const focused = () => document.activeElement!;
   const originalFetch = globalThis.fetch;
   let gradeCalls = 0;
+  let saveCalls = 0;
   let releaseGrade: (() => void) | null = null;
   globalThis.fetch = async (input) => {
     const path = new URL(String(input), "https://keyboard.invalid").pathname;
+    if (path === "/api/progress/save") { saveCalls++; return Response.json({ scoopId: 9 }); }
     assert.equal(path, "/api/quiz/grade");
     gradeCalls++;
     await new Promise<void>(resolve => { releaseGrade = resolve; });
@@ -124,6 +127,53 @@ async function main() {
     assert.equal(onboardingHint?.textContent, "숫자 키(1–5)로 고르고 Enter로 넘어가요");
     assert.match(onboardingHint!.className, /\bhidden\b/);
     assert.match(onboardingHint!.className, /lg:block/);
+
+    // Result: score focused first, plain Enter = the main black button.
+    const graded = { score: 0.75, correct: 3, total: 4, review: [], prevLevel: null, newLevel: null, dir: "유지" as const,
+      rollingAccuracy: null, domain: "cloud", domainLabel: "클라우드", articleId: 1, variantId: 7, isReview: false,
+      sourceUrl: "https://source.invalid/a", canSave: true };
+    const settle = () => act(async () => { for (let i = 0; i < 3; i++) await new Promise(resolve => setTimeout(resolve, 0)); });
+    await render(createElement(Result, { key: "save", result: graded, articleTitle: "글" }));
+    const score = container.querySelector("h1")!;
+    assert.match(score.textContent!, /75점/);
+    assert.ok(focused() === score, "score is focused first");
+    assert.equal(score.tabIndex, -1);
+    await press(score, "Enter", { isComposing: true });
+    await press(score, "Enter", { repeat: true });
+    await press(score, "Enter", { ctrlKey: true });
+    await settle();
+    assert.equal(saveCalls, 0, "composing, repeated and modified Enter do not save");
+    const sourceLink = [...container.querySelectorAll("a")].find(a => a.textContent === "원문 보기 ↗")!;
+    sourceLink.focus();
+    await press(sourceLink, "Enter");
+    const outside = document.createElement("button");
+    outside.textContent = "계속 읽기";
+    document.body.append(outside);
+    outside.focus();
+    await press(outside, "Enter");
+    outside.remove();
+    await settle();
+    assert.equal(saveCalls, 0, "Enter on a link or a dialog button keeps its own behavior");
+    const primary = container.querySelector('[aria-keyshortcuts="Enter"]')!;
+    assert.equal(primary.textContent, "콘에 올리기 🍦");
+    const kbd = [...container.querySelectorAll("span")].find(span => span.textContent === "Enter")!;
+    assert.match(kbd.className, /\bhidden\b/);
+    assert.match(kbd.className, /lg:block/);
+    score.focus();
+    await press(score, "Enter"); await press(score, "Enter");
+    await settle();
+    assert.equal(saveCalls, 1, "Enter saves once");
+    assert.deepEqual(pushes, ["/cone?new=9"]);
+    await press(document.body, "Enter");
+    await settle();
+    assert.equal(saveCalls, 1, "no second save after saving");
+
+    await render(createElement(Result, { key: "review", result: { ...graded, isReview: true, canSave: false }, articleTitle: "글" }));
+    await press(document.body, "Enter");
+    await settle();
+    assert.equal(saveCalls, 1, "review results never call save");
+    assert.equal(pushes.at(-1), "/", "Enter goes home when saving is not possible");
+    assert.equal(container.querySelector('[aria-keyshortcuts="Enter"]')!.textContent, "홈으로");
 
     console.log("Keyboard flow: quiz radio group, digits, arrows, Enter next/submit, composing and grading guards; onboarding 1–5 and Enter passed.");
   } finally {

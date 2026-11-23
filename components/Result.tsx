@@ -1,11 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { quizHref, readHref } from "@/lib/routes";
 
 import { apiJson } from "@/lib/client-api";
+import { isInteractiveTarget, isPlainEnter } from "@/lib/keyboard";
 import { PROMOTE_AT, levelLabel } from "@/lib/level";
 import { prepareScoopSound } from "@/lib/scoop-sound";
 import type { CreditResult } from "@/lib/credits";
@@ -58,6 +59,33 @@ export function Result({
   const canSave = result.canSave ?? !result.isReview;
   // 저장 전에 나가면 묻는다. 저장하면 꺼지고 콘 화면으로 넘어간다.
   useLeaveGuard(canSave && !saved);
+  const mainRef = useRef<HTMLElement>(null);
+  const scoreRef = useRef<HTMLHeadingElement>(null);
+  const primaryRef = useRef<() => void>(() => {});
+
+  // Enter가 누를 주요 버튼 — 렌더마다 최신 상태로 바꿔 끼운다.
+  useEffect(() => {
+    primaryRef.current = () => {
+      if (canSave) { if (!saving && !saved) void save(); }
+      else router.push("/");
+    };
+  });
+
+  // 점수부터 읽히게 포커스를 점수에 둔다. 그 자리에서 Enter가 주요 버튼이다.
+  useEffect(() => { scoreRef.current?.focus(); }, []);
+
+  useEffect(() => {
+    function onKey(event: KeyboardEvent) {
+      // 누른 채로 반복되는 Enter는 받지 않는다 — 마지막 문항의 Enter가 결과가 뜨자마자 저장하지 않게.
+      if (event.repeat || !isPlainEnter(event) || isInteractiveTarget(event.target)) return;
+      const target = event.target as Node | null;
+      if (target !== document.body && !(target && mainRef.current?.contains(target))) return;
+      event.preventDefault();
+      primaryRef.current();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   async function save() {
     prepareScoopSound();
@@ -78,7 +106,7 @@ export function Result({
   }
 
   return (
-    <main className="pb-10">
+    <main ref={mainRef} className="pb-10">
       <section className="rounded-3xl bg-white p-6 text-center shadow-sm">
         {result.isReview && (
           <p className="mb-3 inline-block rounded-full bg-stone-100 px-3 py-1 text-xs font-medium text-stone-600">
@@ -87,9 +115,9 @@ export function Result({
         )}
 
         <p className="text-sm text-stone-500">{articleTitle}</p>
-        <p className="mt-3 text-4xl font-bold tabular-nums text-stone-900">
+        <h1 ref={scoreRef} tabIndex={-1} className="mt-3 text-4xl font-bold tabular-nums text-stone-900 focus:outline-none">
           {percent}점
-        </p>
+        </h1>
         <p className="mt-1 text-sm text-stone-600">
           {result.total}문제 중 {result.correct}개 정답
         </p>
@@ -163,18 +191,20 @@ export function Result({
 
       <div className="mt-8 space-y-2">
         {canSave ? (
-          <button type="button" onClick={save} disabled={saving || saved}
+          <button type="button" onClick={save} disabled={saving || saved} aria-keyshortcuts="Enter"
             className="block w-full rounded-xl bg-stone-900 px-4 py-3 text-center font-medium text-white transition hover:bg-stone-800 disabled:opacity-60">
             {saved ? "저장했어요 · 콘으로" : saving ? "저장 중…" : "콘에 올리기 🍦"}
           </button>
         ) : (
           <Link
             href="/"
+            aria-keyshortcuts="Enter"
             className="block w-full rounded-xl bg-stone-900 px-4 py-3 text-center font-medium text-white"
           >
             홈으로
           </Link>
         )}
+        <span aria-hidden="true" className="hidden pb-1 text-center text-[11px] text-stone-400 lg:block">Enter</span>
         {result.isOriginal && result.variantId && <>
           {onRetry ? <button type="button" onClick={onRetry} className="block w-full rounded-xl bg-stone-100 px-4 py-3 font-medium text-stone-700">퀴즈 다시 풀기</button> :
             <Link href={quizHref(result.variantId)+"&practice=1"} className="block rounded-xl bg-stone-100 px-4 py-3 text-center font-medium text-stone-700">퀴즈 다시 풀기</Link>}
