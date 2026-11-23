@@ -196,6 +196,58 @@ async function main() {
     assert.match(container.textContent!, /스쿱 0개/);
     assert.doesNotMatch(container.textContent!, /old failure|불러오지 못했어요/);
     assert.deepEqual(monthRangeUtc("2026-10"), ["2026-09-30T15:00:00.000Z", "2026-10-31T15:00:00.000Z"]);
+
+    // Laptop width: bowl scene with a tool rail; switching width keeps the chosen scoop.
+    await act(async () => { root.unmount(); });
+    const { WIDE_QUERY } = await import("../lib/use-wide-layout");
+    const { OPEN_SHOP_EVENT } = await import("../lib/cosmetics");
+    let wide = true;
+    const wideListeners: Array<() => void> = [];
+    Object.defineProperty(dom.window, "matchMedia", { configurable: true, value: (q: string) => ({
+      get matches() { return q === WIDE_QUERY && wide; }, media: q,
+      addEventListener(_: string, cb: () => void) { if (q === WIDE_QUERY) wideListeners.push(cb); }, removeEventListener() {} }) });
+    slow = false;
+    const wideFetch = globalThis.fetch;
+    globalThis.fetch = async (input, init) => {
+      const url = new URL(input instanceof Request ? input.url : String(input), dom.window.location.origin);
+      if (url.pathname === "/api/credits") return Response.json({ userId: uid, balance: 120, spendableBalance: 120,
+        policyVersion: 1, earningMode: "active", spendingEnabled: true, hasWelcome: true,
+        rules: { article: 10, quizBonusMax: 10, welcome: 100 }, equipped: {}, scoopColors: {},
+        streak: { enabled: true, days: 3, reward: 50, blockDays: 7, daysUntilReward: 4 } });
+      return wideFetch(input, init);
+    };
+    dom.window.history.replaceState(null, "", "/cone/?month=2026-10&scoop=3");
+    let shopEvents = 0;
+    const countShop = () => { shopEvents++; };
+    dom.window.addEventListener(OPEN_SHOP_EVENT, countShop);
+    const wideRoot = createRoot(container);
+    try {
+      await act(async () => { wideRoot.render(createElement(AppRouterContext.Provider, { value: router }, createElement(ConePage))); });
+      await act(async () => { await new Promise(resolve => setTimeout(resolve, 0)); });
+      const rail = () => container.querySelector('aside[aria-label="콘 도구"]');
+      assert.ok(rail(), "wide cone shows the tool rail");
+      assert.equal(container.querySelector("svg.ac-svg")!.getAttribute("viewBox"), "0 0 600 400", "wide cone draws the bowl");
+      assert.ok(rail()!.querySelector("select"), "month picker moves to the rail");
+      assert.match(rail()!.textContent!, /분야별 맛/);
+      assert.match(rail()!.textContent!, /스쿱 2개/);
+      assert.ok(container.querySelector('[aria-label="선택한 스쿱"]') != null, "?scoop= selects in the bowl");
+      const shopButton = [...rail()!.querySelectorAll("button")].find(b => b.textContent!.includes("꾸미기 상점"))!;
+      await act(async () => { shopButton.click(); });
+      assert.equal(shopEvents, 1, "rail shop button opens the shop");
+
+      wide = false;
+      await act(async () => { wideListeners.forEach(cb => cb()); });
+      assert.equal(rail() == null, true, "narrow width drops the rail");
+      assert.notEqual(container.querySelector("svg.ac-svg")!.getAttribute("viewBox"), "0 0 600 400", "narrow width draws the cone");
+      assert.ok(container.querySelector('[aria-label="선택한 스쿱"]') != null, "the same scoop stays selected across widths");
+      assert.equal(new URL(dom.window.location.href).searchParams.get("scoop"), "3");
+      wide = true;
+      await act(async () => { wideListeners.forEach(cb => cb()); });
+      assert.ok(container.querySelector('[aria-label="선택한 스쿱"]') != null, "and back again");
+    } finally {
+      dom.window.removeEventListener(OPEN_SHOP_EVENT, countShop);
+      await act(async () => { wideRoot.unmount(); });
+    }
     console.log("Scoops: owner isolation, private metadata redaction, KST months, failures, readable links, month navigation and stale responses passed.");
   } finally {
     await act(async () => { root.unmount(); });
