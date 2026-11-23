@@ -114,16 +114,16 @@ async function main() {
     throw new Error(`Unexpected read ${table}`);
   };
   try {
-    const { POST: open } = await import("../app/api/read/open/route.api");
-    const { GET: quiz } = await import("../app/api/quiz/route.api");
-    const { POST: grade } = await import("../app/api/quiz/grade/route.api");
-    const { POST: save } = await import("../app/api/progress/save/route.api");
-    const { GET: collect } = await import("../app/api/cron/ingest/route.api");
-    const { GET: process } = await import("../app/api/cron/ingest/[category]/route.api");
+    const { POST: open } = await import("../app/api/read/open/route");
+    const { GET: quiz } = await import("../app/api/quiz/route");
+    const { POST: grade } = await import("../app/api/quiz/grade/route");
+    const { POST: save } = await import("../app/api/progress/save/route");
+    const { GET: collect } = await import("../app/api/cron/ingest/route");
+    const { GET: process } = await import("../app/api/cron/ingest/[category]/route");
     const { createAdminClient } = await import("../lib/supabase/admin");
     const { getTodayPicks, getScoops, getScoopMonths } = await import("../lib/feed");
     const request = (path: string, body?: unknown) => new Request(`https://app.invalid${path}`, {
-      headers: { Authorization: "Bearer signed-token", Origin: "https://localhost", "Content-Type": "application/json" },
+      headers: { Authorization: "Bearer signed-token", Origin: "http://localhost:3000", "Content-Type": "application/json" },
       ...(body ? { method: "POST", body: JSON.stringify(body) } : {}),
     });
     const denied = async () => {
@@ -132,7 +132,7 @@ async function main() {
         await save(request("/api/progress/save", { articleId: 1 }))]) {
         assert.equal(response.status, 404);
         assert.equal(response.headers.get("cache-control"), "no-store");
-        assert.equal(response.headers.get("access-control-allow-origin"), "https://localhost");
+        assert.equal(response.headers.get("access-control-allow-origin"), "http://localhost:3000");
         assert.deepEqual(await response.json(), { error: "not found" });
       }
       assert.equal(quizReads, 0, "no question or answer is read before the rights gate");

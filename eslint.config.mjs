@@ -7,7 +7,7 @@ const eslintConfig = defineConfig([
   ...nextTs,
   {
     rules: {
-      // 정적 내보내기(APP_EXPORT=1) 때문에 화면 데이터는 마운트 뒤 effect에서 불러온다.
+      // 화면 데이터는 마운트 뒤 effect에서 불러온다(예전 정적 내보내기 구조의 흔적).
       // 요청 시작 시 로딩·오류 상태를 초기화하는 setState가 이 규칙에 걸리지만 의도된 패턴이다.
       // 새 코드에서는 피하고, 기존 코드는 화면별로 정리할 때 고친다.
       "react-hooks/set-state-in-effect": "warn",
@@ -27,7 +27,6 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
-    "android/**",
     "spike-out/**",
     "supabase/.temp/**",
     ".superpowers/**",

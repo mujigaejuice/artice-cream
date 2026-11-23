@@ -7,7 +7,7 @@ import { randomUUID } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { createAdminClient } from "../lib/supabase/admin";
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "../lib/supabase/env";
-import { GET, POST } from "../app/api/account/delete/route.api";
+import { GET, POST } from "../app/api/account/delete/route";
 
 async function main() {
   const production = process.argv.includes("--production");

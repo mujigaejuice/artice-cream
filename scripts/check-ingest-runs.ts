@@ -86,8 +86,8 @@ async function main() {
 
   try {
     const { NextRequest } = await import("next/server");
-    const { GET: processRoute } = await import("../app/api/cron/ingest/[category]/route.api");
-    const { GET: collectRoute } = await import("../app/api/cron/ingest/route.api");
+    const { GET: processRoute } = await import("../app/api/cron/ingest/[category]/route");
+    const { GET: collectRoute } = await import("../app/api/cron/ingest/route");
     const { buildIngestRunRow, writeIngestRun, recordIngestRun, runRates, safeError } =
       await import("../lib/news/ingest-runs");
     const call = (category = "cloud", token = "runs-cron") => processRoute(

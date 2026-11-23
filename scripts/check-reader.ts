@@ -22,10 +22,10 @@ async function main() {
     return Response.json(result);
   };
   try {
-    const { POST } = await import("../app/api/read/open/route.api");
+    const { POST } = await import("../app/api/read/open/route");
     const request = (body: unknown = { variantId: 2, userId: "attacker-controlled" }, signedIn = true) =>
       new Request("https://app.invalid/api/read/open", { method: "POST", body: JSON.stringify(body),
-        headers: { ...(signedIn ? { Authorization: "Bearer test" } : {}), Origin: "https://localhost" } });
+        headers: { ...(signedIn ? { Authorization: "Bearer test" } : {}), Origin: "http://localhost:3000" } });
     for (let i = 0; i < 2; i++) {
       calls.length = 0;
       const response = await POST(request());
@@ -37,7 +37,7 @@ async function main() {
       assert.equal(body.reader.isOriginal, true);
       assert.equal(body.reader.sourceName, "artice cream Original");
       assert.equal(response.headers.get("cache-control"), "no-store");
-      assert.equal(response.headers.get("access-control-allow-origin"), "https://localhost");
+      assert.equal(response.headers.get("access-control-allow-origin"), "http://localhost:3000");
       assert.match(response.headers.get("server-timing")!, /^auth;dur=[\d.]+, reader;dur=[\d.]+, total;dur=[\d.]+$/);
     }
     calls.length = 0;

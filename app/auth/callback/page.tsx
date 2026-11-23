@@ -3,18 +3,15 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 
-import { AUTH_FAILED_HREF } from "@/lib/native";
-import { safeNext } from "@/lib/routes";
+import { AUTH_FAILED_HREF, safeNext } from "@/lib/routes";
 import { consumeDeletionReturn, deletionAuthFailure } from "@/lib/deletion-return";
 import { createClient } from "@/lib/supabase/client";
 
 /**
  * OAuth / 매직링크가 돌아오는 자리.
  *
- * Route Handler였다가 클라이언트 페이지가 됐다(앱출시.md §2). 정적 내보내기에는
- * code를 세션 쿠키로 바꿔 줄 서버가 없고, 앱에서는 이 주소가 딥링크
- * (`artice-cream://auth/callback`)로 열린다. PKCE라 교환은 브라우저가 한다 —
- * verifier가 이 클라이언트의 스토리지에만 있기 때문이다.
+ * PKCE라 교환은 브라우저가 한다 — verifier가 이 클라이언트의 스토리지에만 있기
+ * 때문이다. 세션은 쿠키가 아니라 localStorage에 있으므로 서버 라우트로는 받을 수 없다.
  */
 export default function AuthCallbackPage() {
   const router = useRouter();

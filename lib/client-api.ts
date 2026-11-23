@@ -3,10 +3,10 @@
 import { createClient } from "./supabase/client";
 
 /**
- * 클라이언트에서 Vercel API를 부르는 자리 (앱출시.md §2).
+ * 클라이언트에서 API를 부르는 자리.
  *
- * 앱 번들은 정적 자산이라 API와 오리진이 다르다. `NEXT_PUBLIC_API_BASE`가 그
- * 주소이고, 웹에서는 비어 있어 같은 오리진을 부른다.
+ * 보통은 같은 오리진을 부른다. `NEXT_PUBLIC_API_BASE`는 다른 오리진의 API를 볼 때만
+ * 채운다(테스트가 쓴다).
  *
  * 쿠키가 없으니 토큰을 매번 붙인다. `getSession()`은 필요하면 갱신까지 해 주므로
  * 만료된 토큰으로 401을 받는 일이 없다.

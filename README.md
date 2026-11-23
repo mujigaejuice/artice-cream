@@ -23,13 +23,12 @@
 - Next.js 16 (App Router), React 19, Tailwind CSS 4
 - Supabase: Postgres, 인증(이메일 인증번호·Google), RLS
 - LLM: Anthropic SDK 또는 OpenAI 호환 게이트웨이
-- Capacitor 8: Android 앱 (정적 번들 + 원격 API)
 - Vercel: API와 수집·가공 cron (함수 리전 `icn1`)
 
 ## 디렉터리 구조
 
 ```
-app/                 화면과 API 라우트 (*.api.ts)
+app/                 화면과 API 라우트
   (tabs)/            오늘 · 내 콘 · 단어장 · 나 탭
   api/cron/          수집(ingest)·분야별 가공·정리(cleanup) cron
 components/          화면 컴포넌트
@@ -38,7 +37,6 @@ lib/ai/              LLM 파이프라인: 분류, 재작성, 용어, 퀴즈
 lib/news/            피드·문서 수집, 본문 추출, 권리 자동 검토
 lib/supabase/        클라이언트와 타입
 supabase/            마이그레이션, RLS 정책, 시드, 메일 양식
-android/             Capacitor Android 프로젝트
 scripts/             빌드·검사·운영 도구 (check-*.ts가 테스트)
 tests/classify/      분류기 정답 세트와 채점기
 ```
@@ -75,8 +73,8 @@ npm run dev
 2. Authentication에서 이메일과 Google 로그인을 켜고, 익명 로그인은 끈다.
 3. URL Configuration
    - Site URL: 배포 주소 (예: `https://artice-cream.vercel.app`)
-   - Redirect URLs: `http://localhost:3000/auth/callback`, `<배포 주소>/auth/callback`, `artice-cream://auth/callback`
-4. Google OAuth의 Authorized redirect URI는 앱 주소가 아니라 `https://<project-ref>.supabase.co/auth/v1/callback`이다.
+   - Redirect URLs: `http://localhost:3000/auth/callback`, `<배포 주소>/auth/callback`
+4. Google OAuth의 Authorized redirect URI는 배포 주소가 아니라 `https://<project-ref>.supabase.co/auth/v1/callback`이다.
 5. Email Templates의 Magic Link와 Confirm signup 양식을 `supabase/templates/email-code.html`로 바꾼다.
    메일에 `{{ .Token }}` 인증번호가 보여야 한다. 운영 발송 전에는 SMTP를 따로 설정한다.
 
@@ -119,9 +117,6 @@ npm run typecheck      # 타입 검사
 npm run test:ci        # 전체 검사 (모의 HTTP·DB와 jsdom, 실제 서비스 연결 없음)
 npm run test:db        # 임시 Docker PostgreSQL에서 마이그레이션 체인과 RPC 검사 (Docker 필요)
 npm run test:classify  # 분류기 정답률 (실제 LLM 호출, 유료)
-npm run build:app      # Android용 정적 번들 (out/)
-npm run app:run        # 번들 → cap sync → Android 빌드·설치·실행
-npm run app:release    # 서명된 릴리스 빌드 (APP_API_BASE와 업로드 키 환경변수 필요)
 ```
 
 영역별 검사는 `npm run test:<영역>`으로 따로 돌릴 수 있습니다 (예: `test:onboarding`, `test:credits`, `test:reader`).
@@ -131,7 +126,6 @@ npm run app:release    # 서명된 릴리스 빌드 (APP_API_BASE와 업로드 �
 - Vercel에 올리면 `vercel.json`의 cron이 매일 돕니다. 한국 시간 03·09·15·21시에 수집하고, 각 수집 2시간 뒤부터
   30분 간격으로 8분야를 가공합니다. 새벽에는 30일 지난 일일 이용량·광고 기록을 정리합니다.
 - DB 함수에 의존하는 API를 배포할 때는 해당 마이그레이션을 **코드보다 먼저** 운영 DB에 적용합니다.
-- Android 로그인 정보와 WebView 데이터는 클라우드 백업에서 제외합니다. 새 기기에서는 다시 로그인하면 기록을 불러옵니다.
 
 ## 개인정보와 계정 삭제
 

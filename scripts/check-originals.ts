@@ -50,8 +50,8 @@ async function main(){
     assert.equal(method,'GET');return Response.json(url.searchParams.has('article_id')||url.searchParams.has('id')?progress:progress?[progress]:[]);
   };
   try{
-    const {GET}=await import('../app/api/quiz/route.api');
-    const {POST}=await import('../app/api/quiz/grade/route.api');
+    const {GET}=await import('../app/api/quiz/route');
+    const {POST}=await import('../app/api/quiz/grade/route');
     const {createAdminClient}=await import('../lib/supabase/admin');
     const {getOriginalPicks}=await import('../lib/feed');
     const request=(path:string,body?:unknown)=>new Request('https://app.invalid'+path,{headers:{authorization:'Bearer fixture','content-type':'application/json'},...(body!==undefined?{method:'POST',body:JSON.stringify(body)}:{})});

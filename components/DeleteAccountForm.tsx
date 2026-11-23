@@ -47,8 +47,8 @@ export function DeleteAccountForm() {
       setError("본인 확인을 마치지 못했어요. 인증번호를 받아 다시 확인해 주세요.");
     }
     void load();
-    // Native deep links may return to this same mounted page. Refresh after the
-    // auth callback releases its lock; never await SDK calls inside its listener.
+    // Sign-in may finish in another tab while this page stays mounted. Refresh after
+    // the auth callback releases its lock; never await SDK calls inside its listener.
     let refreshTimer: ReturnType<typeof setTimeout> | undefined;
     const { data: { subscription } } = createClient().auth.onAuthStateChange((event) => {
       if (!["SIGNED_IN", "SIGNED_OUT"].includes(event)) return;
@@ -111,7 +111,7 @@ export function DeleteAccountForm() {
         <p>이 기기의 로그인 정보 정리를 마치지 못했어요. 계정 삭제는 완료됐어요.</p>
         <button type="button" className={`${buttonStyle} mt-2 border border-stone-300`} onClick={() => void clearSession()}>기기 로그인 정보 정리 다시 시도</button>
       </div>}
-      <a href="/onboarding/" className="mt-5 inline-block text-sm underline underline-offset-4">시작 화면으로</a>
+      <a href="/onboarding" className="mt-5 inline-block text-sm underline underline-offset-4">시작 화면으로</a>
     </section>
   );
 

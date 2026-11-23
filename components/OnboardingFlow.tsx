@@ -9,7 +9,6 @@ import { WelcomeTutorial } from "@/components/WelcomeTutorial";
 import { coreColor } from "@/lib/color";
 import { apiJson } from "@/lib/client-api";
 import { levelLabel, levelShort } from "@/lib/level";
-import { authRedirectUrl, openExternal } from "@/lib/native";
 import type { PublicQuizQuestion } from "@/lib/onboarding-quiz";
 import { createClient } from "@/lib/supabase/client";
 import type { DomainRow } from "@/lib/supabase/types";
@@ -20,7 +19,7 @@ type Props = {
   /** 분야 id → 레벨 퀴즈 문항(정답 없음). 없는 분야는 퀴즈 없이 Lv2로 시작한다. */
   quizzes: Record<string, PublicQuizQuestion[]>;
   isSignedIn: boolean;
-  /** 딥링크·웹 콜백에서 로그인이 실패해 돌아온 경우. */
+  /** 로그인 콜백에서 실패해 돌아온 경우. */
   authFailed?: boolean;
   startAtLogin?: boolean;
   onSignedIn?: () => void;
@@ -287,12 +286,11 @@ function SignIn({ authFailed, onSignedIn }: { authFailed?: boolean; onSignedIn: 
     setError(null);
 
     try {
-      // 앱은 WebView를 유지한 채 시스템 브라우저를 열고 딥링크로 돌아온다.
       // 계정별 기록을 구분할 수 있도록 Google 계정 선택을 항상 표시한다.
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: authRedirectUrl(),
+          redirectTo: `${window.location.origin}/auth/callback`,
           skipBrowserRedirect: true,
           queryParams: { prompt: "select_account" },
         },
@@ -301,15 +299,11 @@ function SignIn({ authFailed, onSignedIn }: { authFailed?: boolean; onSignedIn: 
         setError("구글 로그인에 실패했어요. 잠시 후 다시 시도해 주세요.");
         return;
       }
-      try {
-        await openExternal(data.url);
-      } catch {
-        setError("브라우저를 열지 못했어요.");
-      }
+      window.location.assign(data.url);
     } catch {
       setError("구글 로그인에 실패했어요. 연결을 확인하고 다시 시도해 주세요.");
     } finally {
-      // 앱에서 브라우저를 닫고 돌아오거나 예외가 나도 다시 시도할 수 있어야 한다.
+      // 예외가 나거나 구글 화면에서 뒤로 돌아와도 다시 시도할 수 있어야 한다.
       signingIn.current = false;
       setBusy(false);
     }

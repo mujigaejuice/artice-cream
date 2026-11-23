@@ -27,8 +27,6 @@ supabase/.temp/
 # 로컬 시안/샘플 파일
 artice-cream-flow.jsx
 scoop-cone.jsx
-android/app/src/androidTest/java/com/getcapacitor/myapp/ExampleInstrumentedTest.java
-android/app/src/test/java/com/getcapacitor/myapp/ExampleUnitTest.java
 
 # 오디오
 scripts/generate-bgm.mjs

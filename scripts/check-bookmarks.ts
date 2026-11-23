@@ -70,10 +70,10 @@ async function main() {
   };
 
   try {
-    const { GET, POST, OPTIONS } = await import("../app/api/bookmarks/route.api");
+    const { GET, POST, OPTIONS } = await import("../app/api/bookmarks/route");
     const request = (method: "GET" | "POST", body?: unknown, signedIn = true) =>
       new Request("https://app.invalid/api/bookmarks", { method,
-        headers: { ...(signedIn ? { Authorization: "Bearer signed-token" } : {}), Origin: "https://localhost",
+        headers: { ...(signedIn ? { Authorization: "Bearer signed-token" } : {}), Origin: "http://localhost:3000",
           "Content-Type": "application/json" },
         ...(body === undefined ? {} : { body: typeof body === "string" ? body : JSON.stringify(body) }) });
 
@@ -95,7 +95,7 @@ async function main() {
     const listed = await GET(request("GET"));
     assert.equal(listed.status, 200);
     assert.equal(listed.headers.get("cache-control"), "no-store");
-    assert.equal(listed.headers.get("access-control-allow-origin"), "https://localhost");
+    assert.equal(listed.headers.get("access-control-allow-origin"), "http://localhost:3000");
     const raw = await listed.text();
     const { userId: listedUser, bookmarks } = JSON.parse(raw);
     assert.equal(listedUser, userId);
@@ -164,7 +164,7 @@ async function main() {
     return Response.json(good);
   };
   try {
-    const { POST: open } = await import("../app/api/read/open/route.api");
+    const { POST: open } = await import("../app/api/read/open/route");
     const openRequest = () => new Request("https://app.invalid/api/read/open", { method: "POST",
       body: JSON.stringify({ variantId: 2 }), headers: { Authorization: "Bearer signed-token" } });
     assert.equal((await (await open(openRequest())).json()).reader.bookmarked, true);

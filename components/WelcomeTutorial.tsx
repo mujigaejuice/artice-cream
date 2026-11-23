@@ -121,7 +121,7 @@ export function WelcomeTutorial({ children, startAtLogin = false }: { children: 
       </nav>
       <footer className="mt-5 border-t border-stone-200 pt-4">
         <div className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-stone-600">
-          <Link href="/privacy/" className="ac-intro-link">개인정보처리방침</Link>
+          <Link href="/privacy" className="ac-intro-link">개인정보처리방침</Link>
           <Link href="/account/delete/" className="ac-intro-link">계정 및 데이터 삭제</Link>
         </div>
       </footer>

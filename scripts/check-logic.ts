@@ -6,7 +6,6 @@
  *   npm run test:logic
  */
 import assert from "node:assert";
-import { readFileSync } from "node:fs";
 
 import { markTerms, resolveTokenPrice } from "../lib/ai/pipeline";
 import {
@@ -29,14 +28,6 @@ import { applyQuiz } from "../lib/level";
 import type { User } from "@supabase/supabase-js";
 
 import { corsHeaders, signedInUser } from "../lib/api";
-import {
-  AUTH_DEEP_LINK,
-  AUTH_HOST,
-  AUTH_SCHEME,
-  authRedirectUrl,
-  isNative,
-  parseAuthDeepLink,
-} from "../lib/native";
 import { quizHref, readHref, safeNext } from "../lib/routes";
 
 // color: 같은 (슬러그, 날짜, 기사)는 같은 색. 같은 날의 기사도 톤이 다르다.
@@ -280,14 +271,20 @@ assert.equal(safeNext("//evil.example"), "/", "프로토콜 상대 URL은 외부
 assert.equal(safeNext("/\\evil.example"), "/", "백슬래시도 //로 읽는 브라우저가 있다");
 console.log("routes ok");
 
-/* ── CORS 허용 오리진 (앱출시.md §2) ── */
-// WebView는 쿠키를 안 보내므로 Bearer 토큰을 쓰고, 그래서 오리진 허용이 필요하다.
-// 목록이 넓어지면 API가 열리고, 좁아지면 앱이 못 부른다.
-const nativeReq = new Request("https://x/api/feed", {
-  headers: { origin: "https://localhost" },
+/* ── CORS 허용 오리진 ── */
+// 목록이 넓어지면 API가 열린다. 앱(WebView) 오리진은 웹 전용 전환 때 뺐다.
+const devReq = new Request("https://x/api/feed", {
+  headers: { origin: "http://localhost:3000" },
 });
-assert.equal(corsHeaders(nativeReq)["Access-Control-Allow-Origin"], "https://localhost");
-assert.equal(corsHeaders(nativeReq)["Vary"], "Origin");
+assert.equal(corsHeaders(devReq)["Access-Control-Allow-Origin"], "http://localhost:3000");
+assert.equal(corsHeaders(devReq)["Vary"], "Origin");
+for (const origin of ["https://localhost", "capacitor://localhost"]) {
+  assert.deepEqual(
+    corsHeaders(new Request("https://x/api/feed", { headers: { origin } })),
+    {},
+    `앱 WebView 오리진(${origin})은 더 이상 허용하지 않는다`,
+  );
+}
 assert.deepEqual(
   corsHeaders(new Request("https://x/api/feed", { headers: { origin: "https://evil.example" } })),
   {},
@@ -315,87 +312,6 @@ console.log("cors ok");
 }
 console.log("auth ok");
 
-/* ── 네이티브 경계 (T2 스펙 §6·§7) ── */
-// 앱과 웹이 갈리는 자리가 여기 하나여야 한다. 화면마다 분기하면 다음 화면에서 빠뜨린다.
-assert.equal(isNative(), false, "노드에는 Capacitor 전역이 없다");
-
-const g = globalThis as { Capacitor?: { isNativePlatform?: () => boolean } };
-g.Capacitor = { isNativePlatform: () => true };
-assert.equal(isNative(), true);
-assert.equal(authRedirectUrl(), AUTH_DEEP_LINK, "네이티브는 딥링크로 돌아온다");
-delete g.Capacitor;
-assert.equal(isNative(), false);
-
-// 딥링크 파싱 — 우리 것만 받고 나머지는 지나간다.
-assert.deepEqual(parseAuthDeepLink("artice-cream://auth/callback?code=abc"), {
-  code: "abc",
-  next: "/",
-});
-assert.deepEqual(parseAuthDeepLink("artice-cream://auth/callback?code=abc&next=/cone"), {
-  code: "abc",
-  next: "/cone",
-});
-assert.equal(
-  parseAuthDeepLink("artice-cream://auth/callback?next=//evil.example"),
-  null,
-  "code도 error도 없으면 우리가 시작한 응답이 아니다",
-);
-assert.equal(
-  parseAuthDeepLink("https://localhost/auth/callback?code=abc"),
-  null,
-  "웹 콜백은 페이지가 받는다",
-);
-assert.equal(
-  parseAuthDeepLink("artice-cream://other/thing"),
-  null,
-  "스킴을 하나 더 붙여도 여기가 막지 않는다",
-);
-assert.equal(parseAuthDeepLink("URL이 아닌 것"), null);
-// 우리가 시작한 응답만 받는다. code도 error도 없는 딥링크는 아무 앱이나 쏠 수 있고,
-// 그걸 처리하면 열린 로그인 브라우저를 닫고 사용자를 화면에서 끌어낸다.
-assert.equal(parseAuthDeepLink("artice-cream://auth/callback"), null, "빈 콜백은 무시한다");
-assert.equal(
-  parseAuthDeepLink("artice-cream://auth/callback?next=/cone"),
-  null,
-  "next만 있는 딥링크로 화면을 옮길 수 없어야 한다",
-);
-assert.equal(parseAuthDeepLink("artice-cream://auth/evil?code=x"), null, "경로가 다르면 우리 것이 아니다");
-assert.deepEqual(
-  parseAuthDeepLink("artice-cream://auth/callback?error=invalid_request&error_code=email_exists"),
-  { code: null, next: "/" },
-  "실패 응답은 받아서 안내해야 한다",
-);
-// 딥링크의 next도 safeNext를 거친다 — 제어문자 우회가 여기로 들어온다.
-assert.deepEqual(
-  parseAuthDeepLink("artice-cream://auth/callback?code=abc&next=%2F%09%2Fevil.example"),
-  { code: "abc", next: "/" },
-);
-// 매니페스트와 상수가 어긋나면 딥링크가 조용히 안 걸린다. 스킴을 바꿀 일이
-// 생기면(스펙 §11-4) 두 곳을 같이 고쳐야 한다.
-const manifest = readFileSync("android/app/src/main/AndroidManifest.xml", "utf8");
-assert.ok(
-  manifest.includes(`android:scheme="${AUTH_SCHEME}"`),
-  `AndroidManifest에 ${AUTH_SCHEME} 스킴이 없다`,
-);
-assert.ok(
-  manifest.includes(`android:host="${AUTH_HOST}"`),
-  `AndroidManifest에 ${AUTH_HOST} 호스트가 없다`,
-);
-// 커스텀 스킴을 new URL()로 쪼개면 엔진마다 답이 다르다. 노드는
-// host="auth" pathname="/callback", 안드로이드 WebView는 host="" pathname=
-// "//auth/callback"이다. parseAuthDeepLink가 그 둘 중 하나에 기대면 이 테스트는
-// 통과하는데 앱에서만 조용히 안 걸린다. 문자열로 자르는 구현을 지키기 위한 못이다.
-{
-  const parsed = new URL(AUTH_DEEP_LINK);
-  const enginePicksHost = parsed.host === AUTH_HOST;
-  assert.ok(
-    enginePicksHost || parsed.pathname.includes(AUTH_HOST),
-    "URL 파서가 스킴을 이해하지 못한다",
-  );
-  // 어느 쪽이든 파싱 결과는 같아야 한다.
-  assert.deepEqual(parseAuthDeepLink(`${AUTH_DEEP_LINK}?code=abc`), { code: "abc", next: "/" });
-}
-console.log("native ok");
 
 // 비용 단가 — 게이트웨이도 0이 되면 일일 예산이 가공을 멈추지 못한다.
 {
