@@ -1,14 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { coreColor } from "@/lib/color";
 import { levelShort } from "@/lib/level";
-import { quizHref } from "@/lib/routes";
+import { glossaryInOrder } from "@/lib/glossary-order";
+import { useWideLayout } from "@/lib/use-wide-layout";
 import type { Attribution, ReferenceLink } from "@/lib/content-rights";
 import { useLeaveGuard, useReadingProgress } from "@/components/ReadingExitNotice";
 import { BookmarkButton } from "@/components/BookmarkButton";
+import { ReaderCta } from "@/components/ReaderCta";
+import { ReaderRail } from "@/components/ReaderRail";
 
 type GlossaryMap = Record<string, { term: string; definition: string }>;
 
@@ -59,6 +62,10 @@ function toggleInlineDefinition(mark: HTMLElement, term: string, definition: str
 
 export function Reader(props: ReaderProps) {
   const bodyRef = useRef<HTMLDivElement>(null);
+  // 노트북에서는 용어를 본문에 펼치지 않고 오른쪽 칸 항목을 강조한다.
+  const wide = useWideLayout();
+  const [activeTerm, setActiveTerm] = useState<string | null>(null);
+  const glossaryItems = useMemo(() => glossaryInOrder(props.contentHtml, props.glossary), [props.contentHtml, props.glossary]);
   useReadingProgress(props.progressStatus === "started");
   // 콘에 올리기 전(읽는 중·퀴즈만 끝냄)이면 나갈 때 묻는다.
   useLeaveGuard(props.progressStatus !== "saved");
@@ -72,7 +79,9 @@ export function Reader(props: ReaderProps) {
       const mark = (target as HTMLElement | null)?.closest?.("mark[data-w]") as HTMLElement | null;
       const id = mark?.getAttribute("data-w");
       const entry = id ? props.glossary[id] : null;
-      if (mark && entry) toggleInlineDefinition(mark, entry.term, entry.definition);
+      if (!mark || !id || !entry) return;
+      if (wide) setActiveTerm((current) => (current === id ? null : id));
+      else toggleInlineDefinition(mark, entry.term, entry.definition);
     }
 
     function onClick(event: MouseEvent) {
@@ -88,41 +97,61 @@ export function Reader(props: ReaderProps) {
     node.addEventListener("click", onClick);
     node.addEventListener("keydown", onKeyDown);
 
+    // 폭이 바뀌면 이전 방식의 펼침·강조를 모두 접고 시작한다.
+    node.querySelectorAll(".ac-def").forEach((n) => n.remove());
+    setActiveTerm(null);
+
     // HTML로 들어온 <mark>라 키보드로도 닿게 만들어 준다.
     for (const mark of node.querySelectorAll("mark[data-w]")) {
       mark.setAttribute("tabindex", "0");
       mark.setAttribute("role", "button");
       mark.setAttribute("aria-expanded", "false");
-      mark.setAttribute("aria-label", `${mark.textContent} 뜻 펼치기`);
+      mark.setAttribute("aria-label", `${mark.textContent} 뜻 ${wide ? "보기" : "펼치기"}`);
+      if (wide) mark.setAttribute("aria-controls", `gloss-${mark.getAttribute("data-w")}`);
+      else mark.removeAttribute("aria-controls");
     }
 
     return () => {
       node.removeEventListener("click", onClick);
       node.removeEventListener("keydown", onKeyDown);
     };
-  }, [props.glossary, props.contentHtml]);
+  }, [props.glossary, props.contentHtml, wide]);
+
+  // 노트북: 강조된 용어만 펼친 상태로 알린다.
+  useEffect(() => {
+    const node = bodyRef.current;
+    if (!node || !wide) return;
+    for (const mark of node.querySelectorAll("mark[data-w]")) {
+      mark.setAttribute("aria-expanded", mark.getAttribute("data-w") === activeTerm ? "true" : "false");
+    }
+  }, [activeTerm, wide]);
+
+  // 정책.md §8 — 원문으로 가는 문은 리더 어디서든 보여야 한다(머리말 또는 오른쪽 칸 + 하단).
+  const actions = <>
+    {props.bookmarked !== undefined && (
+      <BookmarkButton key={`${props.articleId}:${props.bookmarked}`} articleId={props.articleId} initialBookmarked={props.bookmarked} />
+    )}
+    {props.sourceUrl && !props.isOriginal && <a
+      href={props.sourceUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="shrink-0 text-sm font-medium text-stone-600 underline-offset-2 hover:text-stone-900 hover:underline"
+    >
+      원문 읽기 ↗
+    </a>}
+  </>;
+  const cta = <ReaderCta variantId={props.variantId} isOriginal={props.isOriginal}
+    progressStatus={props.progressStatus} quizScore={props.quizScore} />;
 
   return (
-    <main className="pb-28">
+    <main className="pb-28 lg:grid lg:grid-cols-[minmax(0,680px)_240px] lg:justify-center lg:gap-12 lg:pb-16">
+      <div className="min-w-0">
       <header className="mb-5">
         <div className="flex items-center justify-between gap-3">
           <Link href="/" className="text-sm text-stone-500 hover:text-stone-700">
             ← 홈
           </Link>
-          <div className="flex shrink-0 items-center gap-3">
-            {props.bookmarked !== undefined && (
-              <BookmarkButton key={`${props.articleId}:${props.bookmarked}`} articleId={props.articleId} initialBookmarked={props.bookmarked} />
-            )}
-            {/* 정책.md §8 — 원문으로 가는 문은 리더 어디서든 보여야 한다(헤더 + 하단). */}
-            {props.sourceUrl && !props.isOriginal && <a
-              href={props.sourceUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="shrink-0 text-sm font-medium text-stone-600 underline-offset-2 hover:text-stone-900 hover:underline"
-            >
-              원문 읽기 ↗
-            </a>}
-          </div>
+          {!wide && <div className="flex shrink-0 items-center gap-3">{actions}</div>}
         </div>
 
         <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
@@ -193,41 +222,22 @@ export function Reader(props: ReaderProps) {
         </>}
       </footer>
 
-      <div className="fixed inset-x-0 bottom-0 border-t border-stone-200 bg-[#faf7f2]/95 backdrop-blur">
-        <div
-          className="mx-auto w-full max-w-lg px-4 pt-3"
-          style={{
-            paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom, 0px))",
-          }}
-        >
-          {/* 화면구성.md §5 — 세 상태로 갈린다. 재제출은 항상 복습이라(정책.md §7),
-              저장까지 끝난 글은 퀴즈 CTA를 다시 보여주지 않는다. */}
-          {props.progressStatus === "saved" ? (
-            <div className="flex gap-2">
-              <Link
-                href={quizHref(props.variantId) + (props.isOriginal ? "&practice=1" : "")}
-                className="flex-1 rounded-xl bg-stone-100 px-4 py-3 text-center text-sm font-medium text-stone-700 transition hover:bg-stone-200"
-              >
-                {props.isOriginal ? "퀴즈 다시 풀기" : `퀴즈 ${props.quizScore != null ? `${Math.round(props.quizScore * 100)}점` : ""} · 문항 다시 보기`}
-              </Link>
-            </div>
-          ) : props.progressStatus === "completed" ? (
-            <Link
-              href={quizHref(props.variantId)}
-              className="block w-full rounded-xl bg-stone-900 px-4 py-3 text-center font-medium text-white transition hover:bg-stone-800"
-            >
-              결과 보고 콘에 올리기
-            </Link>
-          ) : (
-            <Link
-              href={quizHref(props.variantId)}
-              className="block w-full rounded-xl bg-stone-900 px-4 py-3 text-center font-medium text-white transition hover:bg-stone-800"
-            >
-              다 읽었어요 · 퀴즈 풀기
-            </Link>
-          )}
-        </div>
       </div>
+
+      {wide ? (
+        <ReaderRail items={glossaryItems} activeId={activeTerm} cta={cta} actions={actions} />
+      ) : (
+        <div className="fixed inset-x-0 bottom-0 border-t border-stone-200 bg-[#faf7f2]/95 backdrop-blur">
+          <div
+            className="mx-auto w-full max-w-lg px-4 pt-3"
+            style={{
+              paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom, 0px))",
+            }}
+          >
+            {cta}
+          </div>
+        </div>
+      )}
     </main>
   );
 }
