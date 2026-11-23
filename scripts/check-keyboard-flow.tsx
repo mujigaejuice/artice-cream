@@ -19,6 +19,9 @@ async function main() {
   const { Quiz } = await import("../components/Quiz");
   const { OnboardingQuiz } = await import("../components/OnboardingQuiz");
   const { Result } = await import("../components/Result");
+  const { Reader } = await import("../components/Reader");
+  const { readerCtaHref } = await import("../components/ReaderCta");
+  const { WIDE_QUERY } = await import("../lib/use-wide-layout");
   const { createClient } = await import("../lib/supabase/client");
   const container = document.getElementById("root")!;
   const root = createRoot(container);
@@ -175,7 +178,53 @@ async function main() {
     assert.equal(pushes.at(-1), "/", "Enter goes home when saving is not possible");
     assert.equal(container.querySelector('[aria-keyshortcuts="Enter"]')!.textContent, "홈으로");
 
-    console.log("Keyboard flow: quiz radio group, digits, arrows, Enter next/submit, composing and grading guards; onboarding 1–5 and Enter passed.");
+    // Reader: ⌘/Ctrl+Enter anywhere runs the quiz button; terms ignore modified Enter.
+    const reader = { variantId: 7, articleId: 3, level: 2, title: "글",
+      contentHtml: '<p>앞 <mark data-w="w1">용어</mark> 끝</p>', glossary: { w1: { term: "용어", definition: "뜻" } },
+      readingMinutes: 3, domainSlug: "cloud", domainLabel: "클라우드", sourceName: "Example", sourceUrl: "https://source.invalid/a",
+      progressStatus: "started" as const, quizScore: null };
+    assert.equal(readerCtaHref({ variantId: 7, progressStatus: "started" }), "/read/quiz?v=7");
+    assert.equal(readerCtaHref({ variantId: 7, progressStatus: "completed" }), "/read/quiz?v=7");
+    assert.equal(readerCtaHref({ variantId: 7, progressStatus: "saved" }), "/read/quiz?v=7");
+    assert.equal(readerCtaHref({ variantId: 7, progressStatus: "saved", isOriginal: true }), "/read/quiz?v=7&practice=1");
+    pushes.length = 0;
+    await render(createElement(Reader, { key: "reader", ...reader }));
+    await press(document.body, "Enter", { ctrlKey: true });
+    assert.deepEqual(pushes, ["/read/quiz?v=7"]);
+    await press(document.body, "Enter", { metaKey: true });
+    assert.deepEqual(pushes, ["/read/quiz?v=7", "/read/quiz?v=7"]);
+    await press(document.body, "Enter", { ctrlKey: true, isComposing: true });
+    await press(document.body, "Enter", { ctrlKey: true, repeat: true });
+    await press(document.body, "Enter");
+    assert.equal(pushes.length, 2, "composing, repeated and plain Enter do not navigate");
+    const term = container.querySelector('mark[data-w="w1"]') as HTMLElement;
+    term.focus();
+    await press(term, "Enter", { ctrlKey: true });
+    assert.equal(container.querySelectorAll(".ac-def").length, 0, "Ctrl+Enter on a term does not expand it");
+    assert.equal(pushes.length, 3);
+    await press(term, "Enter");
+    assert.equal(container.querySelectorAll(".ac-def").length, 1, "plain Enter still expands the term");
+    assert.equal(pushes.length, 3);
+    await render(createElement(Reader, { key: "reader-saved", ...reader, progressStatus: "saved", isOriginal: true, quizScore: 1 }));
+    await press(document.body, "Enter", { ctrlKey: true });
+    assert.equal(pushes.at(-1), "/read/quiz?v=7&practice=1");
+    assert.equal(container.querySelector('[aria-keyshortcuts="Meta+Enter Control+Enter"]') != null, true, "narrow CTA declares the shortcut");
+    assert.equal([...container.querySelectorAll("span")].some(span => /Enter$/.test(span.textContent ?? "")), false,
+      "narrow bottom bar has no hint");
+
+    Object.defineProperty(window, "matchMedia", { configurable: true, value: (q: string) => ({
+      matches: q === WIDE_QUERY, media: q, addEventListener() {}, removeEventListener() {} }) });
+    for (const [platform, label] of [["MacIntel", "⌘ Enter"], ["Win32", "Ctrl Enter"]]) {
+      Object.defineProperty(window.navigator, "platform", { configurable: true, get: () => platform });
+      await render(createElement(Reader, { key: `wide-${platform}`, ...reader }));
+      const aside = container.querySelector('aside[aria-label="읽기 도구"]')!;
+      assert.equal(aside.querySelector('a[aria-keyshortcuts="Meta+Enter Control+Enter"]')!.textContent, "다 읽었어요 · 퀴즈 풀기");
+      const hint = [...aside.querySelectorAll("span")].find(span => span.textContent === label);
+      assert.ok(hint, `rail shows ${label}`);
+      assert.match(hint!.className, /lg:block/);
+    }
+
+    console.log("Keyboard flow: quiz radio group, digits, arrows, Enter next/submit, composing and grading guards; onboarding 1–5 and Enter; result focus and Enter; reader ⌘/Ctrl+Enter passed.");
   } finally {
     await act(async () => root.unmount());
     createClient().auth.stopAutoRefresh();

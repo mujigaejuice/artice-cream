@@ -1,16 +1,18 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { coreColor } from "@/lib/color";
 import { levelShort } from "@/lib/level";
 import { glossaryInOrder } from "@/lib/glossary-order";
+import { isPrimaryEnter } from "@/lib/keyboard";
 import { useWideLayout } from "@/lib/use-wide-layout";
 import type { Attribution, ReferenceLink } from "@/lib/content-rights";
 import { useLeaveGuard, useReadingProgress } from "@/components/ReadingExitNotice";
 import { BookmarkButton } from "@/components/BookmarkButton";
-import { ReaderCta } from "@/components/ReaderCta";
+import { ReaderCta, readerCtaHref } from "@/components/ReaderCta";
 import { ReaderRail } from "@/components/ReaderRail";
 
 type GlossaryMap = Record<string, { term: string; definition: string }>;
@@ -62,6 +64,7 @@ function toggleInlineDefinition(mark: HTMLElement, term: string, definition: str
 
 export function Reader(props: ReaderProps) {
   const bodyRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
   // 노트북에서는 용어를 본문에 펼치지 않고 오른쪽 칸 항목을 강조한다.
   const wide = useWideLayout();
   const [activeTerm, setActiveTerm] = useState<string | null>(null);
@@ -88,6 +91,8 @@ export function Reader(props: ReaderProps) {
       activate(event.target);
     }
     function onKeyDown(event: KeyboardEvent) {
+      // ⌘/Ctrl+Enter는 퀴즈로 가는 단축키다 — 용어를 펼치지 않고 창 리스너에 맡긴다.
+      if (event.metaKey || event.ctrlKey) return;
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
         activate(event.target);
@@ -117,6 +122,18 @@ export function Reader(props: ReaderProps) {
     };
   }, [props.glossary, props.contentHtml, wide]);
 
+  // ⌘/Ctrl+Enter: 어디서든 퀴즈 버튼과 같다. 조합키라 읽다가 실수로 넘어갈 일이 적다.
+  const ctaHref = readerCtaHref(props);
+  useEffect(() => {
+    function onKey(event: KeyboardEvent) {
+      if (event.repeat || !isPrimaryEnter(event)) return;
+      event.preventDefault();
+      router.push(ctaHref);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [router, ctaHref]);
+
   // 노트북: 강조된 용어만 펼친 상태로 알린다.
   useEffect(() => {
     const node = bodyRef.current;
@@ -140,8 +157,9 @@ export function Reader(props: ReaderProps) {
       원문 읽기 ↗
     </a>}
   </>;
-  const cta = <ReaderCta variantId={props.variantId} isOriginal={props.isOriginal}
-    progressStatus={props.progressStatus} quizScore={props.quizScore} />;
+  const ctaProps = { variantId: props.variantId, isOriginal: props.isOriginal,
+    progressStatus: props.progressStatus, quizScore: props.quizScore };
+  const cta = <ReaderCta {...ctaProps} />;
 
   return (
     <main className="pb-28 lg:grid lg:grid-cols-[minmax(0,680px)_240px] lg:justify-center lg:gap-12 lg:pb-16">
@@ -225,7 +243,7 @@ export function Reader(props: ReaderProps) {
       </div>
 
       {wide ? (
-        <ReaderRail items={glossaryItems} activeId={activeTerm} cta={cta} actions={actions} />
+        <ReaderRail items={glossaryItems} activeId={activeTerm} cta={<ReaderCta {...ctaProps} hint />} actions={actions} />
       ) : (
         <div className="fixed inset-x-0 bottom-0 border-t border-stone-200 bg-[#faf7f2]/95 backdrop-blur">
           <div
