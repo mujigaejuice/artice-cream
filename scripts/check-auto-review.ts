@@ -64,7 +64,7 @@ async function main() {
 
     Object.assign(process.env, { NEXT_PUBLIC_SUPABASE_URL: "https://auto-db.invalid", SUPABASE_SERVICE_ROLE_KEY: "test-private",
       CRON_SECRET: "auto-test", BASE_URL: "https://auto-llm.invalid", API_KEY: "test", MODEL_ID: "test" });
-    const { GET } = await import("../app/api/cron/ingest/route.api");
+    const { GET } = await import("../app/api/cron/ingest/route");
     const { createAdminClient } = await import("../lib/supabase/admin");
     const { reviewPendingArticles } = await import("../lib/news/review-queue");
     const { startDeadline } = await import("../lib/news/ingest");

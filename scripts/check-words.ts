@@ -78,14 +78,14 @@ async function main() {
   const errors = console.error;
   console.error = () => {};
   try {
-    const { GET, OPTIONS } = await import("../app/api/words/route.api");
+    const { GET, OPTIONS } = await import("../app/api/words/route");
     const request = (token: string | null = "signed-token") => new Request("https://app.invalid/api/words", {
-      headers: { Origin: "https://localhost", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      headers: { Origin: "http://localhost:3000", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
     });
 
-    const preflight = OPTIONS(new Request("https://app.invalid/api/words", { method: "OPTIONS", headers: { Origin: "https://localhost" } }));
+    const preflight = OPTIONS(new Request("https://app.invalid/api/words", { method: "OPTIONS", headers: { Origin: "http://localhost:3000" } }));
     assert.equal(preflight.status, 204);
-    assert.equal(preflight.headers.get("access-control-allow-origin"), "https://localhost");
+    assert.equal(preflight.headers.get("access-control-allow-origin"), "http://localhost:3000");
 
     let response = await GET(request(null));
     assert.deepEqual(await response.json(), { status: "onboarding" });
@@ -98,7 +98,7 @@ async function main() {
     response = await GET(request());
     assert.equal(response.status, 200);
     assert.equal(response.headers.get("cache-control"), "no-store");
-    assert.equal(response.headers.get("access-control-allow-origin"), "https://localhost");
+    assert.equal(response.headers.get("access-control-allow-origin"), "http://localhost:3000");
     const raw = await response.text();
     assert.doesNotMatch(raw, /LEAK|차단용어|보류용어|만료용어|출처용어|표기용어|Article [3-7]\b/,
       "terms, definitions and titles of non-publishable articles must not leak");

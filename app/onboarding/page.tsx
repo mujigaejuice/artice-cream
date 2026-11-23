@@ -72,7 +72,7 @@ export default function OnboardingPage() {
       domains={data.domains}
       initialLevels={data.levels}
       quizzes={data.quizzes}
-      // 딥링크·웹 콜백이 실패하면 ?error=auth로 돌아온다. 그냥 두면 사용자는
+      // 로그인 콜백이 실패하면 ?error=auth로 돌아온다. 그냥 두면 사용자는
       // 구글에 다녀왔는데 아무 말 없이 화면만 바뀐 것으로 본다.
       authFailed={query.get("error") === "auth"}
       startAtLogin={query.get("step") === "login"}

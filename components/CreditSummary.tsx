@@ -56,7 +56,7 @@ export function CreditSummary({ userId, compact = false }: { userId: string; com
         <span className="text-stone-600">크레딧 적립 준비 중</span>
       ) : (
         <>
-          <Link href="/credits/" className="inline-flex items-baseline gap-1 rounded focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-900">
+          <Link href="/credits" className="inline-flex items-baseline gap-1 rounded focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-900">
             <span className={compact ? "font-semibold text-emerald-900" : "text-sm font-medium text-emerald-900"}>크레딧</span>
             <strong className={compact ? "tabular-nums text-base text-emerald-950" : "tabular-nums text-3xl text-emerald-950"}>
               {snapshot.balance.toLocaleString("ko-KR")}
@@ -69,7 +69,7 @@ export function CreditSummary({ userId, compact = false }: { userId: string; com
                   snapshot.hasWelcome ? "학습을 이어가며 크레딧을 모아 보세요." :
                   `첫 학습을 완료하면 ${snapshot.rules.welcome}크레딧을 더 받아요.`}
               </p>
-              <Link href="/credits/" className="mt-3 inline-block text-sm font-medium text-emerald-900 underline underline-offset-4 focus-visible:outline-2">적립 내역 보기</Link>
+              <Link href="/credits" className="mt-3 inline-block text-sm font-medium text-emerald-900 underline underline-offset-4 focus-visible:outline-2">적립 내역 보기</Link>
             </>
           )}
         </>

@@ -63,7 +63,7 @@ async function main() {
     assert.equal(terms.error, null); assert.deepEqual(terms.data, [], "old derived glossary cache is hidden");
     const request = (path: string, body?: unknown) => fetch(`${base}${path}`, {
       method: body ? "POST" : "GET", cache: "no-store", signal: AbortSignal.timeout(60_000),
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", Origin: "https://localhost" },
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", Origin: "http://localhost:3000" },
       ...(body ? { body: JSON.stringify(body) } : {}),
     });
     for (const [path, body] of [

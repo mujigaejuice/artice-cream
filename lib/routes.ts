@@ -17,15 +17,20 @@ export function quizHref(variantId: number | string, base = ""): string {
   return `${base}/read/quiz?v=${variantId}`;
 }
 
+/**
+ * 로그인에 실패했을 때 돌아가는 자리. 로그인하지 않았으면 온보딩이 로그인 화면을
+ * 보여 주고, `?error=auth`가 그 화면에 실패 안내를 띄운다.
+ */
+export const AUTH_FAILED_HREF = "/onboarding?error=auth";
+
 /** `safeNext`가 오리진을 재는 기준. 실제로 존재하지 않는 도메인이어야 한다. */
 const SAFE_NEXT_BASE = "https://artice.invalid";
 
 /**
  * `next` 파라미터를 내부 경로로만 좁힌다.
  *
- * 값이 URL에서 오므로 그대로 쓰면 열린 리다이렉트가 된다. 딥링크로도 들어오기
- * 때문에(`artice-cream://auth/callback?next=…`) 아무 앱이나 웹 페이지가 만들 수
- * 있는 값이다.
+ * 값이 URL에서 오므로 그대로 쓰면 열린 리다이렉트가 된다. 아무 웹 페이지나
+ * `/auth/callback?next=…` 링크를 만들 수 있다.
  *
  * 글자를 세는 방식으로는 못 막는다. URL 파서가 파싱 전에 탭·개행·복귀를 지우므로
  * `/<TAB>/host`가 `//host`가 되어 외부 오리진이 된다. 그래서 직접 해석해 보고

@@ -31,53 +31,61 @@ export function ArticleCard({ pick, unlocked }: Props) {
   const [confirming, setConfirming] = useState(false);
   const yearNote = publishYearNote(pick.publishedAt);
 
+  // 노트북(lg)에서는 한 장의 DOM을 CSS 격자로 다시 놓는다: 왼쪽 분야·수준, 가운데 제목·요약, 오른쪽 읽는 시간.
+  // 휴대폰에서는 감싼 요소가 모두 contents라 지금 flex 배치 그대로다.
   const body = (
-    <>
-      <div className="flex flex-wrap items-center gap-2 text-xs">
-        <span
-          className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
-          style={{ background: coreColor(pick.domain.slug) }}
-          aria-hidden="true"
-        />
-        <span className="font-medium text-stone-600">{pick.domain.name_ko}</span>
-        <span className="text-stone-400">·</span>
-        <span className="rounded-full bg-stone-100 px-2 py-0.5 font-medium text-stone-600">
+    <div className="lg:grid lg:grid-cols-[8.5rem_minmax(0,1fr)_auto] lg:gap-x-6 lg:gap-y-1">
+      <div className="flex flex-wrap items-center gap-2 text-xs lg:contents">
+        <span className="contents lg:col-start-1 lg:row-start-1 lg:flex lg:items-center lg:gap-2">
+          <span
+            className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+            style={{ background: coreColor(pick.domain.slug) }}
+            aria-hidden="true"
+          />
+          <span className="font-medium text-stone-600">{pick.domain.name_ko}</span>
+        </span>
+        <span className="text-stone-400 lg:hidden">·</span>
+        <span className="rounded-full bg-stone-100 px-2 py-0.5 font-medium text-stone-600 lg:col-start-1 lg:row-start-2 lg:self-start lg:justify-self-start">
           {pick.isOriginal ? `Original · 기초 ${pick.foundationOrder ?? ""}` : levelShort(pick.level)}
         </span>
         {pick.readingMinutes != null && (
           <>
-            <span className="text-stone-400">·</span>
-            <span className="text-stone-500">{pick.readingMinutes}분</span>
+            <span className="text-stone-400 lg:hidden">·</span>
+            <span className="text-stone-500 lg:col-start-3 lg:row-start-1 lg:justify-self-end">
+              {pick.readingMinutes}분<span className="hidden lg:inline" aria-hidden="true"> →</span>
+            </span>
           </>
         )}
-        {yearNote && (
-          <>
-            <span className="text-stone-400">·</span>
-            <span className="text-stone-500">{yearNote}</span>
-          </>
-        )}
-        {pick.completedNotSaved && (
-          <span className="rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-900">
-            퀴즈 완료 · 저장 안 함
-          </span>
-        )}
-        {pick.isOriginal && pick.progressStatus === "saved" && <span className="text-emerald-700">쌓은 기초 · 복습 가능</span>}
-        {pick.progressStatus === "started" && <span className="rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-900">읽는 중 · 이어 읽기</span>}
+        <span className="contents lg:col-start-2 lg:row-start-1 lg:flex lg:flex-wrap lg:gap-2">
+          {yearNote && (
+            <>
+              <span className="text-stone-400 lg:hidden">·</span>
+              <span className="text-stone-500">{yearNote}</span>
+            </>
+          )}
+          {pick.completedNotSaved && (
+            <span className="rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-900">
+              퀴즈 완료 · 저장 안 함
+            </span>
+          )}
+          {pick.isOriginal && pick.progressStatus === "saved" && <span className="text-emerald-700">쌓은 기초 · 복습 가능</span>}
+          {pick.progressStatus === "started" && <span className="rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-900">읽는 중 · 이어 읽기</span>}
+        </span>
       </div>
 
-      <h3 className="mt-2 text-base font-semibold leading-snug text-stone-900">
+      <h3 className="mt-2 text-base font-semibold leading-snug text-stone-900 lg:col-start-2 lg:row-start-2 lg:mt-0">
         {pick.title}
       </h3>
 
       {/* 정책.md §13 — 고르기 전에 무엇인지 알아야 고를 수 있다. */}
       {pick.summary && (
-        <p className="mt-1.5 line-clamp-3 text-sm text-stone-600">{pick.summary}</p>
+        <p className="mt-1.5 line-clamp-3 text-sm text-stone-600 lg:col-start-2 lg:line-clamp-2">{pick.summary}</p>
       )}
 
       {pick.sourceName && (
-        <p className="mt-1.5 truncate text-xs text-stone-500">{pick.sourceName}</p>
+        <p className="mt-1.5 truncate text-xs text-stone-500 lg:col-start-2">{pick.sourceName}</p>
       )}
-    </>
+    </div>
   );
 
   // 저장 안 한 글은 쿼터를 다시 쓰지 않고 결과 화면으로 바로 간다(정책.md §13).
@@ -89,7 +97,7 @@ export function ArticleCard({ pick, unlocked }: Props) {
     return (
       <div className="rounded-2xl border border-stone-200 bg-stone-50 p-4 opacity-70">
         {body}
-        <p className="mt-3 text-xs font-medium text-stone-500">
+        <p className="mt-3 text-xs font-medium text-stone-500 lg:ml-[10rem]">
           오늘의 무료 1편을 다 읽었어요 · 광고를 보면 한 편 더
         </p>
       </div>

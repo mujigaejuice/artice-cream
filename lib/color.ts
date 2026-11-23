@@ -148,6 +148,12 @@ export function highlightColor(c: Hsl): Hsl {
 /** 콘(와플)과 체리 — 선은 outlineColor로 파생한다. */
 export const CONE_FILL: Hsl = { h: 32, s: 69, l: 71 };
 export const CONE_LATTICE: Hsl = { h: 32, s: 45, l: 58 };
+/** 코코아 콘(상점 아이템). 콘 와플과 보울이 같이 쓴다. */
+export const COCOA_FILL: Hsl = { h: 25, s: 43, l: 43 };
+export const COCOA_DARK: Hsl = { h: 24, s: 35, l: 32 };
+/** 노트북 내 콘의 보울: 앞면과 안쪽 면. 와플 콘과 어울리는 밝은 크림·베이지. */
+export const BOWL_FILL: Hsl = { h: 36, s: 62, l: 86 };
+export const BOWL_INNER: Hsl = { h: 34, s: 46, l: 76 };
 /** 아이스크림 도안.png의 체리 실측값. */
 export const CHERRY_FILL: Hsl = { h: 356, s: 98, l: 66 };
 export const CHERRY_GLINT: Hsl = { h: 5, s: 96, l: 88 };

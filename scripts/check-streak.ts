@@ -107,10 +107,10 @@ async function checkApi() {
     });
   };
   try {
-    const { GET } = await import("../app/api/credits/route.api");
+    const { GET } = await import("../app/api/credits/route");
     const read = async () => {
       const response = await GET(new Request("https://app.invalid/api/credits", {
-        headers: { Authorization: "Bearer signed-token", Origin: "https://localhost" },
+        headers: { Authorization: "Bearer signed-token", Origin: "http://localhost:3000" },
       }));
       assert.equal(response.status, 200);
       return (await response.json()).streak;

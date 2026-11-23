@@ -73,7 +73,7 @@ export default function CreditsPage() {
     const client = createClient();
     void client.auth.getUser().then(({ data }) => {
       if (!mounted) return;
-      if (!data.user || data.user.is_anonymous) router.replace("/onboarding/");
+      if (!data.user || data.user.is_anonymous) router.replace("/onboarding");
       else setUserId(data.user.id);
     }).catch(() => { if (mounted) setError(true); });
     const { data: { subscription } } = client.auth.onAuthStateChange((_event, session) => {
@@ -83,7 +83,7 @@ export default function CreditsPage() {
         setSnapshot(null);
         setEvents([]);
         setUserId(null);
-        router.replace("/onboarding/");
+        router.replace("/onboarding");
       } else if (session.user.id !== userId) {
         requestId.current++;
         setSnapshot(null);
@@ -125,7 +125,7 @@ export default function CreditsPage() {
 
   return (
     <main className="pb-10">
-      <Link href="/account/" className="text-sm text-stone-600 underline underline-offset-4">계정으로</Link>
+      <Link href="/account" className="text-sm text-stone-600 underline underline-offset-4">계정으로</Link>
       <h1 className="mt-5 text-2xl font-bold tracking-tight text-stone-900">내 크레딧</h1>
       <section aria-label="크레딧 잔액" className="mt-5 rounded-3xl bg-[#241b33] px-6 py-7 text-[#f9f6ef]">
         <p className="text-sm text-[#d8d2e0]">현재 잔액</p>

@@ -4,7 +4,6 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { OPEN_SHOP_EVENT } from "@/lib/cosmetics";
-import { isNative } from "@/lib/native";
 import { readMusicPreference, writeMusicPreference } from "@/lib/music-preferences";
 import { apiJson } from "@/lib/client-api";
 import type { CreditSnapshot } from "@/lib/credits";
@@ -31,21 +30,18 @@ export function BackgroundMusic() {
     let playback: Playback = "idle";
     let request = 0;
     let pageHidden = false;
-    let nativeActive = !isNative();
-    let nativeRevision = 0;
     let source = DEFAULT_MUSIC_SOURCE;
     let selectedUser: string | null = null;
     let musicRequest = 0;
     let previewing = false;
     let authTimer: ReturnType<typeof setTimeout> | undefined;
     let unsubscribeAuth: (() => void) | undefined;
-    const nativeRemovers: Array<() => Promise<void>> = [];
 
     function update(next: Playback) {
       playback = next;
       if (!disposed) setState({ ready: true, enabled, playback });
     }
-    function canPlay() { return !disposed && enabled && !previewing && !document.hidden && !pageHidden && nativeActive; }
+    function canPlay() { return !disposed && enabled && !previewing && !document.hidden && !pageHidden; }
     function pause() {
       request++;
       audio.pause();
@@ -64,7 +60,7 @@ export function BackgroundMusic() {
         update(name === "NotAllowedError" ? "blocked" : name === "AbortError" ? "paused" : "error");
       };
       try {
-        // Invoke synchronously inside the click, before storage or native awaits.
+        // Invoke synchronously inside the click, before any storage await.
         void audio.play().then(() => {
           if (!canPlay()) { audio.pause(); return; }
           if (attempt === request) update("playing");
@@ -139,7 +135,7 @@ export function BackgroundMusic() {
     };
     update("idle");
     void readMusicPreference().then(saved => {
-      // A slow native read must not undo a choice already made on this screen.
+      // A late read must not undo a choice already made on this screen.
       if (disposed || chosen) return;
       enabled = saved;
       update("idle");
@@ -154,37 +150,6 @@ export function BackgroundMusic() {
       unsubscribeAuth = () => subscription.unsubscribe();
       void refreshMusic();
     } catch { /* A missing auth configuration must not break the music toggle. */ }
-
-    if (isNative()) {
-      void (async () => {
-        const { App } = await import("@capacitor/app");
-        if (disposed) return;
-        const changed = (active: boolean) => {
-          if (disposed) return;
-          nativeRevision++;
-          nativeActive = active;
-          reconcile();
-        };
-        const keep = async (pending: Promise<{ remove(): Promise<void> }>) => {
-          const handle = await pending;
-          if (disposed) { await handle.remove(); return; }
-          nativeRemovers.push(() => handle.remove());
-        };
-        await Promise.all([
-          keep(App.addListener("appStateChange", ({ isActive }) => changed(isActive))),
-          keep(App.addListener("pause", () => changed(false))),
-          keep(App.addListener("resume", () => changed(true))),
-        ]);
-        if (disposed) return;
-        const revision = nativeRevision;
-        const current = await App.getState();
-        if (!disposed && revision === nativeRevision) changed(current.isActive);
-      })().catch(() => {
-        if (disposed || nativeRevision > 0) return;
-        nativeActive = true;
-        reconcile(); // Browser visibility remains the fallback if the bridge fails.
-      });
-    }
 
     return () => {
       disposed = true;
@@ -202,7 +167,6 @@ export function BackgroundMusic() {
       window.removeEventListener("pageshow", show);
       window.removeEventListener(MUSIC_EQUIPPED_EVENT, equippedChanged);
       window.removeEventListener(MUSIC_PREVIEW_EVENT, previewChanged);
-      nativeRemovers.forEach(remove => { void remove().catch(() => {}); });
       audio.pause();
       audio.removeAttribute("src");
       audio.load();
@@ -221,11 +185,11 @@ export function BackgroundMusic() {
     : state.enabled ? "음악 일시정지" : "";
 
   return (
-    <div className="mb-3 flex min-h-11 items-center justify-end gap-1" aria-label="상단 도구">
+    <div className="mb-3 flex min-h-11 items-center justify-end gap-1 lg:mb-0" aria-label="상단 도구">
       {pathname?.replace(/\/$/, "") === "/cone" && <button type="button"
         aria-label="꾸미기 상점 열기" title="꾸미기 상점 열기"
         onClick={() => window.dispatchEvent(new window.Event(OPEN_SHOP_EVENT))}
-        className="inline-flex size-11 items-center justify-center rounded-full text-stone-800 transition hover:bg-stone-200/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-800">
+        className="inline-flex size-11 lg:hidden items-center justify-center rounded-full text-stone-800 transition hover:bg-stone-200/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-800">
         <svg viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth="1.7"
           strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M4 10.5v9h16v-9M3 9l2-5h14l2 5" />

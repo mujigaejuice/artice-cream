@@ -66,7 +66,7 @@ async function main() {
     return Response.json(reviewedArticles.filter(row => !url.searchParams.has("source_url") ||
       url.searchParams.get("source_url")!.includes(row.source_url)));
   };
-  const { GET } = await import("../app/api/cron/ingest/route.api");
+  const { GET } = await import("../app/api/cron/ingest/route");
   const request = () => new NextRequest("https://app.invalid/api/cron/ingest", { headers: { Authorization: "Bearer test-cron" } });
   let summary = await (await GET(request())).json();
   assert.equal(summary.classified, 0); assert.equal(llmCalls, 0);

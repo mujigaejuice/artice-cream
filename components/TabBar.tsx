@@ -53,7 +53,7 @@ function AccountIcon() {
   );
 }
 
-type Tab = {
+export type Tab = {
   href: string;
   label: string;
   Icon: () => React.ReactElement;
@@ -61,12 +61,17 @@ type Tab = {
   badge?: number;
 };
 
-const TABS: Tab[] = [
+export const TABS: Tab[] = [
   { href: "/", label: "오늘", Icon: TodayIcon },
   { href: "/cone", label: "내 콘", Icon: ConeIcon },
   { href: "/words", label: "단어장", Icon: WordsIcon },
   { href: "/account", label: "나", Icon: AccountIcon },
 ];
+
+/** 탭 바와 노트북 상단 메뉴가 같은 판정을 쓴다. */
+export function isActiveTab(pathname: string, href: string): boolean {
+  return (pathname.replace(/\/$/, "") || "/") === href;
+}
 
 export function TabBar() {
   const pathname = usePathname();
@@ -74,14 +79,14 @@ export function TabBar() {
   return (
     <nav
       aria-label="주요"
-      className="fixed inset-x-0 bottom-0 z-10 border-t border-stone-200 bg-[#faf7f2]/95 backdrop-blur"
+      className="fixed inset-x-0 bottom-0 z-10 border-t lg:hidden border-stone-200 bg-[#faf7f2]/95 backdrop-blur"
     >
       <ul
         className="mx-auto flex w-full max-w-lg"
         style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
         {TABS.map((tab) => {
-          const active = (pathname.replace(/\/$/, "") || "/") === tab.href;
+          const active = isActiveTab(pathname, tab.href);
           return (
             <li key={tab.href} className="flex-1">
               <Link

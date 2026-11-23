@@ -28,10 +28,10 @@ const sections = [
 export default function PrivacyPage() {
   return (
     <main className="text-stone-800">
-      <Link href="/onboarding/" className="ac-intro-link text-stone-600">서비스 소개로</Link>
+      <Link href="/onboarding" className="ac-intro-link text-stone-600">서비스 소개로</Link>
       <p className="mt-7 text-sm font-semibold text-stone-500">artice cream</p>
       <h1 className="mt-2 text-3xl font-bold tracking-tight">개인정보처리방침</h1>
-      <p className="mt-4 text-sm leading-7 text-stone-600">무지개쥬스가 운영하는 artice cream 웹과 Android 앱의 개인정보 처리에 관한 안내입니다. 로그인하지 않아도 읽을 수 있습니다.</p>
+      <p className="mt-4 text-sm leading-7 text-stone-600">무지개쥬스가 운영하는 artice cream 웹 서비스의 개인정보 처리에 관한 안내입니다. 로그인하지 않아도 읽을 수 있습니다.</p>
 
       <aside aria-label="초안 안내" className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950">
         <p className="font-semibold">공개 전 최종 확인 중인 초안입니다.</p>
@@ -107,8 +107,8 @@ export default function PrivacyPage() {
 
         <section id="device" aria-labelledby="device-title">
           <h2 id="device-title">기기에 저장하는 정보</h2>
-          <p>로그인 유지를 위한 인증 세션을 브라우저의 로컬 저장소 또는 Android 앱 저장 공간에 보관합니다. 계정 삭제 인증 후 돌아갈 화면을 위한 임시 정보와 배경음악 켜기·끄기 설정도 기기에 저장합니다. 구매한 배경음악 중 적용한 곡은 다른 꾸미기와 같이 계정에 저장됩니다.</p>
-          <p>로그아웃하면 현재 기기의 로그인 상태가 해제됩니다. 브라우저의 사이트 데이터 삭제나 Android의 앱 데이터 삭제로 저장 정보를 지울 수 있습니다. 저장을 차단하거나 삭제하면 로그인 유지와 음악 설정 복원이 제한될 수 있고, 서버의 계정·학습 기록은 함께 삭제되지 않습니다.</p>
+          <p>로그인 유지를 위한 인증 세션을 브라우저의 로컬 저장소에 보관합니다. 계정 삭제 인증 후 돌아갈 화면을 위한 임시 정보와 배경음악 켜기·끄기 설정도 기기에 저장합니다. 구매한 배경음악 중 적용한 곡은 다른 꾸미기와 같이 계정에 저장됩니다.</p>
+          <p>로그아웃하면 현재 기기의 로그인 상태가 해제됩니다. 브라우저의 사이트 데이터 삭제로 저장 정보를 지울 수 있습니다. 저장을 차단하거나 삭제하면 로그인 유지와 음악 설정 복원이 제한될 수 있고, 서버의 계정·학습 기록은 함께 삭제되지 않습니다.</p>
           <p>현재 앱에는 AdMob, 광고 식별자 수집, 푸시 알림 SDK나 별도 이용자 분석 SDK가 연결되어 있지 않습니다. 호스팅·인증 로그와는 별개입니다. 광고·분석·알림을 도입하면 실제 처리 내용과 필요한 동의 절차를 먼저 반영합니다.</p>
         </section>
 
@@ -135,7 +135,7 @@ export default function PrivacyPage() {
 
         <section id="security" aria-labelledby="security-title">
           <h2 id="security-title">개인정보 보호 조치</h2>
-          <p>계정 인증, 사용자별 데이터 접근 제한, 서버 전용 비밀키 분리와 HTTPS 통신을 적용합니다. 계정 삭제에는 최근 본인 인증과 최종 확인을 요구합니다. Android 로그인·WebView 데이터는 앱의 클라우드 백업과 기기 이전에서 제외하도록 설정합니다.</p>
+          <p>계정 인증, 사용자별 데이터 접근 제한, 서버 전용 비밀키 분리와 HTTPS 통신을 적용합니다. 계정 삭제에는 최근 본인 인증과 최종 확인을 요구합니다.</p>
           <p>운영자는 업무에 필요한 최소한의 접근권한을 관리하고 문의·운영 자료의 보관기간과 삭제를 확인합니다. 장애 조사 때에도 불필요한 회원 데이터 사본을 만들지 않는 것을 운영 기준으로 합니다.</p>
         </section>
 

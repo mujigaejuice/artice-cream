@@ -59,6 +59,8 @@ export type ShopSnapshot = {
 };
 
 export const OPEN_SHOP_EVENT = "artice:open-shop";
+/** 크레딧이 바뀐 화면이 보내면 상단 바 잔액이 다시 읽는다. */
+export const CREDITS_CHANGED_EVENT = "artice:credits-changed";
 
 export function safeEquipped(equipped: Equipped | null | undefined): Equipped {
   const safe: Equipped = {};

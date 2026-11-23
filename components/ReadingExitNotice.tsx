@@ -138,7 +138,7 @@ export function ReadingExitNotice({ children }: { children: ReactNode }) {
         onCancel={stay}
         onConfirm={leave}
       />}
-      <div className="pointer-events-none fixed inset-x-0 z-50 px-4" style={{ bottom: "calc(5.5rem + env(safe-area-inset-bottom, 0px))" }}>
+      <div className="pointer-events-none fixed inset-x-0 bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))] z-50 px-4 lg:bottom-6">
         <div role="status" aria-live="polite" aria-atomic="true">
           {visible && <div className="pointer-events-auto mx-auto flex max-w-lg items-start gap-3 rounded-2xl bg-stone-900 p-4 text-sm text-white shadow-lg">
             <div className="flex-1"><p className="font-medium">퀴즈를 제출해야 스쿱을 쌓을 수 있어요.</p>

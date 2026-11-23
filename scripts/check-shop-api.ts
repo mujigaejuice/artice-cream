@@ -48,14 +48,14 @@ async function main() {
   };
   const request = (path: string, body?: unknown) => new Request(`https://app.invalid${path}`, {
     method: body === undefined ? "GET" : "POST",
-    headers: { Authorization: "Bearer fixture", Origin: "https://localhost" },
+    headers: { Authorization: "Bearer fixture", Origin: "http://localhost:3000" },
     ...(body === undefined ? {} : { body: JSON.stringify(body) }),
   });
   try {
-    const { GET: shop } = await import("../app/api/shop/route.api");
-    const { POST: spend } = await import("../app/api/credits/spend/route.api");
-    const { POST: equip } = await import("../app/api/cosmetics/equip/route.api");
-    const { POST: colors } = await import("../app/api/cosmetics/colors/route.api");
+    const { GET: shop } = await import("../app/api/shop/route");
+    const { POST: spend } = await import("../app/api/credits/spend/route");
+    const { POST: equip } = await import("../app/api/cosmetics/equip/route");
+    const { POST: colors } = await import("../app/api/cosmetics/colors/route");
     let response = await shop(request("/api/shop"));
     assert.equal(response.status, 200);
     assert.equal(response.headers.get("cache-control"), "no-store");

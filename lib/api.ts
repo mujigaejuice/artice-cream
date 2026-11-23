@@ -7,18 +7,14 @@ import {
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "./supabase/env";
 
 /**
- * Route Handler 공용 — 인증과 CORS (앱출시.md §2).
+ * Route Handler 공용 — 인증과 CORS.
  *
- * 앱 번들은 정적 자산이라 Vercel과 다른 오리진에서 돌고, WebView는 쿠키를 같이
- * 보내지 않는다. API는 웹과 앱 모두 `Authorization: Bearer <access token>`으로
- * 인증하며, 쿠키 인증 폴백은 없다.
+ * 세션이 쿠키가 아니라 브라우저 스토리지에 있으므로(lib/supabase/client.ts) API는
+ * `Authorization: Bearer <access token>`으로 인증하며, 쿠키 인증 폴백은 없다.
  *
  * 서버 권위는 그대로다(정책.md §7) — 토큰에서 얻은 user.id로만 쓰고, 클라이언트가
  * 보낸 user id는 어디서도 믿지 않는다.
  */
-
-/** Capacitor WebView가 쓰는 오리진. 안드로이드는 https, iOS는 capacitor 스킴. */
-const NATIVE_ORIGINS = ["https://localhost", "capacitor://localhost"];
 
 function allowedOrigins(): string[] {
   const extra = (process.env.ALLOWED_ORIGINS ?? "")
@@ -29,7 +25,6 @@ function allowedOrigins(): string[] {
   const site = process.env.NEXT_PUBLIC_SITE_URL;
 
   return [
-    ...NATIVE_ORIGINS,
     ...(site ? [site.replace(/\/$/, "")] : []),
     ...extra,
     // 로컬 개발. 프로덕션에서도 열려 있지만 Bearer 토큰이 없으면 아무것도 못 읽는다.

@@ -11,8 +11,8 @@ export default function TabsLayout({
 }) {
   return (
     <>
-      {/* 탭 바(h-14) + 세이프에어리어만큼 본문 아래를 비운다. */}
-      <div style={{ paddingBottom: "calc(3.5rem + env(safe-area-inset-bottom, 0px))" }}>
+      {/* 탭 바(h-14) + 세이프에어리어만큼 본문 아래를 비운다. 노트북에는 탭 바가 없다. */}
+      <div className="pb-[calc(3.5rem+env(safe-area-inset-bottom,0px))] lg:pb-0">
         {children}
       </div>
       <TabBar />

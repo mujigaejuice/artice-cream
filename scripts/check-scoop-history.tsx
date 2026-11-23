@@ -18,7 +18,7 @@ async function main() {
     rights_reviewed_at: past, rights_expires_at: null, domains: domain,
     rights_attribution: { author: "Author", originalTitle: "Original", licenseLabel: "CC BY", licenseUrl: "https://publisher.invalid/license", changes: "Translated", notices: "" } };
   function record(id: number, userId: string, date: string, rights = "blocked", status = "saved") {
-    return { id, user_id: userId, article_id: id + 100, variant_id: id + 200, status, completed_at: date, quiz_score: 0.75,
+    return { id, user_id: userId, article_id: id + 100, variant_id: id + 200, status, completed_at: date, saved_at: date, quiz_score: 0.75,
       article_variants: { title: `Private title ${id}`, summary: `Private summary ${id}.`, articles: { ...article, rights_status: rights } } };
   }
   const records = [record(1, uid, "2026-09-30T14:59:59Z"), record(2, uid, "2026-09-30T15:00:00Z"),
@@ -45,6 +45,8 @@ async function main() {
     assert.equal(table, "user_article_progress");
     assert.equal(url.searchParams.get("user_id"), `eq.${uid}`, "verified owner filter is mandatory");
     assert.equal(url.searchParams.get("status"), "eq.saved");
+    if (url.searchParams.get("select")!.includes("article_variants"))
+      assert.match(url.searchParams.get("select")!, /saved_at/, "bowl drop order needs the save time");
     assert.doesNotMatch(url.searchParams.get("select")!, /content_html|original_text|quiz_answers|correct_index|rights_review_note/);
     if (historyFails) return Response.json({ code: "XX000", message: "private database detail" }, { status: 503 });
     const bounds = url.searchParams.getAll("completed_at");
@@ -54,7 +56,7 @@ async function main() {
     rows.sort((a, b) => a.completed_at.localeCompare(b.completed_at) * (url.searchParams.get("order")!.includes("desc") ? -1 : 1));
     return Response.json(rows);
   };
-  const { GET } = await import("../app/api/cone/route.api");
+  const { GET } = await import("../app/api/cone/route");
   const request = (query = "", token = true) => new Request(`https://app.invalid/api/cone${query}`, {
     headers: token ? { Authorization: "Bearer test-token" } : {},
   });
@@ -75,7 +77,7 @@ async function main() {
     assert.deepEqual(october.months, ["2026-10", "2026-09"]);
     assert.deepEqual(october.scoops.map(s => s.id), [2, 3]);
     assert.deepEqual(october.scoops[0], { id: 2, articleId: 102, variantId: null, domain: domain.slug,
-      domainLabel: domain.name_ko, date: "2026-10-01", title: "현재 열람 불가", summaryFirstLine: null, score: 0.75 });
+      domainLabel: domain.name_ko, date: "2026-10-01", title: "현재 열람 불가", summaryFirstLine: null, score: 0.75, savedAt: "2026-09-30T15:00:00Z" });
     assert.equal(october.scoops[1].title, "Private title 3");
     assert.equal(october.scoops[1].variantId, 203);
     assert.doesNotMatch(JSON.stringify(october), /Private (title|summary) [1245]|rights_attribution|user_id/);
@@ -194,6 +196,58 @@ async function main() {
     assert.match(container.textContent!, /스쿱 0개/);
     assert.doesNotMatch(container.textContent!, /old failure|불러오지 못했어요/);
     assert.deepEqual(monthRangeUtc("2026-10"), ["2026-09-30T15:00:00.000Z", "2026-10-31T15:00:00.000Z"]);
+
+    // Laptop width: bowl scene with a tool rail; switching width keeps the chosen scoop.
+    await act(async () => { root.unmount(); });
+    const { WIDE_QUERY } = await import("../lib/use-wide-layout");
+    const { OPEN_SHOP_EVENT } = await import("../lib/cosmetics");
+    let wide = true;
+    const wideListeners: Array<() => void> = [];
+    Object.defineProperty(dom.window, "matchMedia", { configurable: true, value: (q: string) => ({
+      get matches() { return q === WIDE_QUERY && wide; }, media: q,
+      addEventListener(_: string, cb: () => void) { if (q === WIDE_QUERY) wideListeners.push(cb); }, removeEventListener() {} }) });
+    slow = false;
+    const wideFetch = globalThis.fetch;
+    globalThis.fetch = async (input, init) => {
+      const url = new URL(input instanceof Request ? input.url : String(input), dom.window.location.origin);
+      if (url.pathname === "/api/credits") return Response.json({ userId: uid, balance: 120, spendableBalance: 120,
+        policyVersion: 1, earningMode: "active", spendingEnabled: true, hasWelcome: true,
+        rules: { article: 10, quizBonusMax: 10, welcome: 100 }, equipped: {}, scoopColors: {},
+        streak: { enabled: true, days: 3, reward: 50, blockDays: 7, daysUntilReward: 4 } });
+      return wideFetch(input, init);
+    };
+    dom.window.history.replaceState(null, "", "/cone/?month=2026-10&scoop=3");
+    let shopEvents = 0;
+    const countShop = () => { shopEvents++; };
+    dom.window.addEventListener(OPEN_SHOP_EVENT, countShop);
+    const wideRoot = createRoot(container);
+    try {
+      await act(async () => { wideRoot.render(createElement(AppRouterContext.Provider, { value: router }, createElement(ConePage))); });
+      await act(async () => { await new Promise(resolve => setTimeout(resolve, 0)); });
+      const rail = () => container.querySelector('aside[aria-label="콘 도구"]');
+      assert.ok(rail(), "wide cone shows the tool rail");
+      assert.equal(container.querySelector("svg.ac-svg")!.getAttribute("viewBox"), "0 0 600 400", "wide cone draws the bowl");
+      assert.ok(rail()!.querySelector("select"), "month picker moves to the rail");
+      assert.match(rail()!.textContent!, /분야별 맛/);
+      assert.match(rail()!.textContent!, /스쿱 2개/);
+      assert.ok(container.querySelector('[aria-label="선택한 스쿱"]') != null, "?scoop= selects in the bowl");
+      const shopButton = [...rail()!.querySelectorAll("button")].find(b => b.textContent!.includes("꾸미기 상점"))!;
+      await act(async () => { shopButton.click(); });
+      assert.equal(shopEvents, 1, "rail shop button opens the shop");
+
+      wide = false;
+      await act(async () => { wideListeners.forEach(cb => cb()); });
+      assert.equal(rail() == null, true, "narrow width drops the rail");
+      assert.notEqual(container.querySelector("svg.ac-svg")!.getAttribute("viewBox"), "0 0 600 400", "narrow width draws the cone");
+      assert.ok(container.querySelector('[aria-label="선택한 스쿱"]') != null, "the same scoop stays selected across widths");
+      assert.equal(new URL(dom.window.location.href).searchParams.get("scoop"), "3");
+      wide = true;
+      await act(async () => { wideListeners.forEach(cb => cb()); });
+      assert.ok(container.querySelector('[aria-label="선택한 스쿱"]') != null, "and back again");
+    } finally {
+      dom.window.removeEventListener(OPEN_SHOP_EVENT, countShop);
+      await act(async () => { wideRoot.unmount(); });
+    }
     console.log("Scoops: owner isolation, private metadata redaction, KST months, failures, readable links, month navigation and stale responses passed.");
   } finally {
     await act(async () => { root.unmount(); });

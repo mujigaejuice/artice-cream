@@ -79,8 +79,8 @@ export default function TodayPage() {
     <>
       <PageError message={error} onRetry={load} />
       <nav aria-label="공개 안내" className="flex flex-wrap justify-center gap-x-5 text-stone-600">
-        <Link href="/onboarding/" className="ac-intro-link">서비스 소개·로그인</Link>
-        <Link href="/privacy/" className="ac-intro-link">개인정보처리방침</Link>
+        <Link href="/onboarding" className="ac-intro-link">서비스 소개·로그인</Link>
+        <Link href="/privacy" className="ac-intro-link">개인정보처리방침</Link>
         <Link href="/account/delete/" className="ac-intro-link">계정 및 데이터 삭제</Link>
       </nav>
     </>
@@ -94,7 +94,7 @@ export default function TodayPage() {
   const recommended = originals.find(p => feed.selectedDomainIds?.includes(p.domain.id) && p.progressStatus !== "saved" && p.progressStatus !== "completed");
 
   return (
-    <main>
+    <main className="lg:mx-auto lg:max-w-[960px]">
       <header className="mb-5 flex items-baseline justify-between">
         <h1 className="text-xl font-bold tracking-tight text-stone-900">
           <span className="ac-mark">오늘의 아티클</span>

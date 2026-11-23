@@ -60,8 +60,7 @@ export default function AccountPage() {
     try {
       await signOutCurrentDevice();
       // 새 문서로 이동해 이전 계정의 React 상태와 라우터 캐시도 비운다.
-      // 끝의 /는 Capacitor 정적 번들의 onboarding/index.html과도 맞는다.
-      window.location.replace("/onboarding/");
+      window.location.replace("/onboarding");
     } catch {
       setError("로그아웃하지 못했어요. 연결을 확인하고 다시 시도해 주세요.");
       signingOut.current = false;
@@ -150,7 +149,7 @@ export default function AccountPage() {
         <Link href="/account/delete/" className="mt-4 inline-flex min-h-12 items-center rounded-xl border border-red-200 px-4 py-3 text-sm font-medium text-red-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-800">계정 및 데이터 삭제</Link>
       </section>
       <footer className="mt-8 flex flex-wrap gap-x-5 border-t border-stone-200 pt-4 text-stone-600">
-        <Link href="/privacy/" className="ac-intro-link">개인정보처리방침</Link>
+        <Link href="/privacy" className="ac-intro-link">개인정보처리방침</Link>
       </footer>
     </main>
   );
