@@ -94,7 +94,7 @@ export default function TodayPage() {
   const recommended = originals.find(p => feed.selectedDomainIds?.includes(p.domain.id) && p.progressStatus !== "saved" && p.progressStatus !== "completed");
 
   return (
-    <main>
+    <main className="lg:mx-auto lg:max-w-[960px]">
       <header className="mb-5 flex items-baseline justify-between">
         <h1 className="text-xl font-bold tracking-tight text-stone-900">
           <span className="ac-mark">오늘의 아티클</span>
