@@ -41,10 +41,10 @@ async function main() {
   };
 
   try {
-    const { GET: balance } = await import("../app/api/credits/route.api");
-    const { GET: history } = await import("../app/api/credits/history/route.api");
+    const { GET: balance } = await import("../app/api/credits/route");
+    const { GET: history } = await import("../app/api/credits/history/route");
     const request = (path: string) => new Request(`https://app.invalid${path}`, {
-      headers: { Authorization: "Bearer signed-token", Origin: "https://localhost" },
+      headers: { Authorization: "Bearer signed-token", Origin: "http://localhost:3000" },
     });
     let response = await balance(request("/api/credits"));
     assert.equal(response.status, 200);

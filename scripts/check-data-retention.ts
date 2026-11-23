@@ -63,7 +63,7 @@ async function main() {
   failTable = null;
   assert.deepEqual(await deleteExpiredUsage(admin, now), { dailyQuotaDeleted: 0, adViewsDeleted: 0, ingestRunsDeleted: 1 });
 
-  const { GET } = await import("../app/api/cron/cleanup/route.api");
+  const { GET } = await import("../app/api/cron/cleanup/route");
   const request = (token?: string) => new Request("https://app.invalid/api/cron/cleanup?days=0", {
     headers: token ? { authorization: `Bearer ${token}` } : {},
   });

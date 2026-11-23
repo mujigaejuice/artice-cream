@@ -1,8 +1,7 @@
-/** Real Supabase client + fake storage/HTTP: no network or real account access. */
+/** Real Supabase client + fake localStorage/HTTP: no network or real account access. */
 import assert from "node:assert/strict";
 
 async function main() {
-  const native = process.argv.includes("--native");
   const storage = new Map<string, string>();
   let denyRemoval = false;
   const remove = (key: string) => {
@@ -10,24 +9,13 @@ async function main() {
     storage.delete(key);
   };
 
-  if (native) {
-    Object.defineProperty(globalThis, "Capacitor", { configurable: true, value: {
-      isNativePlatform: () => true,
-      Plugins: { Preferences: {
-        get: async ({ key }: { key: string }) => ({ value: storage.get(key) ?? null }),
-        set: async ({ key, value }: { key: string; value: string }) => { storage.set(key, value); },
-        remove: async ({ key }: { key: string }) => { remove(key); },
-      } },
-    } });
-  } else {
-    Object.defineProperty(globalThis, "window", { configurable: true, value: {
-      localStorage: {
-        getItem: (key: string) => storage.get(key) ?? null,
-        setItem: (key: string, value: string) => { storage.set(key, value); },
-        removeItem: remove,
-      },
-    } });
-  }
+  Object.defineProperty(globalThis, "window", { configurable: true, value: {
+    localStorage: {
+      getItem: (key: string) => storage.get(key) ?? null,
+      setItem: (key: string, value: string) => { storage.set(key, value); },
+      removeItem: remove,
+    },
+  } });
 
   process.env.NEXT_PUBLIC_SUPABASE_URL = "https://auth-test.invalid";
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "test-key";
@@ -83,7 +71,7 @@ async function main() {
       assert.equal(storage.has("artice-auth"), false);
       assert.equal((await client.auth.getSession()).data.session, null);
     }
-    console.log(`${native ? "native Preferences" : "web localStorage"}: logout checks passed`);
+    console.log("web localStorage: logout checks passed");
   } finally {
     await client.auth.stopAutoRefresh();
   }

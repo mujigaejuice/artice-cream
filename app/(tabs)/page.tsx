@@ -79,8 +79,8 @@ export default function TodayPage() {
     <>
       <PageError message={error} onRetry={load} />
       <nav aria-label="공개 안내" className="flex flex-wrap justify-center gap-x-5 text-stone-600">
-        <Link href="/onboarding/" className="ac-intro-link">서비스 소개·로그인</Link>
-        <Link href="/privacy/" className="ac-intro-link">개인정보처리방침</Link>
+        <Link href="/onboarding" className="ac-intro-link">서비스 소개·로그인</Link>
+        <Link href="/privacy" className="ac-intro-link">개인정보처리방침</Link>
         <Link href="/account/delete/" className="ac-intro-link">계정 및 데이터 삭제</Link>
       </nav>
     </>

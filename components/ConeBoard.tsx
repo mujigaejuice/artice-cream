@@ -18,9 +18,8 @@ import type { DomainRow } from "@/lib/supabase/types";
  * URL 동기화에 Next 라우터 대신 History API를 쓴다. 선택은 순수 클라이언트
  * 상태이고, `router.push`는 화면을 다시 마운트해 `/api/cone`을 새로 부른다.
  *
- * 경로는 `window.location.pathname`에서 읽는다. 하드코딩하면 앱 빌드
- * (`trailingSlash: true`)에서 정본이 `/cone/`인데 `/cone`으로 갈아 두게 되고,
- * 그 주소로 새로고침하면 정적 호스트가 파일을 찾지 못한다.
+ * 경로는 `window.location.pathname`에서 읽는다. 같은 컴포넌트가 `/cone`과
+ * 목데이터 미리보기(`/preview` 아래) 양쪽에서 돈다.
  */
 
 type Props = {

@@ -39,11 +39,11 @@ async function main() {
     return Response.json({ user });
   };
 
-  const { GET, POST, OPTIONS } = await import("../app/api/account/delete/route.api");
+  const { GET, POST, OPTIONS } = await import("../app/api/account/delete/route");
   const { hasRecentAuthentication } = await import("../lib/account-deletion");
   const request = (bearer: string | null = token(), body: unknown = { expectedUserId: id, confirmation: "계정 삭제" }) =>
     new Request("https://app.invalid/api/account/delete", { method: "POST", headers: {
-      ...(bearer ? { Authorization: `Bearer ${bearer}` } : {}), "Content-Type": "application/json", Origin: "https://localhost",
+      ...(bearer ? { Authorization: `Bearer ${bearer}` } : {}), "Content-Type": "application/json", Origin: "http://localhost:3000",
     }, body: typeof body === "string" ? body : JSON.stringify(body) });
   const check = async (req: Request, status: number, code: string) => {
     const response = await POST(req);
@@ -52,7 +52,7 @@ async function main() {
     assert.equal(response.headers.get("cache-control"), "no-store");
   };
   assert.equal(OPTIONS(request()).status, 204);
-  assert.equal(OPTIONS(request()).headers.get("access-control-allow-origin"), "https://localhost");
+  assert.equal(OPTIONS(request()).headers.get("access-control-allow-origin"), "http://localhost:3000");
   assert.equal((await GET(request(null))).status, 401);
   await check(request(null), 401, "unauthenticated");
   authMode = "invalid";
@@ -90,7 +90,7 @@ async function main() {
   const success = await POST(request());
   assert.equal(success.status, 200);
   assert.deepEqual(await success.json(), { deleted: true });
-  assert.equal(success.headers.get("access-control-allow-origin"), "https://localhost");
+  assert.equal(success.headers.get("access-control-allow-origin"), "http://localhost:3000");
   const callsAfterDeletion = deleteCalls;
   await check(request(), 401, "unauthenticated");
   assert.equal((await GET(request())).status, 401);

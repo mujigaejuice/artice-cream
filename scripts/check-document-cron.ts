@@ -101,7 +101,7 @@ async function main() {
   };
   try {
     const { createAdminClient } = await import("../lib/supabase/admin");
-    const { GET } = await import("../app/api/cron/ingest/route.api");
+    const { GET } = await import("../app/api/cron/ingest/route");
     const db = createAdminClient(), domains = new Map([["llm", { id: 6 }]]);
     const run = () => syncDocumentCandidates(db, new Map([[source.source, source]]), domains, startDeadline());
     const request = (query = "") => new NextRequest(`https://app.invalid/api/cron/ingest${query}`, { headers: { authorization: "Bearer fixture-cron" } });
@@ -124,7 +124,7 @@ async function main() {
     assert.equal(modelCalls, 0);
     // No generic-extractor fallback: tampered approved document never reaches the LLM.
     rows[0].original_text = text + "tampered";
-    const { GET: processCategory } = await import("../app/api/cron/ingest/[category]/route.api");
+    const { GET: processCategory } = await import("../app/api/cron/ingest/[category]/route");
     summary = await (await processCategory(request(), { params: Promise.resolve({ category: "llm" }) })).json();
     assert.equal(summary.retryLater, 1); assert.equal(summary.processed, 0); assert.equal(modelCalls, 0);
     assert.equal(pageCalls, beforePages);

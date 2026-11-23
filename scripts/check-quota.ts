@@ -32,11 +32,11 @@ async function main() {
     return Response.json(result);
   };
   try {
-    const { GET, POST } = await import("../app/api/ads/reward/route.api");
+    const { GET, POST } = await import("../app/api/ads/reward/route");
     const { createAdminClient } = await import("../lib/supabase/admin");
     const request = (body?: unknown, signedIn = true) => new Request("https://app.invalid/api/ads/reward", {
       headers: { ...(signedIn ? { Authorization: "Bearer test-session" } : {}),
-        Origin: "https://localhost", "Content-Type": "application/json" },
+        Origin: "http://localhost:3000", "Content-Type": "application/json" },
       ...(body !== undefined ? { method: "POST", body: JSON.stringify(body) } : {}),
     });
     assert.equal((await GET(request(undefined, false))).status, 401);
@@ -49,7 +49,7 @@ async function main() {
       assert.equal(response.status, 200);
       assert.deepEqual(await response.json(), { quota });
       assert.equal(response.headers.get("cache-control"), "no-store");
-      assert.equal(response.headers.get("access-control-allow-origin"), "https://localhost");
+      assert.equal(response.headers.get("access-control-allow-origin"), "http://localhost:3000");
     }
     for (const [status, httpStatus] of [["limit", 429], ["conflict", 409]] as const) {
       result = { status };

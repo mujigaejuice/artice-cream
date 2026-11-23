@@ -120,10 +120,10 @@ async function checkRoute() {
     return Response.json({ ok: true, added: body.p_selections.length - retaken, ...(rpcKnowsRetake ? { retaken } : {}) });
   };
 
-  const { GET, POST } = await import("../app/api/onboarding/route.api");
+  const { GET, POST } = await import("../app/api/onboarding/route");
   const request = (method: "GET" | "POST", body?: unknown, auth = true) =>
     new Request("https://app.invalid/api/onboarding", { method,
-      headers: { ...(auth ? { Authorization: "Bearer signed-token" } : {}), Origin: "https://localhost",
+      headers: { ...(auth ? { Authorization: "Bearer signed-token" } : {}), Origin: "http://localhost:3000",
         "Content-Type": "application/json" },
       ...(body === undefined ? {} : { body: typeof body === "string" ? body : JSON.stringify(body) }) });
   const right = { cloud: correctAnswers("cloud"), data: correctAnswers("data") };

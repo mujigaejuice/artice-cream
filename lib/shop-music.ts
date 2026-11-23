@@ -1,4 +1,4 @@
-/** Static music files shipped with both the web site and the Android bundle. */
+/** Static music files served from public/. */
 export const DEFAULT_MUSIC_SOURCE = "/audio/ice-cream-basic.mp3";
 export const MUSIC_TRACKS = {
   "one-scoop-of-joy": { source: "/audio/one-scoop-of-joy.mp3", color: "#D986A8", light: "#F8DDE8" },

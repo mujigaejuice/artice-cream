@@ -203,7 +203,7 @@ async function main() {
     brokenLengthRetry = false;
 
     const { NextRequest } = await import("next/server");
-    const { GET } = await import("../app/api/cron/ingest/[category]/route.api");
+    const { GET } = await import("../app/api/cron/ingest/[category]/route");
     const denied = await GET(new NextRequest("https://app.invalid/api/cron/ingest/cloud"), { params: Promise.resolve({ category: "cloud" }) });
     assert.equal(denied.status, 401);
     const response = await GET(new NextRequest("https://app.invalid/api/cron/ingest/cloud", {

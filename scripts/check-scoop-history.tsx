@@ -54,7 +54,7 @@ async function main() {
     rows.sort((a, b) => a.completed_at.localeCompare(b.completed_at) * (url.searchParams.get("order")!.includes("desc") ? -1 : 1));
     return Response.json(rows);
   };
-  const { GET } = await import("../app/api/cone/route.api");
+  const { GET } = await import("../app/api/cone/route");
   const request = (query = "", token = true) => new Request(`https://app.invalid/api/cone${query}`, {
     headers: token ? { Authorization: "Bearer test-token" } : {},
   });
