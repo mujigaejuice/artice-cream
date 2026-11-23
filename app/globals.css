@@ -131,6 +131,27 @@ body {
   animation: ac-plop 0.42s ease-in both, ac-settle 0.22s 0.42s ease-out forwards;
 }
 
+/* 노트북 보울. 스쿱을 고르면 보울과 더미가 왼쪽으로 비켜난다. */
+.ac-bowl {
+  transition: transform 0.28s ease-out;
+}
+
+/* 새 스쿱이 장면 위에서 떨어져 계산된 자리에 내려앉는다. --ac-drop-from은 자리까지의 높이. */
+@keyframes ac-bowl-drop {
+  0% {
+    transform: translateY(var(--ac-drop-from));
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(4px) scaleY(0.9) scaleX(1.06);
+    opacity: 1;
+  }
+}
+
+.ac-scoop.ac-bowl-drop {
+  animation: ac-bowl-drop 0.5s cubic-bezier(0.55, 0, 1, 0.45) both, ac-settle 0.22s 0.5s ease-out forwards;
+}
+
 /*
  * 스쿱 패널의 줄이 나타나는 방식 — 한 글자씩 타이핑하지 않는다(화면구성.md §4-2).
  * 텍스트는 처음부터 완성된 채로 DOM에 있고, mask-image의 reveal 위치만 애니메이션한다.
@@ -217,8 +238,12 @@ body {
   .ac-write {
     --reveal: 100% !important;
   }
-  .ac-scoop.ac-plop {
+  .ac-scoop.ac-plop,
+  .ac-scoop.ac-bowl-drop {
     animation: none !important;
+  }
+  .ac-bowl {
+    transition: none !important;
   }
   *,
   *::before,
