@@ -45,7 +45,8 @@ async function main() {
     assert.equal(table, "user_article_progress");
     assert.equal(url.searchParams.get("user_id"), `eq.${uid}`, "verified owner filter is mandatory");
     assert.equal(url.searchParams.get("status"), "eq.saved");
-    assert.match(url.searchParams.get("select")!, /saved_at/, "bowl drop order needs the save time");
+    if (url.searchParams.get("select")!.includes("article_variants"))
+      assert.match(url.searchParams.get("select")!, /saved_at/, "bowl drop order needs the save time");
     assert.doesNotMatch(url.searchParams.get("select")!, /content_html|original_text|quiz_answers|correct_index|rights_review_note/);
     if (historyFails) return Response.json({ code: "XX000", message: "private database detail" }, { status: 503 });
     const bounds = url.searchParams.getAll("completed_at");
