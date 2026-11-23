@@ -35,7 +35,7 @@ async function main(){
     await render(createElement(Quiz,{variantId:2,articleTitle:'오리지널',questions,isOriginal:true,isPractice:true}));
     for(let round=0;round<2;round++){
       assert.match(container.textContent!,/문제 1/);
-      assert.equal(container.querySelectorAll('[aria-pressed="true"]').length,0,'retry clears answers');
+      assert.equal(container.querySelectorAll('[aria-checked="true"]').length,0,'retry clears answers');
       for(let i=0;i<4;i++){await click('가');await click(i===3?'제출하기':'다음');}
       assert.match(container.textContent!,/100점/);assert.doesNotMatch(container.textContent!,/원문 보기|콘에 올리기/);
       await click('퀴즈 다시 풀기');
