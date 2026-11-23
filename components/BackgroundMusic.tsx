@@ -185,11 +185,11 @@ export function BackgroundMusic() {
     : state.enabled ? "음악 일시정지" : "";
 
   return (
-    <div className="mb-3 flex min-h-11 items-center justify-end gap-1" aria-label="상단 도구">
+    <div className="mb-3 flex min-h-11 items-center justify-end gap-1 lg:mb-0" aria-label="상단 도구">
       {pathname?.replace(/\/$/, "") === "/cone" && <button type="button"
         aria-label="꾸미기 상점 열기" title="꾸미기 상점 열기"
         onClick={() => window.dispatchEvent(new window.Event(OPEN_SHOP_EVENT))}
-        className="inline-flex size-11 items-center justify-center rounded-full text-stone-800 transition hover:bg-stone-200/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-800">
+        className="inline-flex size-11 lg:hidden items-center justify-center rounded-full text-stone-800 transition hover:bg-stone-200/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-800">
         <svg viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth="1.7"
           strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M4 10.5v9h16v-9M3 9l2-5h14l2 5" />

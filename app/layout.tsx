@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from "next";
 
 import { BackgroundMusic } from "@/components/BackgroundMusic";
+import { PageFrame } from "@/components/PageFrame";
 import { ReadingExitNotice } from "@/components/ReadingExitNotice";
+import { SiteHeader } from "@/components/SiteHeader";
 
 import "./globals.css";
 
@@ -25,10 +27,11 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body className="min-h-dvh antialiased">
-        <div className="mx-auto w-full max-w-lg px-4 pb-16 pt-6">
-          <BackgroundMusic />
+        {/* 음악 재생기는 상단 바 안에 하나만 둔다. 화면을 옮겨도 다시 만들어지지 않는다. */}
+        <SiteHeader><BackgroundMusic /></SiteHeader>
+        <PageFrame>
           <ReadingExitNotice>{children}</ReadingExitNotice>
-        </div>
+        </PageFrame>
       </body>
     </html>
   );

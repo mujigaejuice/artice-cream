@@ -20,7 +20,7 @@ export function PageLoading({ label }: { label: string }) {
     // 자리로 비우는 3.5rem을 더한 값이다. 탭이 없는 화면(리더·퀴즈·온보딩)에서는
     // 그만큼 덜 차지만, 넘치면 로딩 화면이 스크롤되면서 상태바 밑으로 말려
     // 들어간다. 모자란 쪽이 낫다.
-    <main className="flex min-h-[calc(100dvh-9rem-env(safe-area-inset-bottom,0px))] flex-col">
+    <main className="flex min-h-[calc(100dvh-9rem-env(safe-area-inset-bottom,0px))] flex-col lg:min-h-[calc(100dvh-12rem)]">
       {/* 스크린리더에는 상태를 말로 준다. 스켈레톤은 aria-hidden으로 감춘다. */}
       <p role="status" aria-live="polite" className="sr-only">
         {label}
