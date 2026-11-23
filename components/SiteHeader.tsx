@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { HeaderCredits } from "@/components/HeaderCredits";
 import { isActiveTab, TABS } from "@/components/TabBar";
 import { isBareHeaderRoute } from "@/lib/layout-width";
+import { useWideLayout } from "@/lib/use-wide-layout";
 
 /**
  * 화면 맨 위 줄. 휴대폰에서는 지금처럼 오른쪽 위 음악 버튼 줄만 보이고,
@@ -15,6 +16,8 @@ import { isBareHeaderRoute } from "@/lib/layout-width";
 export function SiteHeader({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const bare = isBareHeaderRoute(pathname);
+  // 휴대폰에서는 잔액이 보이지 않으니 화면을 옮길 때마다 불러오지 않는다.
+  const wide = useWideLayout();
 
   return (
     <div className="mx-auto w-full max-w-lg px-4 pt-6 lg:sticky lg:top-0 lg:z-20 lg:max-w-none lg:border-b lg:border-stone-200 lg:bg-[#faf7f2]/95 lg:px-0 lg:pt-0 lg:backdrop-blur">
@@ -38,7 +41,7 @@ export function SiteHeader({ children }: { children: React.ReactNode }) {
           </nav>
         )}
         <div className="lg:ml-auto lg:flex lg:items-center lg:gap-4">
-          {!bare && <div className="hidden lg:block"><HeaderCredits /></div>}
+          {!bare && wide && <div className="hidden lg:block"><HeaderCredits /></div>}
           {children}
         </div>
       </div>

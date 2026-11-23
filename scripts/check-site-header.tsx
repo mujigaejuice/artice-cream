@@ -72,6 +72,15 @@ async function main() {
     assert.equal(container.querySelector('[aria-label="크레딧"]'), null, "bare routes hide credits");
     assert.ok(container.querySelector('[data-testid="music"]'), "bare routes keep the music slot");
 
+    // Phones never see the top-bar balance, so they must not pay for it on every navigation.
+    Object.defineProperty(window, "matchMedia", { configurable: true, value: undefined });
+    await render("/", null);
+    const narrowBefore = calls;
+    await header("/cone");
+    await header("/words");
+    assert.equal(calls, narrowBefore, "narrow width never fetches the header balance");
+    assert.ok(container.querySelector('[data-testid="music"]'));
+
     const frameClass = async (pathname: string) => {
       await render(pathname, createElement(PageFrame, null, createElement("p", null, "본문")));
       return (container.firstElementChild as HTMLElement).className;
