@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { coreColor } from "@/lib/color";
+import { digitChoice, isComposing, isPlainEnter } from "@/lib/keyboard";
 import type { PublicQuizQuestion } from "@/lib/onboarding-quiz";
 import type { DomainRow } from "@/lib/supabase/types";
 
@@ -30,6 +31,31 @@ export function OnboardingQuiz({
   const [answers, setAnswers] = useState<(number | null)[]>([]);
   const [choice, setChoice] = useState<number | typeof UNSURE | null>(null);
   const question = questions[step];
+  const groupRef = useRef<HTMLFieldSetElement>(null);
+  const values: Array<number | typeof UNSURE> = [...question.options.map((_, i) => i), UNSURE];
+
+  // 단계가 바뀌면 고른 보기(없으면 첫 보기)로 포커스를 옮긴다 — 숫자 키와 Enter가 바로 먹는다.
+  useEffect(() => {
+    const radios = groupRef.current?.querySelectorAll<HTMLInputElement>('input[type="radio"]');
+    const target = radios && ([...radios].find((radio) => radio.checked) ?? radios[0]);
+    target?.focus();
+  }, [step]);
+
+  /** 보기 그룹에 포커스가 있을 때만: 숫자 키로 고르고 Enter로 넘긴다(WCAG 2.1.4). 화살표는 네이티브 라디오 그대로. */
+  function onGroupKeyDown(event: React.KeyboardEvent<HTMLFieldSetElement>) {
+    if (isComposing(event.nativeEvent)) return;
+    const digit = digitChoice(event.key, values.length);
+    if (digit != null) {
+      event.preventDefault();
+      setChoice(values[digit]);
+      groupRef.current?.querySelectorAll<HTMLInputElement>('input[type="radio"]')[digit]?.focus();
+      return;
+    }
+    if (isPlainEnter(event)) {
+      event.preventDefault();
+      next();
+    }
+  }
 
   function next() {
     if (choice === null) return;
@@ -57,7 +83,7 @@ export function OnboardingQuiz({
       </div>
 
       {/* key: 문항이 바뀌면 라디오 선택이 남지 않게 새로 그린다. */}
-      <fieldset key={step} className="mt-6">
+      <fieldset key={step} ref={groupRef} onKeyDown={onGroupKeyDown} className="mt-6">
         <legend className="text-lg font-bold tracking-tight text-stone-900">{question.prompt}</legend>
         <div className="mt-4 space-y-2">
           {[...question.options.map((label, i) => ({ value: i as number | typeof UNSURE, label })),
@@ -73,6 +99,9 @@ export function OnboardingQuiz({
           ))}
         </div>
       </fieldset>
+      <p className="mt-3 hidden text-xs text-stone-400 lg:block">
+        숫자 키(1–{values.length})로 고르고 Enter로 넘어가요
+      </p>
 
       <button type="button" onClick={next} disabled={choice === null}
         className="mt-6 w-full rounded-xl bg-stone-900 px-4 py-3 font-medium text-white transition hover:bg-stone-800 disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-800">

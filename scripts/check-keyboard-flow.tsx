@@ -17,6 +17,7 @@ async function main() {
   const { createRoot } = await import("react-dom/client");
   const { AppRouterContext } = await import("next/dist/shared/lib/app-router-context.shared-runtime");
   const { Quiz } = await import("../components/Quiz");
+  const { OnboardingQuiz } = await import("../components/OnboardingQuiz");
   const { createClient } = await import("../lib/supabase/client");
   const container = document.getElementById("root")!;
   const root = createRoot(container);
@@ -31,6 +32,7 @@ async function main() {
       target.dispatchEvent(new window.KeyboardEvent("keydown", { key, bubbles: true, cancelable: true, ...init }));
     });
   };
+  // Compare elements with === inside assert.ok: a failed assert.equal on jsdom nodes exhausts memory while printing them.
   const focused = () => document.activeElement!;
   const originalFetch = globalThis.fetch;
   let gradeCalls = 0;
@@ -57,11 +59,11 @@ async function main() {
     assert.ok(group(), "options form a radio group");
     assert.equal(group().getAttribute("aria-labelledby"), container.querySelector("h1")!.id);
     assert.ok(container.querySelector("h1")!.id, "question heading has an id");
-    assert.equal(focused(), radios()[0], "first option focused on mount");
+    assert.ok(focused() === radios()[0], "first option focused on mount");
     assert.deepEqual(radios().map(r => r.tabIndex), [0, -1, -1, -1], "roving tabindex");
     await press(focused(), "3");
     assert.equal(radios()[2].getAttribute("aria-checked"), "true");
-    assert.equal(focused(), radios()[2]);
+    assert.ok(focused() === radios()[2], "focus");
     assert.deepEqual(radios().map(r => r.tabIndex), [-1, -1, 0, -1]);
     await press(focused(), "ArrowDown");
     assert.equal(radios()[3].getAttribute("aria-checked"), "true");
@@ -73,7 +75,7 @@ async function main() {
     assert.match(container.textContent!, /1\/3/, "composing Enter ignored");
     await press(focused(), "Enter");
     assert.match(container.textContent!, /2\/3/);
-    assert.equal(focused(), radios()[0], "focus moves to the new question");
+    assert.ok(focused() === radios()[0], "focus moves to the new question");
     await press(focused(), "Enter");
     assert.match(container.textContent!, /2\/3/, "Enter without a choice does nothing");
     const previous = [...container.querySelectorAll("button")].find(b => b.textContent === "이전")!;
@@ -95,7 +97,35 @@ async function main() {
     await act(async () => { releaseGrade?.(); await new Promise(resolve => setTimeout(resolve, 0)); });
     assert.match(container.textContent!, /100점/);
 
-    console.log("Keyboard flow: quiz radio group, digits, arrows, Enter next/submit, composing and grading guards passed.");
+    // Onboarding level quiz: native radios, 1–5 including 모르겠어요, Enter = 다음.
+    const done: Array<Array<number | null>> = [];
+    await render(createElement(OnboardingQuiz, { key: "onboarding",
+      domain: { id: 1, slug: "cloud", name_ko: "클라우드", name_en: null, rss_topic: null, active: true },
+      questions: [{ prompt: "온보딩 1", options: ["가", "나", "다", "라"] }, { prompt: "온보딩 2", options: ["가", "나", "다", "라"] }],
+      position: { index: 0, total: 1 }, onDone: (answers: Array<number | null>) => { done.push(answers); }, onSkip() {} }));
+    const inputs = () => [...container.querySelectorAll('fieldset input[type="radio"]')] as HTMLInputElement[];
+    assert.equal(inputs().length, 5);
+    assert.ok(focused() === inputs()[0], "first option focused on mount");
+    await press(focused(), "Enter");
+    assert.match(container.textContent!, /온보딩 1/, "Enter without a choice does nothing");
+    await press(focused(), "6");
+    assert.equal(inputs().some(input => input.checked), false, "digits beyond the options are ignored");
+    await press(focused(), "5");
+    assert.equal(inputs()[4].checked, true, "5 picks 모르겠어요");
+    assert.ok(focused() === inputs()[4], "focus");
+    await press(focused(), "Enter", { isComposing: true });
+    assert.match(container.textContent!, /온보딩 1/, "composing Enter ignored");
+    await press(focused(), "Enter");
+    assert.match(container.textContent!, /온보딩 2/);
+    assert.ok(focused() === inputs()[0], "next step focuses the first option");
+    await press(focused(), "2"); await press(focused(), "Enter");
+    assert.deepEqual(done, [[null, 1]]);
+    const onboardingHint = [...container.querySelectorAll("p")].find(p => p.textContent!.startsWith("숫자 키"));
+    assert.equal(onboardingHint?.textContent, "숫자 키(1–5)로 고르고 Enter로 넘어가요");
+    assert.match(onboardingHint!.className, /\bhidden\b/);
+    assert.match(onboardingHint!.className, /lg:block/);
+
+    console.log("Keyboard flow: quiz radio group, digits, arrows, Enter next/submit, composing and grading guards; onboarding 1–5 and Enter passed.");
   } finally {
     await act(async () => root.unmount());
     createClient().auth.stopAutoRefresh();
