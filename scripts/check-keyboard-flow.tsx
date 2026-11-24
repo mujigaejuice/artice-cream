@@ -22,6 +22,9 @@ async function main() {
   const { Reader } = await import("../components/Reader");
   const { readerCtaHref } = await import("../components/ReaderCta");
   const { WIDE_QUERY } = await import("../lib/use-wide-layout");
+  const { ConfirmDialog } = await import("../components/ConfirmDialog");
+  const dialog = () => createElement(ConfirmDialog, { title: "지금 나가면 콘에 올릴 수 없어요.", description: "기사를 그만 읽으시겠어요?",
+    cancelLabel: "계속 읽기", confirmLabel: "그만 읽기", onCancel() {}, onConfirm() {} });
   const { createClient } = await import("../lib/supabase/client");
   const container = document.getElementById("root")!;
   const root = createRoot(container);
@@ -59,9 +62,14 @@ async function main() {
       { id: 2, position: 2, prompt: "문제 2", options: ["가", "나", "다", "라"] },
       { id: 3, position: 3, prompt: "문제 3", options: ["예", "아니오"] },
     ];
-    await render(createElement(Quiz, { variantId: 7, articleTitle: "글", questions, isOriginal: true, isPractice: true }));
     const group = () => container.querySelector('[role="radiogroup"]')!;
     const radios = () => [...container.querySelectorAll('[role="radio"]')] as HTMLElement[];
+    // Phones and unknown pointers: focus is never moved, so no focus ring appears on a first option.
+    await render(createElement(Quiz, { key: "coarse", variantId: 7, articleTitle: "글", questions, isOriginal: true, isPractice: true }));
+    assert.ok(focused() !== radios()[0], "no automatic focus without a fine pointer");
+    Object.defineProperty(window, "matchMedia", { configurable: true, value: (q: string) => ({
+      matches: q === "(pointer: fine)", media: q, addEventListener() {}, removeEventListener() {} }) });
+    await render(createElement(Quiz, { key: "fine", variantId: 7, articleTitle: "글", questions, isOriginal: true, isPractice: true }));
     assert.ok(group(), "options form a radio group");
     assert.equal(group().getAttribute("aria-labelledby"), container.querySelector("h1")!.id);
     assert.ok(container.querySelector("h1")!.id, "question heading has an id");
@@ -79,6 +87,8 @@ async function main() {
     assert.equal(radios()[3].getAttribute("aria-checked"), "true", "wraps to last");
     await press(focused(), "Enter", { isComposing: true });
     assert.match(container.textContent!, /1\/3/, "composing Enter ignored");
+    await press(focused(), "Enter", { repeat: true });
+    assert.match(container.textContent!, /1\/3/, "held-down Enter does not step through questions");
     await press(focused(), "Enter");
     assert.match(container.textContent!, /2\/3/);
     assert.ok(focused() === radios()[0], "focus moves to the new question");
@@ -171,6 +181,14 @@ async function main() {
     await settle();
     assert.equal(saveCalls, 1, "no second save after saving");
 
+    // An open confirmation dialog pauses the result shortcut, even with focus on the page body.
+    const savesBefore = saveCalls;
+    await render(createElement("div", { key: "modal" }, createElement(Result, { result: graded, articleTitle: "글" }), dialog()));
+    (document.activeElement as HTMLElement).blur();
+    await press(document.body, "Enter");
+    await settle();
+    assert.equal(saveCalls, savesBefore, "Enter behind a modal dialog does not save");
+
     await render(createElement(Result, { key: "review", result: { ...graded, isReview: true, canSave: false }, articleTitle: "글" }));
     await press(document.body, "Enter");
     await settle();
@@ -205,6 +223,14 @@ async function main() {
     await press(term, "Enter");
     assert.equal(container.querySelectorAll(".ac-def").length, 1, "plain Enter still expands the term");
     assert.equal(pushes.length, 3);
+    const sourceLink2 = [...container.querySelectorAll("a")].find(a => a.textContent === "원문 읽기 ↗")!;
+    sourceLink2.focus();
+    await press(sourceLink2, "Enter", { ctrlKey: true });
+    assert.equal(pushes.length, 3, "Ctrl/⌘+Enter on a focused link keeps the browser's open-in-new-tab");
+    await render(createElement("div", { key: "reader-modal" }, createElement(Reader, reader), dialog()));
+    (document.activeElement as HTMLElement).blur();
+    await press(document.body, "Enter", { ctrlKey: true });
+    assert.equal(pushes.length, 3, "Ctrl/⌘+Enter behind a modal dialog does not navigate");
     await render(createElement(Reader, { key: "reader-saved", ...reader, progressStatus: "saved", isOriginal: true, quizScore: 1 }));
     await press(document.body, "Enter", { ctrlKey: true });
     assert.equal(pushes.at(-1), "/read/quiz?v=7&practice=1");

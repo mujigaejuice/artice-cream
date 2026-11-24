@@ -6,7 +6,7 @@ import Link from "next/link";
 import { quizHref, readHref } from "@/lib/routes";
 
 import { apiJson } from "@/lib/client-api";
-import { isInteractiveTarget, isPlainEnter } from "@/lib/keyboard";
+import { canAutoFocus, isInteractiveTarget, isModalOpen, isPlainEnter } from "@/lib/keyboard";
 import { PROMOTE_AT, levelLabel } from "@/lib/level";
 import { prepareScoopSound } from "@/lib/scoop-sound";
 import type { CreditResult } from "@/lib/credits";
@@ -72,12 +72,12 @@ export function Result({
   });
 
   // 점수부터 읽히게 포커스를 점수에 둔다. 그 자리에서 Enter가 주요 버튼이다.
-  useEffect(() => { scoreRef.current?.focus(); }, []);
+  useEffect(() => { if (canAutoFocus()) scoreRef.current?.focus(); }, []);
 
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
       // 누른 채로 반복되는 Enter는 받지 않는다 — 마지막 문항의 Enter가 결과가 뜨자마자 저장하지 않게.
-      if (event.repeat || !isPlainEnter(event) || isInteractiveTarget(event.target)) return;
+      if (event.repeat || !isPlainEnter(event) || isInteractiveTarget(event.target) || isModalOpen()) return;
       const target = event.target as Node | null;
       if (target !== document.body && !(target && mainRef.current?.contains(target))) return;
       event.preventDefault();

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { coreColor } from "@/lib/color";
-import { digitChoice, isComposing, isPlainEnter } from "@/lib/keyboard";
+import { canAutoFocus, digitChoice, isComposing, isPlainEnter } from "@/lib/keyboard";
 import type { PublicQuizQuestion } from "@/lib/onboarding-quiz";
 import type { DomainRow } from "@/lib/supabase/types";
 
@@ -36,6 +36,7 @@ export function OnboardingQuiz({
 
   // 단계가 바뀌면 고른 보기(없으면 첫 보기)로 포커스를 옮긴다 — 숫자 키와 Enter가 바로 먹는다.
   useEffect(() => {
+    if (!canAutoFocus()) return;
     const radios = groupRef.current?.querySelectorAll<HTMLInputElement>('input[type="radio"]');
     const target = radios && ([...radios].find((radio) => radio.checked) ?? radios[0]);
     target?.focus();
@@ -53,7 +54,7 @@ export function OnboardingQuiz({
     }
     if (isPlainEnter(event)) {
       event.preventDefault();
-      next();
+      if (!event.repeat) next();
     }
   }
 

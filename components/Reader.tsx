@@ -7,7 +7,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { coreColor } from "@/lib/color";
 import { levelShort } from "@/lib/level";
 import { glossaryInOrder } from "@/lib/glossary-order";
-import { isPrimaryEnter } from "@/lib/keyboard";
+import { isModalOpen, isPrimaryEnter } from "@/lib/keyboard";
 import { useWideLayout } from "@/lib/use-wide-layout";
 import type { Attribution, ReferenceLink } from "@/lib/content-rights";
 import { useLeaveGuard, useReadingProgress } from "@/components/ReadingExitNotice";
@@ -126,7 +126,9 @@ export function Reader(props: ReaderProps) {
   const ctaHref = readerCtaHref(props);
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
-      if (event.repeat || !isPrimaryEnter(event)) return;
+      if (event.repeat || !isPrimaryEnter(event) || isModalOpen()) return;
+      // 링크 위의 ⌘/Ctrl+Enter는 브라우저의 "새 탭에서 열기"다 — 가로채지 않는다.
+      if ((event.target as Element | null)?.closest?.("a[href]")) return;
       event.preventDefault();
       router.push(ctaHref);
     }

@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { JSDOM } from "jsdom";
 import {
-  digitChoice, isComposing, isInteractiveTarget, isPlainEnter, isPrimaryEnter, modifierLabel,
+  canAutoFocus, digitChoice, isComposing, isInteractiveTarget, isModalOpen, isPlainEnter, isPrimaryEnter, modifierLabel,
 } from "../lib/keyboard";
 
 assert.equal(isComposing({ isComposing: true }), true);
@@ -47,6 +47,16 @@ assert.equal(isInteractiveTarget(byId("radio")), true);
 assert.equal(isInteractiveTarget(byId("field")), true);
 assert.equal(isInteractiveTarget(byId("text")), false);
 assert.equal(isInteractiveTarget(null), false);
+assert.equal(isModalOpen(dom.window.document), false);
+const modal = dom.window.document.createElement("div");
+modal.setAttribute("aria-modal", "true");
+dom.window.document.body.append(modal);
+assert.equal(isModalOpen(dom.window.document), true, "an open aria-modal dialog pauses page shortcuts");
 dom.window.close();
+
+assert.equal(canAutoFocus({ matchMedia: (q: string) => ({ matches: q === "(pointer: fine)" }) }), true);
+assert.equal(canAutoFocus({ matchMedia: () => ({ matches: false }) }), false, "touch screens keep focus where it was");
+assert.equal(canAutoFocus({}), false, "no matchMedia means no automatic focus");
+assert.equal(canAutoFocus(undefined), false);
 
 console.log("Keyboard: IME composition, digit choice, plain/primary Enter, platform label and interactive targets passed.");

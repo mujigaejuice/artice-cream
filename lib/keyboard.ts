@@ -38,6 +38,21 @@ export function isPlainEnter(event: KeyLike & { altKey: boolean; shiftKey: boole
     && !isComposing(event);
 }
 
+/** 확인 창(aria-modal)이 떠 있으면 페이지 단축키는 쉰다 — 창 뒤에서 저장·이동이 일어나지 않게. */
+export function isModalOpen(root: ParentNode = document): boolean {
+  return root.querySelector('[aria-modal="true"]') != null;
+}
+
+type MediaWindow = { matchMedia?: (query: string) => { matches: boolean } };
+
+/**
+ * 마우스·트랙패드가 있는 기기에서만 포커스를 옮긴다. 휴대폰에서는 처음 뜬 보기에 포커스 링이
+ * 그려져 미리 고른 것처럼 보일 수 있어서, 지금처럼 포커스를 그대로 둔다.
+ */
+export function canAutoFocus(win: MediaWindow | undefined = typeof window === "undefined" ? undefined : window): boolean {
+  return typeof win?.matchMedia === "function" && win.matchMedia("(pointer: fine)").matches;
+}
+
 export function modifierLabel(platform: string | undefined): "⌘" | "Ctrl" {
   return platform && /mac|iphone|ipad/i.test(platform) ? "⌘" : "Ctrl";
 }

@@ -5,7 +5,7 @@ import { useEffect, useId, useRef, useState } from "react";
 
 import { Result, type GradeResult } from "@/components/Result";
 import { apiJson } from "@/lib/client-api";
-import { digitChoice, isComposing, isPlainEnter } from "@/lib/keyboard";
+import { canAutoFocus, digitChoice, isComposing, isPlainEnter } from "@/lib/keyboard";
 import { readHref } from "@/lib/routes";
 import type { PublicQuizQuestion } from "@/lib/supabase/types";
 import { useLeaveGuard, useReadingProgress } from "@/components/ReadingExitNotice";
@@ -33,7 +33,7 @@ export function Quiz({ variantId, articleTitle, questions, isOriginal, isPractic
   // 문항이 뜨면 고른 보기(없으면 첫 보기)로 포커스를 옮긴다 — 숫자 키와 Enter가 바로 먹는다.
   // 같은 문항 안에서 고를 때는 키 처리가 직접 옮긴다.
   useEffect(() => {
-    if (!result) optionRefs.current.find((node) => node?.tabIndex === 0)?.focus();
+    if (!result && canAutoFocus()) optionRefs.current.find((node) => node?.tabIndex === 0)?.focus();
   }, [index, result]);
 
   if (result) {
@@ -75,7 +75,8 @@ export function Quiz({ variantId, articleTitle, questions, isOriginal, isPractic
     if (isPlainEnter(event)) {
       // 버튼 기본 동작(클릭)으로 보기가 다시 눌리지 않게 막는다.
       event.preventDefault();
-      if (chosen === undefined || busy) return;
+      // 누른 채로 반복되는 Enter로 문항을 건너뛰어 제출까지 가지 않게 한다 — 첫 제출이 수준을 정한다.
+      if (event.repeat || chosen === undefined || busy) return;
       if (isLast) void submit();
       else setIndex(index + 1);
     }
