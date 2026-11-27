@@ -32,9 +32,9 @@ async function main() {
   const router = { back() {}, forward() {}, refresh() {}, hmrRefresh() {}, push() {}, replace(href: string) { redirects.push(href); }, prefetch() {}, bfcacheId: "test" };
   const container = dom.window.document.getElementById("root")!;
   const root = createRoot(container);
-  function session(anonymous: boolean) {
+  function session(anonymous: boolean, id = "test-user") {
     dom.window.localStorage.setItem("artice-auth", JSON.stringify({ access_token: "test-token", refresh_token: "test-refresh", token_type: "bearer",
-      expires_at: Math.floor(Date.now() / 1000) + 3600, user: { id: "test-user", is_anonymous: anonymous } }));
+      expires_at: Math.floor(Date.now() / 1000) + 3600, user: { id, is_anonymous: anonymous } }));
   }
   async function render(key: string) {
     await act(async () => { root.render(createElement(AppRouterContext.Provider, { value: router }, createElement(TodayPage, { key }))); });
@@ -66,11 +66,24 @@ async function main() {
     await resume();
     await resume();
     assert.equal(pending.length, 2);
+    assert.match(container.textContent!, /오늘 1편 남음/, "a resumed page keeps the feed on screen while it refreshes");
     await act(async () => { pending[1](Response.json(feed(2))); });
     assert.match(container.textContent!, /오늘 2편 남음/);
     await act(async () => { pending[0](Response.json({ status: "onboarding" })); });
     assert.match(container.textContent!, /오늘 2편 남음/, "late response cannot overwrite refreshed state");
     assert.equal(redirects.length, 2, "late response cannot send a signed-in user to onboarding");
+    await render("tab-return");
+    assert.match(container.textContent!, /오늘 2편 남음/, "returning to the tab shows the last feed instead of a loading screen");
+    assert.equal(pending.length, 3, "the returned tab still refreshes in the background");
+    await act(async () => { pending[2](Response.json(feed(3))); });
+    assert.match(container.textContent!, /오늘 3편 남음/);
+    session(false, "other-user");
+    await render("other-user");
+    assert.doesNotMatch(container.textContent!, /편 남음/, "another account never sees the previous account's feed");
+    assert.match(container.textContent!, /불러오고 있어요/);
+    await act(async () => { pending[3](Response.json(feed(4))); });
+    assert.match(container.textContent!, /오늘 4편 남음/);
+    mode = "ok";
     dom.window.localStorage.removeItem("artice-auth");
     const previousCalls = calls;
     await resume();

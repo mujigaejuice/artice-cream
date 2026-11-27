@@ -22,16 +22,23 @@ import { useRefreshOnResume } from "@/lib/use-refresh-on-resume";
  * 위조해도 본문은 오지 않는다(정책.md §7).
  */
 
-type Feed =
-  | { status: "onboarding" }
-  | {
-      status: "ok";
-      picks: TodayPick[];
-      originals?: TodayPick[];
-      domains?: DomainRow[];
-      selectedDomainIds?: number[];
-      quota: { remaining: number; canRead: boolean; canUnlockWithAd: boolean };
-    };
+type OkFeed = {
+  status: "ok";
+  picks: TodayPick[];
+  originals?: TodayPick[];
+  domains?: DomainRow[];
+  selectedDomainIds?: number[];
+  quota: { remaining: number; canRead: boolean; canUnlockWithAd: boolean };
+};
+type Feed = { status: "onboarding" } | OkFeed;
+
+/**
+ * 마지막으로 받은 오늘 탭 응답. 다른 탭에 갔다 오면 화면이 새로 만들어지는데, 그때
+ * 로딩 화면 대신 이걸 먼저 보여 주고 뒤에서 새로 받는다. 사용자 ID가 같을 때만 쓴다 —
+ * 같은 브라우저에서 계정을 바꾸면 남의 목록이 보이면 안 된다.
+ * 제목이 잠깐 낡을 수는 있어도 본문 열기·횟수 차감은 `/api/read/open`이 다시 판정한다.
+ */
+let lastFeed: { userId: string; feed: OkFeed } | null = null;
 
 export default function TodayPage() {
   const router = useRouter();
@@ -43,7 +50,6 @@ export default function TodayPage() {
   const load = useCallback(() => {
     const current = ++request.current;
     setError(null);
-    setFeed(null);
     void (async () => {
       try {
         const { data: { session }, error: sessionError } = await createClient().auth.getSession();
@@ -52,11 +58,17 @@ export default function TodayPage() {
         // 앱 시작 주소에서도 공개 소개까지 가는 데 기사 API가 필요하지 않다.
         // 로그인 상태는 화면 분기용이며, 실제 데이터 접근은 API가 다시 검증한다.
         if (!session || session.user.is_anonymous) {
+          lastFeed = null;
           setFeed({ status: "onboarding" });
           return;
         }
+        const userId = session.user.id;
+        // 같은 사용자의 마지막 목록이 있으면 그대로 두고, 없으면 로딩 화면을 띄운다.
+        setFeed(lastFeed?.userId === userId ? lastFeed.feed : null);
         const next = await apiJson<Feed>("/api/feed");
-        if (current === request.current) setFeed(next);
+        if (current !== request.current) return;
+        lastFeed = next.status === "ok" ? { userId, feed: next } : null;
+        setFeed(next);
       } catch {
         if (current === request.current) setError("잠시 후 다시 시도해 주세요.");
       }
