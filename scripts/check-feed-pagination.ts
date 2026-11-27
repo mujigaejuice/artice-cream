@@ -2,6 +2,7 @@
 import assert from "node:assert/strict";
 import { createClient } from "@supabase/supabase-js";
 import { getTodayPicks } from "../lib/feed";
+import type { SourceRights } from "../lib/content-rights";
 import type { DomainRow } from "../lib/supabase/types";
 
 async function main() {
@@ -92,7 +93,30 @@ async function main() {
     progressFailed = false;
     offsets = []; progress = []; articles = [variant(1)];
     assert.equal((await picks())[0].articleId, 1); assert.deepEqual(offsets, [0]);
-    console.log("Feed pagination: older unread articles, started-article resume, actual variant, rights checks, progress failures and completed priority passed.");
+
+    // 분야별 조회는 동시에 나가고, 결과는 분야 순서를 지킨다. 넘겨받은 출처 권한은 다시 읽지 않는다.
+    const data = { ...domain, id: 3, slug: "data", name_ko: "데이터" } as DomainRow;
+    let inFlight = 0; let maxInFlight = 0; let rightsReads = 0;
+    globalThis.fetch = async (input) => {
+      const url = new URL(input instanceof Request ? input.url : String(input));
+      const table = url.pathname.split("/").pop();
+      if (table === "content_source_rights") { rightsReads++; return Response.json([source]); }
+      if (table === "user_article_progress") return Response.json([]);
+      assert.equal(table, "article_variants");
+      const domainId = Number(url.searchParams.get("articles.domain_id")!.replace("eq.", ""));
+      inFlight++; maxInFlight = Math.max(maxInFlight, inFlight);
+      // 첫 분야가 더 늦게 답해도 순서는 분야 순서여야 한다.
+      await new Promise((resolve) => setTimeout(resolve, domainId === 2 ? 20 : 0));
+      inFlight--;
+      const row = variant(domainId * 100);
+      return Response.json([{ ...row, articles: { ...row.articles, domain_id: domainId } }]);
+    };
+    const both = await getTodayPicks(client, userId, [domain, data], new Map([[2, 2], [3, 2]]),
+      new Map([[source.source, source as SourceRights]]));
+    assert.deepEqual(both.map((pick) => pick.domain.id), [2, 3], "picks keep the domain order");
+    assert.equal(maxInFlight, 2, "domain lookups overlap instead of waiting for each other");
+    assert.equal(rightsReads, 0, "source rights passed in are not read again");
+    console.log("Feed pagination: older unread articles, started-article resume, actual variant, rights checks, progress failures, completed priority and concurrent domain lookups passed.");
   } finally { globalThis.fetch = originalFetch; }
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });

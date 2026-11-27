@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { dayKey, monthRangeUtc } from "./day";
 import { clampLevel } from "./level";
 import type { DomainRow } from "./supabase/types";
-import { ARTICLE_RIGHTS_COLUMNS, articleAllows, getSourceRights, type ArticleRights } from "./content-rights";
+import { ARTICLE_RIGHTS_COLUMNS, articleAllows, getSourceRights, type ArticleRights, type SourceRights } from "./content-rights";
 
 /**
  * 홈은 사용자 스코프 클라이언트와 RLS로 조회한다. 콘의 저장 기록 조회는 서버의
@@ -189,23 +189,32 @@ export function selectedDomains(
  *
  * "안 읽음"을 SQL에서 거르지 않고 메모리에서 판정한다. 집합이 작고(하루 ~1편),
  * 계속 커지는 id 목록에 대한 NOT IN은 조용히 썩는 종류의 쿼리라서.
+ *
+ * 왕복을 줄이려고 서로 기다릴 이유가 없는 조회는 동시에 보낸다. 출처 권한과 진행
+ * 기록이 그렇고, 분야별 새 글 찾기도 분야끼리는 서로 기다리지 않는다. 분야를 하나씩
+ * 차례로 물으면 고른 분야 수(보통 8개)만큼 왕복이 쌓인다. `sources`를 넘기면 이미
+ * 읽은 출처 권한을 다시 읽지 않는다.
  */
 export async function getTodayPicks(
   supabase: SupabaseClient,
   userId: string,
   domains: DomainRow[],
   levels: Map<number, number>,
+  sources?: Map<string, SourceRights>,
 ): Promise<TodayPick[]> {
-  const sources = await getSourceRights(supabase);
-  if (sources.size === 0) return [];
-  const { data: progressRows, error: progressError } = await supabase
-    .from("user_article_progress")
-    .select(
-      `article_id, variant_id, status, article_variants(title, summary, level, reading_minutes, articles(id, domain_id, source_url, image_url, published_at, ${ARTICLE_RIGHTS_COLUMNS}))`,
-    )
-    .eq("user_id", userId)
-    .in("status", ["started", "completed", "saved"])
-    .order("started_at", { ascending: false });
+  const [rights, { data: progressRows, error: progressError }] = await Promise.all([
+    sources ?? getSourceRights(supabase),
+    supabase
+      .from("user_article_progress")
+      .select(
+        `article_id, variant_id, status, article_variants(title, summary, level, reading_minutes, articles(id, domain_id, source_url, image_url, published_at, ${ARTICLE_RIGHTS_COLUMNS}))`,
+      )
+      .eq("user_id", userId)
+      .in("status", ["started", "completed", "saved"])
+      .order("started_at", { ascending: false }),
+  ]);
+  // 출처 권한을 못 읽으면 진행 기록과 상관없이 아무것도 보여 주지 않는다.
+  if (rights.size === 0) return [];
   if (progressError) throw new Error("읽던 아티클을 불러오지 못했어요.");
 
   type ProgressJoin = {
@@ -235,7 +244,7 @@ export async function getTodayPicks(
     if (row.status !== "started") interacted.add(row.article_id);
     const variant = row.article_variants;
     const article = variant?.articles;
-    if (!variant || !article || article.content_kind === "original" || row.status === "saved" || !articleAllows(article, sources, "publish")) continue;
+    if (!variant || !article || article.content_kind === "original" || row.status === "saved" || !articleAllows(article, rights, "publish")) continue;
 
     const domain = domains.find((d) => d.id === article.domain_id);
     const resumable = row.status === "completed" ? unsavedByDomain : startedByDomain;
@@ -257,14 +266,10 @@ export async function getTodayPicks(
     });
   }
 
-  const picks: TodayPick[] = [];
-
-  for (const domain of domains) {
+  // 분야 순서는 그대로 두고 조회만 동시에 보낸다.
+  const picks = await Promise.all(domains.map(async (domain): Promise<TodayPick | null> => {
     const unsaved = unsavedByDomain.get(domain.id) ?? startedByDomain.get(domain.id);
-    if (unsaved) {
-      picks.push(unsaved);
-      continue;
-    }
+    if (unsaved) return unsaved;
 
     const level = clampLevel(levels.get(domain.id) ?? 2);
 
@@ -297,13 +302,13 @@ export async function getTodayPicks(
       if (error) break;
       const page = (data ?? []) as unknown as FreshVariant[];
       fresh = page.find((row) => !interacted.has(row.article_id) &&
-        articleAllows(row.articles, sources, "publish"));
+        articleAllows(row.articles, rights, "publish"));
       if (page.length < pageSize) break;
     }
 
-    if (!fresh) continue;
+    if (!fresh) return null;
 
-    picks.push({
+    return {
       variantId: fresh.id,
       articleId: fresh.article_id,
       domain,
@@ -315,10 +320,10 @@ export async function getTodayPicks(
       imageUrl: null,
       publishedAt: fresh.articles.published_at,
       completedNotSaved: false,
-    });
-  }
+    };
+  }));
 
-  return picks;
+  return picks.filter((pick): pick is TodayPick => pick !== null);
 }
 
 export function hostLabel(url: string | null): string | null {
@@ -330,10 +335,14 @@ export function hostLabel(url: string | null): string | null {
   }
 }
 
-/** One beginner text at every user level; saved originals remain available for practice. */
-export async function getOriginalPicks(supabase: SupabaseClient, userId: string, domains: DomainRow[]): Promise<TodayPick[]> {
+/**
+ * One beginner text at every user level; saved originals remain available for practice.
+ * `knownSources`를 넘기면 이미 읽은 출처 권한을 다시 읽지 않는다.
+ */
+export async function getOriginalPicks(supabase: SupabaseClient, userId: string, domains: DomainRow[],
+  knownSources?: Map<string, SourceRights>): Promise<TodayPick[]> {
   const [sources, variants, progress] = await Promise.all([
-    getSourceRights(supabase),
+    knownSources ?? getSourceRights(supabase),
     supabase.from("article_variants").select(`id, article_id, title, summary, reading_minutes, articles!inner(id, domain_id, foundation_order, ${ARTICLE_RIGHTS_COLUMNS})`)
       .eq("level", 1).eq("articles.content_kind", "original").eq("articles.status", "ready").order("id").limit(200),
     supabase.from("user_article_progress").select("article_id, status").eq("user_id", userId),

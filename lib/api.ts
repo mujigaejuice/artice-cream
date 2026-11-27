@@ -61,6 +61,28 @@ export function json(
   });
 }
 
+/**
+ * 응답의 `Server-Timing` 헤더에 구간별 시간(ms)을 싣는다. 브라우저 개발자 도구
+ * Network 탭의 응답 헤더나 Timing 탭에서 본다. `total`은 핸들러 시작부터 응답을
+ * 만들 때까지이고, 콜드 스타트와 브라우저까지의 통신은 들어가지 않는다.
+ */
+export function serverTiming() {
+  const started = performance.now();
+  const entries: string[] = [];
+  return {
+    async measure<T>(name: string, work: () => PromiseLike<T>): Promise<T> {
+      const before = performance.now();
+      try { return await work(); }
+      finally { entries.push(`${name};dur=${(performance.now() - before).toFixed(1)}`); }
+    },
+    apply(response: Response): Response {
+      response.headers.set("Server-Timing",
+        [...entries, `total;dur=${(performance.now() - started).toFixed(1)}`].join(", "));
+      return response;
+    },
+  };
+}
+
 export function apiError(
   request: Request,
   message: string,
